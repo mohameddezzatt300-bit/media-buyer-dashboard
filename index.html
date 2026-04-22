@@ -522,8 +522,9 @@ function buildForecast(daily, futureDays=90) {
 // Fit log-linear curve: purchases_per_day = α × ln(spend_per_day) + β
 // This naturally models diminishing returns
 function fitCurve(daily) {
-  const valid = daily.filter(d => d.spend > 10 && d.purchases > 0);
-  if (valid.length < 4) return null;
+  // Include ALL days with spend > 0 — zero-purchase days are valid data points
+  const valid = daily.filter(d => d.spend > 10);
+  if (valid.length < 7) return null;
 
   const xs = valid.map(d => Math.log(d.spend));       // ln(spend)
   const ys = valid.map(d => d.purchases);
@@ -892,11 +893,12 @@ function renderAccountTab(accKey, rawData) {
           <canvas id="calc-curve-${accKey}" height="120"></canvas>
         </div>
 
-        <p class="calc-note">
-          <span style="color:var(--green);font-weight:700">📊 Calculator uses last 90 days of data automatically</span> — independent of the date picker above.<br>
-          <strong>Model:</strong> Log-Linear (captures diminishing returns) &nbsp;|&nbsp;
-          <strong>Scenarios:</strong> ±1σ standard deviation from expected &nbsp;|&nbsp;
-          <strong>CPM Scaling:</strong> +12% per doubling of daily spend
+        <p class="calc-note" id="calc-period-note-${accKey}">
+          <span style="color:var(--green);font-weight:700">📊 Calculator always uses the last 90 days automatically</span>
+          — completely independent from the date picker above.<br>
+          <strong>Model:</strong> Log-Linear &nbsp;|&nbsp;
+          <strong>Scenarios:</strong> ±1σ from expected &nbsp;|&nbsp;
+          <strong>CPM Scaling:</strong> +12% per spend doubling
         </p>
       </div>
     </div>
@@ -996,8 +998,26 @@ function updateCalc(accKey) {
   const input = parseFloat(document.getElementById(`calc-inp-${accKey}`)?.value||0);
   if (!input || input<=0) return;
 
-  const res = advancedCalc(input, el._daily90||el._daily||[], el._acc);
+  const d90data = el._daily90 || el._daily || [];
+  const res = advancedCalc(input, d90data, el._acc);
   const cur = el._acc.currency || 'EGP';
+
+  // Update period note with actual 90-day range used
+  const noteEl = document.getElementById(`calc-period-note-${accKey}`);
+  if (noteEl && d90data.length > 0) {
+    const d90sorted = [...d90data].sort((a,b)=>a.date.localeCompare(b.date));
+    const d90from   = d90sorted[0]?.date || '—';
+    const d90to     = d90sorted[d90sorted.length-1]?.date || '—';
+    const activeDays= d90data.filter(d=>d.spend>10).length;
+    noteEl.innerHTML = `
+      <span style="color:var(--green);font-weight:700">📊 Calculator uses last 90 days automatically</span>
+      — independent from the date picker above.<br>
+      <strong>90-day window:</strong> ${d90from} → ${d90to}
+      &nbsp;|&nbsp; <strong>Active days:</strong> ${activeDays} days with spend
+      &nbsp;|&nbsp; <strong>Model:</strong> Log-Linear
+      &nbsp;|&nbsp; <strong>Scenarios:</strong> ±1σ from expected
+    `;
+  }
   const set = (id, val) => { const e=document.getElementById(id); if(e) e.textContent=val; };
 
   // 3 scenarios
