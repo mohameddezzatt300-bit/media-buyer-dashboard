@@ -198,25 +198,22 @@ td.ty{color:var(--yellow);font-weight:700}
 
 <!-- TOKEN MODAL -->
 <div class="modal-overlay" id="tokenModal">
-  <div class="modal" style="max-width:540px">
+  <div class="modal" style="max-width:480px">
     <h3>⚙️ Dashboard Settings</h3>
 
-    <p style="margin-bottom:10px">🔵 <strong>Meta Access Token</strong><br>
-       <span style="font-size:11px">Get from: developers.facebook.com/tools/explorer → ads_read</span></p>
+    <p style="margin-bottom:6px">🔵 <strong>Meta Access Token</strong><br>
+       <span style="font-size:11px;color:var(--muted)">developers.facebook.com/tools/explorer → ads_read</span></p>
     <input type="password" id="tokenInput" placeholder="EAAXw6s8...">
 
-    <p style="margin-bottom:10px">🟢 <strong>Shopify Proxy URL</strong><br>
-       <span style="font-size:11px">Deploy the Google Apps Script proxy → paste the web app URL here</span></p>
-    <input type="text" id="shopifyProxyInput" placeholder="https://script.google.com/macros/s/.../exec">
+    <p style="margin-bottom:6px">🛍 <strong>Shopify Access Token</strong><br>
+       <span style="font-size:11px;color:var(--muted)">Shopify Admin → Settings → Apps → Your app → API credentials</span></p>
+    <input type="password" id="shopifyTokenInput" placeholder="shpss_...">
 
-    <div style="background:rgba(149,191,71,.08);border:1px solid rgba(149,191,71,.2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:11px;color:var(--muted);line-height:1.7">
-      📋 <strong style="color:#95bf47">How to get Shopify Proxy URL:</strong><br>
-      1. Go to <strong>script.google.com</strong> → New Project<br>
-      2. Paste the <code>shopify_proxy.gs</code> code<br>
-      3. Click <strong>Deploy → New Deployment → Web App</strong><br>
-      4. Set "Who has access" to <strong>Anyone</strong> → Deploy<br>
-      5. Copy the URL and paste it above
+    <div style="background:rgba(149,191,71,.08);border:1px solid rgba(149,191,71,.2);border-radius:8px;padding:8px 10px;margin-bottom:14px;font-size:11px;color:var(--muted)">
+      🔗 Store: <strong style="color:#95bf47">de2457-05.myshopify.com</strong> — يتصل مباشرة بدون أي إعداد إضافي
     </div>
+
+    <input type="hidden" id="shopifyProxyInput" value="direct">
 
     <div class="modal-btns">
       <button class="btn btn-settings" onclick="closeModal()">Cancel</button>
@@ -297,11 +294,18 @@ const CHART_INSTANCES = {};
 // ═══════════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════════
-const SHOPIFY_STORE_NAME = 'de2457-05.myshopify.com';
+// ── Shopify config ────────────────────────────────────────────
+const SHOPIFY_STORE      = 'de2457-05.myshopify.com';
+const SHOPIFY_API_VER    = '2024-01';
+const SHOPIFY_STORE_NAME = SHOPIFY_STORE;
+// corsproxy.io bridges the browser CORS restriction — free, zero setup
+const CORS_PROXY = 'https://corsproxy.io/?';
 
 const state = {
-  token:        localStorage.getItem('meta_token') || '',
-  shopifyProxy: localStorage.getItem('shopify_proxy') || '',
+  token:         localStorage.getItem('meta_token')     || '',
+  shopifyToken:  localStorage.getItem('shopify_token')  || '',
+  shopifyProxy: 'direct',
+
   since: '',
   until: '',
   activeTab: 'overview',
@@ -324,11 +328,8 @@ const state = {
   document.getElementById('dateFrom').addEventListener('change', e => { state.since = e.target.value; state.cache = {}; });
   document.getElementById('dateTo').addEventListener('change',   e => { state.until = e.target.value; state.cache = {}; });
 
-  if (!state.token) { setTimeout(openModal, 600); }
+  if (!state.token || !state.shopifyToken) { setTimeout(openModal, 600); }
   else { refreshAll(); }
-
-  // Pre-fill proxy URL in modal when it opens
-  document.getElementById('shopifyProxyInput').value = state.shopifyProxy;
 })();
 
 // ═══════════════════════════════════════════════════════════════
@@ -1362,11 +1363,9 @@ async function refreshAll() {
 
   renderOverview(allData);
 
-  // Load Shopify (in parallel, doesn't block Meta load)
-  if (state.shopifyProxy) {
-    btn.textContent = '⟳ Shopify...';
-    renderShopify(allData).catch(e => console.warn('Shopify render error:', e));
-  }
+  // Load Shopify (runs after Meta, doesn't block UI)
+  btn.textContent = '⟳ Shopify...';
+  renderShopify(allData).catch(e => console.warn('Shopify render error:', e));
 
   bar.style.width = '100%';
   setTimeout(()=>{ bar.style.width='0'; }, 600);
@@ -1380,55 +1379,150 @@ async function refreshAll() {
 // SETTINGS MODAL
 // ═══════════════════════════════════════════════════════════════
 function openModal() {
-  document.getElementById('tokenInput').value       = state.token || '';
-  document.getElementById('shopifyProxyInput').value = state.shopifyProxy || '';
+  document.getElementById('tokenInput').value        = state.token        || '';
+  document.getElementById('shopifyTokenInput').value = state.shopifyToken || '';
   document.getElementById('tokenModal').classList.add('open');
 }
 function closeModal() {
   document.getElementById('tokenModal').classList.remove('open');
 }
 function saveSettings() {
-  const t = document.getElementById('tokenInput').value.trim();
-  const p = document.getElementById('shopifyProxyInput').value.trim();
-  if (t) {
-    state.token = t;
-    localStorage.setItem('meta_token', t);
-  }
-  if (p) {
-    state.shopifyProxy = p;
-    localStorage.setItem('shopify_proxy', p);
-    state.shopifyCache = null; // force re-fetch
-  }
+  const t  = document.getElementById('tokenInput').value.trim();
+  const st = document.getElementById('shopifyTokenInput').value.trim();
+  if (t)  { state.token        = t;  localStorage.setItem('meta_token',    t); }
+  if (st) { state.shopifyToken = st; localStorage.setItem('shopify_token', st); state.shopifyCache = null; }
   closeModal();
   state.cache = {};
   refreshAll();
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SHOPIFY API
+// SHOPIFY API — direct via corsproxy.io (no setup needed)
 // ═══════════════════════════════════════════════════════════════
+async function shopifyFetch(path, params = {}) {
+  if (!state.shopifyToken) throw new Error('Shopify token not set — open Settings');
+  const url = new URL(`https://${SHOPIFY_STORE}/admin/api/${SHOPIFY_API_VER}/${path}`);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  const proxied = CORS_PROXY + encodeURIComponent(url.toString());
+  const res = await fetch(proxied, {
+    headers: { 'X-Shopify-Access-Token': state.shopifyToken }
+  });
+  if (!res.ok) throw new Error(`Shopify ${res.status}: ${res.statusText}`);
+  return res.json();
+}
+
+async function shopifyFetchAllPages(path, params = {}, dataKey = 'orders') {
+  let all = [];
+  let data = await shopifyFetch(path, { ...params, limit: 250 });
+  all = all.concat(data[dataKey] || []);
+  // simple single-page for now (250 orders covers most date ranges)
+  return all;
+}
+
 async function loadShopify(days = 30) {
-  if (!state.shopifyProxy) return null;
   try {
-    const url = `${state.shopifyProxy}?endpoint=summary&days=${days}`;
-    const res  = await fetch(url);
-    const json = await res.json();
-    if (!json.ok) { console.warn('Shopify proxy error:', json.error); return null; }
-    return json.data;
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    const sinceISO = since.toISOString().split('T')[0];
+
+    // Paid orders
+    const ordersData = await shopifyFetch('orders.json', {
+      status: 'any',
+      financial_status: 'paid,partially_paid',
+      created_at_min: sinceISO,
+      limit: 250,
+      fields: 'id,created_at,total_price,financial_status,line_items',
+    });
+    const orders = ordersData.orders || [];
+
+    // Refunded orders
+    let refunds = 0;
+    try {
+      const refData = await shopifyFetch('orders.json', {
+        status: 'any',
+        financial_status: 'refunded',
+        created_at_min: sinceISO,
+        limit: 250,
+        fields: 'id,total_price',
+      });
+      refunds = (refData.orders || []).reduce((s, o) => s + parseFloat(o.total_price || 0), 0);
+    } catch(e) { /* refunds optional */ }
+
+    // Aggregate
+    const revenue    = orders.reduce((s, o) => s + parseFloat(o.total_price || 0), 0);
+    const orderCount = orders.length;
+    const aov        = orderCount > 0 ? revenue / orderCount : 0;
+    const totalItems = orders.reduce((s, o) =>
+      s + (o.line_items || []).reduce((a, li) => a + li.quantity, 0), 0);
+
+    // Daily breakdown
+    const dailyMap = {};
+    orders.forEach(o => {
+      const day = o.created_at.slice(0, 10);
+      if (!dailyMap[day]) dailyMap[day] = { date: day, orders: 0, revenue: 0 };
+      dailyMap[day].orders++;
+      dailyMap[day].revenue += parseFloat(o.total_price || 0);
+    });
+    const daily = Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date));
+
+    // Week-over-week
+    const halfDays = Math.floor(days / 2);
+    const cutoffDate = new Date(); cutoffDate.setDate(cutoffDate.getDate() - halfDays);
+    const cutoff   = cutoffDate.toISOString().split('T')[0];
+    const revFirst = orders.filter(o => o.created_at.slice(0,10) < cutoff)
+                           .reduce((s, o) => s + parseFloat(o.total_price || 0), 0);
+    const revLast  = orders.filter(o => o.created_at.slice(0,10) >= cutoff)
+                           .reduce((s, o) => s + parseFloat(o.total_price || 0), 0);
+    const wow = revFirst > 0 ? ((revLast - revFirst) / revFirst * 100) : 0;
+
+    return {
+      days, daily,
+      revenue:    Math.round(revenue * 100) / 100,
+      orders:     orderCount,
+      aov:        Math.round(aov * 100) / 100,
+      refunds:    Math.round(refunds * 100) / 100,
+      totalItems,
+      wow:        Math.round(wow * 10) / 10,
+    };
   } catch(e) {
-    console.warn('Shopify fetch failed:', e.message);
+    console.warn('Shopify loadShopify error:', e.message);
     return null;
   }
 }
 
 async function loadShopifyProducts(days = 30) {
-  if (!state.shopifyProxy) return null;
   try {
-    const url = `${state.shopifyProxy}?endpoint=products&days=${days}`;
-    const res  = await fetch(url);
-    const json = await res.json();
-    return json.ok ? json.data : null;
-  } catch(e) { return null; }
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    const sinceISO = since.toISOString().split('T')[0];
+    const ordersData = await shopifyFetch('orders.json', {
+      status: 'any',
+      financial_status: 'paid,partially_paid',
+      created_at_min: sinceISO,
+      limit: 250,
+      fields: 'id,line_items',
+    });
+    const orders   = ordersData.orders || [];
+    const prodMap  = {};
+    orders.forEach(o => {
+      (o.line_items || []).forEach(li => {
+        const id = li.product_id || li.title;
+        if (!prodMap[id]) prodMap[id] = { title: li.title, orders: 0, units: 0, revenue: 0 };
+        prodMap[id].orders++;
+        prodMap[id].units   += li.quantity;
+        prodMap[id].revenue += parseFloat(li.price || 0) * li.quantity;
+      });
+    });
+    return {
+      products: Object.values(prodMap)
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 15)
+        .map(p => ({ ...p, revenue: Math.round(p.revenue * 100) / 100 }))
+    };
+  } catch(e) {
+    console.warn('Shopify products error:', e.message);
+    return null;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1437,16 +1531,7 @@ async function loadShopifyProducts(days = 30) {
 async function renderShopify(metaAllData) {
   const el = document.getElementById('tab-shopify');
 
-  if (!state.shopifyProxy) {
-    el.innerHTML = `<div class="empty-state">
-      <div class="big">🛍</div>
-      <p>Add your <strong>Shopify Proxy URL</strong> in ⚙️ Settings</p>
-      <p style="margin-top:8px;font-size:11px;color:var(--muted)">Follow the steps in the Settings modal</p>
-    </div>`;
-    return;
-  }
-
-  el.innerHTML = `<div class="empty-state"><div class="big" style="animation:pulse 1s infinite">🛍</div><p>Loading Shopify data…</p></div>`;
+  el.innerHTML = `<div class="empty-state"><div class="big" style="animation:pulse 1s infinite">🛍</div><p>Connecting to Shopify…</p></div>`;
 
   // Calculate days from date picker
   const d1   = new Date(state.since);
@@ -1460,7 +1545,8 @@ async function renderShopify(metaAllData) {
 
   if (!summary) {
     el.innerHTML = `<div class="empty-state"><div class="big">⚠️</div>
-      <p>Could not load Shopify data. Check the proxy URL in Settings.</p></div>`;
+      <p>Could not connect to Shopify.<br>
+      <span style="font-size:11px;color:var(--muted)">Check console for details. Make sure the store is active.</span></p></div>`;
     return;
   }
 
