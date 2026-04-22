@@ -296,10 +296,11 @@ const CHART_INSTANCES = {};
 // ═══════════════════════════════════════════════════════════════
 // ── Shopify config ────────────────────────────────────────────
 const SHOPIFY_STORE      = 'de2457-05.myshopify.com';
+const SHOPIFY_API_KEY    = '45e9483454d1e5f8bb3bb54fb257573a';
 const SHOPIFY_API_VER    = '2024-01';
 const SHOPIFY_STORE_NAME = SHOPIFY_STORE;
-// corsproxy.io bridges the browser CORS restriction — free, zero setup
-const CORS_PROXY = 'https://corsproxy.io/?';
+// allorigins fetches server-side → no CORS block, credentials go in URL
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
 
 const state = {
   token:         localStorage.getItem('meta_token')     || '',
@@ -1397,18 +1398,26 @@ function saveSettings() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SHOPIFY API — direct via corsproxy.io (no setup needed)
+// SHOPIFY API — via allorigins (credentials embedded in URL)
 // ═══════════════════════════════════════════════════════════════
 async function shopifyFetch(path, params = {}) {
   if (!state.shopifyToken) throw new Error('Shopify token not set — open Settings');
-  const url = new URL(`https://${SHOPIFY_STORE}/admin/api/${SHOPIFY_API_VER}/${path}`);
-  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-  const proxied = CORS_PROXY + encodeURIComponent(url.toString());
-  const res = await fetch(proxied, {
-    headers: { 'X-Shopify-Access-Token': state.shopifyToken }
-  });
+
+  // Embed API key:token as Basic Auth in the URL
+  // allorigins fetches this server-side → Shopify sees a proper authenticated request
+  const shopifyUrl = new URL(
+    `https://${SHOPIFY_API_KEY}:${state.shopifyToken}@${SHOPIFY_STORE}/admin/api/${SHOPIFY_API_VER}/${path}`
+  );
+  for (const [k, v] of Object.entries(params)) shopifyUrl.searchParams.set(k, v);
+
+  const proxied = CORS_PROXY + encodeURIComponent(shopifyUrl.toString());
+  const res = await fetch(proxied);
   if (!res.ok) throw new Error(`Shopify ${res.status}: ${res.statusText}`);
-  return res.json();
+
+  const text = await res.text();
+  // allorigins sometimes wraps errors in HTML — detect that
+  if (text.trim().startsWith('<')) throw new Error('Proxy returned HTML — token may be wrong');
+  return JSON.parse(text);
 }
 
 async function shopifyFetchAllPages(path, params = {}, dataKey = 'orders') {
