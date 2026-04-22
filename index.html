@@ -336,18 +336,31 @@ async function fetchAllPages(path, params={}) {
 async function loadAccount(acc) {
   const tr = { since: state.since, until: state.until };
 
+  // 90-day window for calculator (always, regardless of date picker)
+  const today  = new Date();
+  const d90    = new Date(today); d90.setDate(today.getDate() - 90);
+  const tr90   = { since: fmtDate(d90), until: fmtDate(today) };
+
   // Summary
   const [sumData] = await fetchAllPages(`${acc.id}/insights`, {
     fields: 'spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,actions,action_values',
     time_range: tr,
   });
 
-  // Daily
+  // Daily (for charts — uses date picker range)
   const daily = await fetchAllPages(`${acc.id}/insights`, {
     fields: 'spend,impressions,clicks,ctr,cpc,cpm,reach,actions,action_values,date_start',
     time_range: tr,
     time_increment: 1,
     limit: 90,
+  });
+
+  // Daily 90-day (for calculator only — always last 90 days)
+  const daily90 = await fetchAllPages(`${acc.id}/insights`, {
+    fields: 'spend,impressions,clicks,ctr,cpc,cpm,actions,action_values,date_start',
+    time_range: tr90,
+    time_increment: 1,
+    limit: 92,
   });
 
   // Campaigns
@@ -366,7 +379,7 @@ async function loadAccount(acc) {
     limit: 100,
   });
 
-  return { summary: sumData || {}, daily, campaigns, ads, currency: acc.currency };
+  return { summary: sumData || {}, daily, daily90, campaigns, ads, currency: acc.currency };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -880,18 +893,19 @@ function renderAccountTab(accKey, rawData) {
         </div>
 
         <p class="calc-note">
+          <span style="color:var(--green);font-weight:700">📊 Calculator uses last 90 days of data automatically</span> — independent of the date picker above.<br>
           <strong>Model:</strong> Log-Linear (captures diminishing returns) &nbsp;|&nbsp;
-          <strong>Historical:</strong> ${state.since} → ${state.until} &nbsp;|&nbsp;
           <strong>Scenarios:</strong> ±1σ standard deviation from expected &nbsp;|&nbsp;
-          <strong>CPM Scaling:</strong> +12% per doubling of daily budget
+          <strong>CPM Scaling:</strong> +12% per doubling of daily spend
         </p>
       </div>
     </div>
   `;
 
   // Store data for calculator
-  el._acc  = acc;
-  el._daily = daily;
+  el._acc    = acc;
+  el._daily  = daily;
+  el._daily90 = processDaily(rawData.daily90 || rawData.daily); // 90-day data for calculator
 
   // Render charts (needs DOM to exist)
   setTimeout(()=>{
@@ -982,7 +996,7 @@ function updateCalc(accKey) {
   const input = parseFloat(document.getElementById(`calc-inp-${accKey}`)?.value||0);
   if (!input || input<=0) return;
 
-  const res = advancedCalc(input, el._daily||[], el._acc);
+  const res = advancedCalc(input, el._daily90||el._daily||[], el._acc);
   const cur = el._acc.currency || 'EGP';
   const set = (id, val) => { const e=document.getElementById(id); if(e) e.textContent=val; };
 
