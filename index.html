@@ -90,25 +90,6 @@ td.ty{color:var(--yellow);font-weight:700}
 .ac-kpi .v{font-size:17px;font-weight:800}
 .ac-kpi .l{font-size:9px;color:var(--muted);margin-top:2px}
 
-/* ── SHOPIFY ── */
-.shopify-kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px;margin-bottom:20px}
-.shopify-kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
-.shopify-kpi .sk-label{font-size:10px;color:var(--muted);margin-bottom:4px}
-.shopify-kpi .sk-val{font-size:22px;font-weight:800;color:#95bf47}
-.shopify-kpi .sk-sub{font-size:9px;color:var(--muted);margin-top:2px}
-.shopify-badge{display:inline-flex;align-items:center;gap:6px;background:#95bf4720;
-               border:1px solid #95bf4740;border-radius:20px;padding:4px 12px;
-               font-size:11px;font-weight:700;color:#95bf47;margin-bottom:14px}
-.blended-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:11px;
-             background:var(--card2);border:1px solid var(--border);border-radius:14px;
-             padding:18px;margin-bottom:20px}
-.blended-metric{text-align:center}
-.blended-metric .bm-val{font-size:22px;font-weight:800}
-.blended-metric .bm-label{font-size:10px;color:var(--muted);margin-top:3px}
-.prod-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
-.prod-row:last-child{border-bottom:none}
-.prod-bar-wrap{flex:1;height:6px;background:var(--card3);border-radius:3px;overflow:hidden}
-.prod-bar{height:100%;background:#95bf47;border-radius:3px}
 
 /* ── FORECAST ── */
 .forecast-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:11px;margin-top:14px}
@@ -201,7 +182,6 @@ td.ty{color:var(--yellow);font-weight:700}
     <button class="acc-tab" onclick="switchTab('acc3')" data-tab="acc3" style="color:var(--c3)">Minibinis</button>
     <button class="acc-tab" onclick="switchTab('acc4')" data-tab="acc4" style="color:var(--c4)">Padel Lovers</button>
     <button class="acc-tab" onclick="switchTab('acc5')" data-tab="acc5" style="color:var(--c5)">CHOU</button>
-    <button class="acc-tab" onclick="switchTab('shopify')" data-tab="shopify" style="color:#95bf47">🛍 Shopify</button>
   </div>
   <div class="controls">
     <input type="date" class="date-inp" id="dateFrom">
@@ -224,13 +204,6 @@ td.ty{color:var(--yellow);font-weight:700}
        <span style="font-size:11px;color:var(--muted)">developers.facebook.com/tools/explorer → ads_read</span></p>
     <input type="password" id="tokenInput" placeholder="EAAXw6s8...">
 
-    <div style="background:rgba(149,191,71,.1);border:1px solid rgba(149,191,71,.3);border-radius:8px;padding:10px 13px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.8">
-      🛍 <strong style="color:#95bf47">Shopify متصل تلقائياً</strong><br>
-      Store: <strong style="color:var(--text)">Coctail — de2457-05.myshopify.com</strong><br>
-      Proxy: Google Apps Script ✅ — لا يحتاج إعداد
-    </div>
-    <input type="hidden" id="shopifyTokenInput" value="">
-    <input type="hidden" id="shopifyProxyInput" value="">
 
     <div class="modal-btns">
       <button class="btn btn-settings" onclick="closeModal()">Cancel</button>
@@ -257,8 +230,6 @@ td.ty{color:var(--yellow);font-weight:700}
         <div class="chart-card"><h3>ROAS by Account</h3><canvas id="ov-roas-chart"></canvas></div>
       </div>
     </div>
-    <!-- Shopify blended row — populated by renderShopify() -->
-    <div id="shopify-overview-section"></div>
 
     <div class="section">
       <h2>📊 Comparison Table</h2>
@@ -287,14 +258,6 @@ td.ty{color:var(--yellow);font-weight:700}
   <div class="tab-content" id="tab-acc4"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
   <div class="tab-content" id="tab-acc5"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
 
-  <!-- ═══ SHOPIFY TAB ═══ -->
-  <div class="tab-content" id="tab-shopify">
-    <div class="empty-state">
-      <div class="big">🛍</div>
-      <p>Add your Shopify Proxy URL in <strong>⚙️ Settings</strong> then click <strong>Refresh</strong></p>
-      <p style="margin-top:8px;font-size:11px;color:var(--muted)">Need the proxy URL? Follow the setup steps in Settings</p>
-    </div>
-  </div>
 
 </div><!-- /page -->
 
@@ -316,22 +279,15 @@ const CHART_INSTANCES = {};
 // ═══════════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════════
-// ── Shopify config ────────────────────────────────────────────
-const SHOPIFY_STORE      = 'de2457-05.myshopify.com';
-const SHOPIFY_STORE_NAME = SHOPIFY_STORE;
-// Google Apps Script proxy URL — hardcoded, no setup needed
-const SHOPIFY_PROXY_URL  = 'https://script.google.com/macros/s/AKfycbwu2liS5iYc5p2hzc0xGAsKEIYxr3mtyw5Y4KsbaWtO4A2fCmC0gTp-MQkmkSR-Iujp/exec';
 
 const state = {
   token:         localStorage.getItem('meta_token') || '',
-  shopifyProxy:  SHOPIFY_PROXY_URL,
   budgets:       JSON.parse(localStorage.getItem('budgets') || '{}'),
 
   since: '',
   until: '',
   activeTab: 'overview',
   cache: {},
-  shopifyCache: null,
   loading: false,
 };
 
@@ -1624,9 +1580,6 @@ async function refreshAll() {
 
   renderOverview(allData);
 
-  // Load Shopify (runs after Meta, doesn't block UI)
-  btn.textContent = '⟳ Shopify...';
-  renderShopify(allData).catch(e => console.warn('Shopify render error:', e));
 
   bar.style.width = '100%';
   setTimeout(()=>{ bar.style.width='0'; }, 600);
@@ -1655,478 +1608,8 @@ function saveSettings() {
   refreshAll();
 }
 
-// ═══════════════════════════════════════════════════════════════
-// SHOPIFY API
-// Mode A: Google Apps Script proxy (preferred — supports headers)
-// Mode B: Direct via allorigins using access_token URL param
-// ═══════════════════════════════════════════════════════════════
-async function shopifyFetch(path, params = {}) {
-  if (!state.shopifyToken) throw new Error('Shopify token not set — open Settings');
 
-  // Mode A: Apps Script proxy
-  if (state.shopifyProxy && state.shopifyProxy.startsWith('http')) {
-    // The proxy has its own endpoint format — callers use this for raw path calls;
-    // loadShopify/loadShopifyProducts bypass this via proxyCall()
-    throw new Error('Use proxyCall() for proxy mode');
-  }
 
-  // Mode B: Direct via allorigins — pass token as URL query param
-  // shpca_ tokens work with access_token param through allorigins
-  const shopifyUrl = new URL(`https://${SHOPIFY_STORE}/admin/api/${SHOPIFY_API_VER}/${path}`);
-  shopifyUrl.searchParams.set('access_token', state.shopifyToken);
-  for (const [k, v] of Object.entries(params)) shopifyUrl.searchParams.set(k, v);
-
-  const proxied = CORS_PROXY + encodeURIComponent(shopifyUrl.toString());
-  const res = await fetch(proxied);
-  if (!res.ok) throw new Error(`Shopify ${res.status}: ${res.statusText}`);
-
-  const text = await res.text();
-  if (text.trim().startsWith('<')) throw new Error('Proxy returned HTML — check token or try Apps Script proxy');
-  return JSON.parse(text);
-}
-
-async function proxyCall(endpoint, extraParams = {}) {
-  const url = new URL(state.shopifyProxy);
-  url.searchParams.set('endpoint', endpoint);
-  url.searchParams.set('since', state.since);
-  url.searchParams.set('until', state.until);
-  for (const [k, v] of Object.entries(extraParams)) url.searchParams.set(k, v);
-  const res  = await fetch(url.toString());
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || 'Apps Script proxy error');
-  return json.data;
-}
-
-async function loadShopify() {
-  try {
-    // Use Apps Script proxy when configured
-    if (state.shopifyProxy && state.shopifyProxy.startsWith('http')) {
-      return await proxyCall('summary');
-    }
-
-    // Direct mode — use exact date range from picker
-    const sinceISO = state.since;
-    const untilISO = state.until + 'T23:59:59';
-
-    // Paid orders
-    const ordersData = await shopifyFetch('orders.json', {
-      status: 'any',
-      financial_status: 'paid,partially_paid',
-      created_at_min: sinceISO,
-      created_at_max: untilISO,
-      limit: 250,
-      fields: 'id,created_at,total_price,financial_status,line_items',
-    });
-    const orders = ordersData.orders || [];
-
-    // Refunded orders
-    let refunds = 0;
-    try {
-      const refData = await shopifyFetch('orders.json', {
-        status: 'any',
-        financial_status: 'refunded',
-        created_at_min: sinceISO,
-        created_at_max: untilISO,
-        limit: 250,
-        fields: 'id,total_price',
-      });
-      refunds = (refData.orders || []).reduce((s, o) => s + parseFloat(o.total_price || 0), 0);
-    } catch(e) { /* refunds optional */ }
-
-    const revenue    = orders.reduce((s, o) => s + parseFloat(o.total_price || 0), 0);
-    const orderCount = orders.length;
-    const aov        = orderCount > 0 ? revenue / orderCount : 0;
-    const totalItems = orders.reduce((s, o) =>
-      s + (o.line_items || []).reduce((a, li) => a + li.quantity, 0), 0);
-
-    const dailyMap = {};
-    orders.forEach(o => {
-      const day = o.created_at.slice(0, 10);
-      if (!dailyMap[day]) dailyMap[day] = { date: day, orders: 0, revenue: 0 };
-      dailyMap[day].orders++;
-      dailyMap[day].revenue += parseFloat(o.total_price || 0);
-    });
-    const daily = Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date));
-
-    const totalDays = daily.length || 1;
-    const half      = Math.floor(totalDays / 2);
-    const midDate   = daily[half]?.date || '';
-    const revFirst  = orders.filter(o => o.created_at.slice(0,10) < midDate)
-                            .reduce((s, o) => s + parseFloat(o.total_price || 0), 0);
-    const revLast   = orders.filter(o => o.created_at.slice(0,10) >= midDate)
-                            .reduce((s, o) => s + parseFloat(o.total_price || 0), 0);
-    const wow = revFirst > 0 ? ((revLast - revFirst) / revFirst * 100) : 0;
-
-    return {
-      daily,
-      revenue:    Math.round(revenue * 100) / 100,
-      orders:     orderCount,
-      aov:        Math.round(aov * 100) / 100,
-      refunds:    Math.round(refunds * 100) / 100,
-      totalItems,
-      wow:        Math.round(wow * 10) / 10,
-    };
-  } catch(e) {
-    console.warn('Shopify loadShopify error:', e.message);
-    return null;
-  }
-}
-
-async function loadShopifyProducts() {
-  try {
-    if (state.shopifyProxy && state.shopifyProxy.startsWith('http')) {
-      return await proxyCall('products');
-    }
-
-    const sinceISO = state.since;
-    const untilISO = state.until + 'T23:59:59';
-    const ordersData = await shopifyFetch('orders.json', {
-      status: 'any',
-      financial_status: 'paid,partially_paid',
-      created_at_min: sinceISO,
-      created_at_max: untilISO,
-      limit: 250,
-      fields: 'id,line_items',
-    });
-    const orders  = ordersData.orders || [];
-    const prodMap = {};
-    orders.forEach(o => {
-      (o.line_items || []).forEach(li => {
-        const id = li.product_id || li.title;
-        if (!prodMap[id]) prodMap[id] = { title: li.title, orders: 0, units: 0, revenue: 0 };
-        prodMap[id].orders++;
-        prodMap[id].units   += li.quantity;
-        prodMap[id].revenue += parseFloat(li.price || 0) * li.quantity;
-      });
-    });
-    return {
-      products: Object.values(prodMap)
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 15)
-        .map(p => ({ ...p, revenue: Math.round(p.revenue * 100) / 100 }))
-    };
-  } catch(e) {
-    console.warn('Shopify products error:', e.message);
-    return null;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// RENDER: SHOPIFY TAB
-// ═══════════════════════════════════════════════════════════════
-async function renderShopify(metaAllData) {
-  const el = document.getElementById('tab-shopify');
-
-  el.innerHTML = `<div class="empty-state"><div class="big" style="animation:pulse 1s infinite">🛍</div><p>Connecting to Shopify…</p></div>`;
-
-  const d1   = new Date(state.since);
-  const d2   = new Date(state.until);
-  const days = Math.max(1, Math.round((d2 - d1) / 86400000)) + 1;
-
-  const [summary, productsData] = await Promise.all([
-    loadShopify(),
-    loadShopifyProducts(),
-  ]);
-
-  if (!summary) {
-    el.innerHTML = `<div class="empty-state"><div class="big">⚠️</div>
-      <p>Could not connect to Shopify.<br>
-      <span style="font-size:11px;color:var(--muted)">Check console for details. Make sure the store is active.</span></p></div>`;
-    return;
-  }
-
-  state.shopifyCache = summary;
-
-  // ── Blended ROAS across all Meta accounts ──────────────────
-  let totalMetaSpend = 0;
-  ACCOUNTS.forEach(acc => {
-    const raw = metaAllData[acc.key];
-    if (raw?.summary) totalMetaSpend += parseFloat(raw.summary.spend || 0);
-  });
-  const shopifyRev  = summary.netSales != null ? summary.netSales : summary.revenue;
-  const blendedROAS = totalMetaSpend > 0 ? (shopifyRev / totalMetaSpend) : 0;
-  const blendedCPA  = summary.orders > 0 ? totalMetaSpend / summary.orders : 0;
-  const profitEst   = shopifyRev - totalMetaSpend; // rough (no COGS)
-
-  // ── Update Overview tab with Shopify blended banner ────────
-  const ovSection = document.getElementById('shopify-overview-section');
-  if (ovSection) {
-    ovSection.innerHTML = `
-    <div class="section">
-      <h2 style="border-bottom-color:#95bf47">🛍 Shopify + Meta — Blended Performance</h2>
-      <div class="blended-row" style="cursor:pointer" onclick="switchTab('shopify')">
-        <div class="blended-metric">
-          <div class="bm-val" style="color:#95bf47">${blendedROAS > 0 ? blendedROAS.toFixed(2)+'x' : '—'}</div>
-          <div class="bm-label">Blended ROAS</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:#95bf47">${shopifyRev.toLocaleString()} EGP</div>
-          <div class="bm-label">Shopify Net Sales</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:var(--yellow)">${Math.round(totalMetaSpend).toLocaleString()} EGP</div>
-          <div class="bm-label">Total Meta Spend</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:var(--c1)">${summary.orders.toLocaleString()}</div>
-          <div class="bm-label">Shopify Orders</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:var(--c1)">${summary.aov.toLocaleString()} EGP</div>
-          <div class="bm-label">Avg Order Value</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:${profitEst>=0?'var(--green)':'var(--red)'}">
-            ${profitEst>=0?'+':''}${Math.round(profitEst).toLocaleString()} EGP</div>
-          <div class="bm-label">Net Sales − Ad Spend</div>
-        </div>
-      </div>
-      <p style="font-size:10px;color:var(--muted)">Click to open full Shopify tab ↗</p>
-    </div>`;
-  }
-
-  // ── Daily chart data ───────────────────────────────────────
-  const dailyLabels  = summary.daily.map(d => d.date.slice(5));
-  const dailyRevenue = summary.daily.map(d => d.revenue);
-  const dailyOrders  = summary.daily.map(d => d.orders);
-
-  // ── Blended daily: Meta spend per day (summed across all accounts) ──
-  const metaDailyMap = {};
-  ACCOUNTS.forEach(acc => {
-    const raw = metaAllData[acc.key];
-    if (!raw?.daily) return;
-    raw.daily.forEach(d => {
-      const day = d.date_start;
-      if (!metaDailyMap[day]) metaDailyMap[day] = 0;
-      metaDailyMap[day] += parseFloat(d.spend || 0);
-    });
-  });
-  const blendedMetaSpend = dailyLabels.map((_, i) => {
-    const date = summary.daily[i]?.date;
-    return date ? Math.round(metaDailyMap[date] || 0) : 0;
-  });
-
-  // ── Product rows ───────────────────────────────────────────
-  const products    = productsData?.products || [];
-  const maxRevProd  = products.length > 0 ? products[0].revenue : 1;
-  const prodRows    = products.map((p,i) => `
-    <div class="prod-row">
-      <div style="width:20px;font-size:10px;color:var(--muted);text-align:right">${i+1}</div>
-      <div style="flex:2;font-size:12px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</div>
-      <div class="prod-bar-wrap"><div class="prod-bar" style="width:${Math.round(p.revenue/maxRevProd*100)}%"></div></div>
-      <div style="min-width:80px;text-align:right;font-size:12px;font-weight:700;color:#95bf47">${Math.round(p.revenue).toLocaleString()}</div>
-      <div style="min-width:50px;text-align:right;font-size:11px;color:var(--muted)">${p.orders} orders</div>
-      <div style="min-width:40px;text-align:right;font-size:11px;color:var(--muted)">${p.units} units</div>
-    </div>`).join('');
-
-  // ── Wow badge ─────────────────────────────────────────────
-  const wowColor  = summary.wow >= 0 ? 'var(--green)' : 'var(--red)';
-  const wowSymbol = summary.wow >= 0 ? '▲' : '▼';
-
-  el.innerHTML = `
-    <div class="section">
-      <h2 style="border-bottom-color:#95bf47">🛍 Shopify — ${SHOPIFY_STORE_NAME}</h2>
-      <div class="shopify-badge">
-        🟢 Live data &nbsp;·&nbsp; Last ${days} days &nbsp;·&nbsp;
-        <span style="color:${wowColor}">${wowSymbol} ${Math.abs(summary.wow)}% vs prior half-period</span>
-      </div>
-
-      <!-- KPIs — matching Shopify Admin Sales report -->
-      <div class="shopify-kpi-grid" style="grid-template-columns:repeat(auto-fill,minmax(155px,1fr))">
-
-        <div class="shopify-kpi">
-          <div class="sk-label">GROSS SALES</div>
-          <div class="sk-val">${(summary.grossSales ?? summary.revenue).toLocaleString()}</div>
-          <div class="sk-sub">EGP before discounts</div>
-        </div>
-
-        <div class="shopify-kpi">
-          <div class="sk-label">DISCOUNTS</div>
-          <div class="sk-val" style="color:var(--yellow)">
-            ${summary.discounts > 0 ? '−' + summary.discounts.toLocaleString() : '—'}
-          </div>
-          <div class="sk-sub">EGP</div>
-        </div>
-
-        <div class="shopify-kpi">
-          <div class="sk-label">RETURNS</div>
-          <div class="sk-val" style="color:var(--red)">
-            ${summary.returns > 0 ? '−' + summary.returns.toLocaleString() : '—'}
-          </div>
-          <div class="sk-sub">EGP refunded</div>
-        </div>
-
-        <div class="shopify-kpi">
-          <div class="sk-label">NET SALES</div>
-          <div class="sk-val" style="color:var(--green)">
-            ${(summary.netSales ?? (summary.revenue - (summary.returns||0))).toLocaleString()}
-          </div>
-          <div class="sk-sub">Gross − Disc − Returns</div>
-        </div>
-
-        <div class="shopify-kpi">
-          <div class="sk-label">SHIPPING</div>
-          <div class="sk-val" style="color:var(--c1)">
-            ${(summary.shipping ?? 0) > 0 ? summary.shipping.toLocaleString() : '—'}
-          </div>
-          <div class="sk-sub">EGP collected</div>
-        </div>
-
-        <div class="shopify-kpi">
-          <div class="sk-label">TOTAL ORDERS</div>
-          <div class="sk-val" style="color:var(--c0)">${summary.orders.toLocaleString()}</div>
-          <div class="sk-sub">all non-cancelled</div>
-        </div>
-
-        <div class="shopify-kpi">
-          <div class="sk-label">AVG ORDER VALUE</div>
-          <div class="sk-val" style="color:var(--yellow)">${summary.aov.toLocaleString()}</div>
-          <div class="sk-sub">EGP / order</div>
-        </div>
-
-        <div class="shopify-kpi">
-          <div class="sk-label">ITEMS SOLD</div>
-          <div class="sk-val" style="color:var(--muted)">${summary.totalItems.toLocaleString()}</div>
-          <div class="sk-sub">units</div>
-        </div>
-
-      </div>
-
-      <!-- Blended Performance -->
-      <h3 style="color:var(--muted);margin-bottom:10px">⚡ Blended Performance (Shopify + Meta)</h3>
-      <div class="blended-row">
-        <div class="blended-metric">
-          <div class="bm-val" style="color:#95bf47">${blendedROAS > 0 ? blendedROAS.toFixed(2)+'x' : '—'}</div>
-          <div class="bm-label">Blended ROAS</div>
-          <div style="font-size:9px;color:var(--muted);margin-top:2px">Shopify Rev ÷ Meta Spend</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:var(--yellow)">${Math.round(totalMetaSpend).toLocaleString()}</div>
-          <div class="bm-label">Total Meta Spend (EGP)</div>
-          <div style="font-size:9px;color:var(--muted);margin-top:2px">all accounts combined</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:var(--green)">${shopifyRev.toLocaleString()}</div>
-          <div class="bm-label">Shopify Net Sales (EGP)</div>
-          <div style="font-size:9px;color:var(--muted);margin-top:2px">after disc &amp; returns</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:${profitEst >= 0 ? 'var(--green)' : 'var(--red)'}">
-            ${profitEst >= 0 ? '+' : ''}${Math.round(profitEst).toLocaleString()}</div>
-          <div class="bm-label">Rev minus Ad Spend</div>
-          <div style="font-size:9px;color:var(--muted);margin-top:2px">excl. COGS & fees</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:var(--c1)">${blendedCPA > 0 ? Math.round(blendedCPA).toLocaleString() : '—'}</div>
-          <div class="bm-label">Blended CPA (EGP)</div>
-          <div style="font-size:9px;color:var(--muted);margin-top:2px">Meta Spend ÷ Orders</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Charts -->
-    <div class="section">
-      <!-- Blended daily chart -->
-      <div class="chart-card" style="margin-bottom:14px">
-        <h3>📈 Daily: Shopify Revenue vs Meta Ad Spend (EGP)</h3>
-        <canvas id="sh-blended-chart" height="180"></canvas>
-      </div>
-      <div class="charts-2">
-        <div class="chart-card">
-          <h3>Daily Revenue (EGP)</h3>
-          <canvas id="sh-revenue-chart" height="200"></canvas>
-        </div>
-        <div class="chart-card">
-          <h3>Daily Orders</h3>
-          <canvas id="sh-orders-chart" height="200"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Top Products -->
-    ${products.length > 0 ? `
-    <div class="section">
-      <h2 style="border-bottom-color:#95bf47">🏆 Top Products by Revenue</h2>
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px">
-        <div style="display:flex;gap:10px;font-size:10px;color:var(--muted);font-weight:700;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:4px">
-          <div style="width:20px">#</div>
-          <div style="flex:2">Product</div>
-          <div style="flex:3"></div>
-          <div style="min-width:80px;text-align:right">Revenue</div>
-          <div style="min-width:50px;text-align:right">Orders</div>
-          <div style="min-width:40px;text-align:right">Units</div>
-        </div>
-        ${prodRows}
-      </div>
-    </div>` : ''}
-
-    <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-top:8px">
-      ⚠️ <strong>Blended ROAS</strong> compares Shopify revenue (EGP) against Meta spend (EGP) — only valid when both are in EGP.
-      &nbsp;|&nbsp; <strong>Rev minus Ad Spend</strong> does not include COGS, shipping, or Shopify fees.
-      &nbsp;|&nbsp; Data refreshes with the date range selected above.
-    </p>
-  `;
-
-  setTimeout(() => {
-    // Blended chart — dual axis: revenue (left) + spend (right)
-    if (CHART_INSTANCES['sh-blended-chart']) CHART_INSTANCES['sh-blended-chart'].destroy();
-    const bCtx = document.getElementById('sh-blended-chart');
-    if (bCtx) {
-      CHART_INSTANCES['sh-blended-chart'] = new Chart(bCtx, {
-        type: 'bar',
-        data: {
-          labels: dailyLabels,
-          datasets: [
-            {
-              label: 'Shopify Revenue',
-              data: dailyRevenue,
-              backgroundColor: 'rgba(149,191,71,0.65)',
-              borderColor: '#95bf47',
-              borderWidth: 1,
-              yAxisID: 'y',
-            },
-            {
-              label: 'Meta Ad Spend',
-              data: blendedMetaSpend,
-              type: 'line',
-              borderColor: '#f59e0b',
-              backgroundColor: 'rgba(245,158,11,0.1)',
-              borderWidth: 2,
-              pointRadius: 3,
-              tension: 0.3,
-              fill: false,
-              yAxisID: 'y',
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: true, labels: { color: '#94a3b8', font: { size: 11 } } },
-            tooltip: {
-              callbacks: {
-                label: c => `${c.dataset.label}: ${c.raw.toLocaleString()} EGP`,
-              },
-            },
-          },
-          scales: {
-            x: { ticks: { color: '#64748b', maxRotation: 45, font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.05)' } },
-            y: { ticks: { color: '#64748b', font: { size: 10 }, callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v }, grid: { color: 'rgba(255,255,255,.05)' } },
-          },
-        },
-      });
-    }
-
-    mkChart('sh-revenue-chart', 'bar', dailyLabels, [{
-      label: 'Revenue', data: dailyRevenue,
-      backgroundColor: 'rgba(149,191,71,0.6)', borderColor: '#95bf47', borderWidth: 1
-    }]);
-    mkChart('sh-orders-chart', 'bar', dailyLabels, [{
-      label: 'Orders', data: dailyOrders,
-      backgroundColor: 'rgba(6,182,212,0.6)', borderColor: '#06b6d4', borderWidth: 1
-    }]);
-  }, 50);
-}
 
 </script>
 </body>
