@@ -473,46 +473,125 @@ function linearReg(xs, ys) {
   return { slope, intercept: my - slope*mx };
 }
 
-function buildForecast(daily, futureDays=90) {
-  if (daily.length < 5) return null;
-  const xs = daily.map((_,i)=>i);
-  const ypurch = daily.map(d=>d.purchases);
-  const yspend = daily.map(d=>d.spend);
-  const yroas  = daily.map(d=>d.revenue>0 && d.spend>0 ? d.revenue/d.spend : 0).filter(v=>v>0);
+function buildForecast(daily, daily90) {
+  // Use 90-day data for model fitting if available, else fall back to daily
+  const modelData = (daily90 && daily90.length >= 14) ? daily90 : daily;
+  if (modelData.length < 7) return null;
 
-  const rpurch = linearReg(xs, ypurch);
-  const rspend = linearReg(xs, yspend);
-  const avgROAS= yroas.length>0 ? yroas.reduce((a,b)=>a+b,0)/yroas.length : 0;
+  // ── Core metrics from model data ────────────────────────────────
+  const activeDays  = modelData.filter(d => d.spend > 10);
+  const avgSpendDay = activeDays.length > 0
+    ? activeDays.reduce((s,d)=>s+d.spend,0) / activeDays.length : 0;
 
-  const n = daily.length;
-  const projDays = Array.from({length:futureDays},(_,i)=>i);
-  const projPurch= projDays.map(i=>Math.max(0, rpurch.slope*(n+i)+rpurch.intercept));
-  const projSpend= projDays.map(i=>Math.max(0, rspend.slope*(n+i)+rspend.intercept));
+  // Avg order value (revenue per purchase)
+  const revenueData = modelData.filter(d=>d.revenue>0&&d.purchases>0);
+  const avgOrderVal = revenueData.length > 0
+    ? revenueData.reduce((s,d)=>s+d.revenue/d.purchases,0)/revenueData.length : 0;
 
-  // Monthly summaries (next 3 months)
-  const months = [];
-  const today = new Date();
-  for (let m=1; m<=3; m++) {
-    const mDate = new Date(today.getFullYear(), today.getMonth()+m, 1);
-    const daysInMonth = new Date(mDate.getFullYear(), mDate.getMonth()+1, 0).getDate();
-    const startDay = m===1 ? 0 : Array.from({length:m-1},(_,i)=>
-      new Date(today.getFullYear(),today.getMonth()+i+1,0).getDate()
-    ).reduce((a,b)=>a+b,0);
-    const slice = projPurch.slice(startDay, startDay+daysInMonth);
-    const sliceS= projSpend.slice(startDay, startDay+daysInMonth);
-    const mPurch= slice.reduce((a,b)=>a+b,0);
-    const mSpend= sliceS.reduce((a,b)=>a+b,0);
-    months.push({
-      label: mDate.toLocaleString('en-US',{month:'long',year:'numeric'}),
-      purchases: Math.round(mPurch),
-      spend: Math.round(mSpend),
-      revenue: Math.round(mSpend * avgROAS),
-      roas: avgROAS,
-    });
+  // Avg ATC-to-Purchase ratio
+  const atcData = modelData.filter(d=>d.atc>0&&d.purchases>0);
+  const atcRatio= atcData.length>0
+    ? atcData.reduce((s,d)=>s+d.atc/d.purchases,0)/atcData.length : 5;
+
+  // Historical ROAS
+  const roasData= modelData.filter(d=>d.revenue>0&&d.spend>0);
+  const avgROAS = roasData.length>0
+    ? roasData.reduce((s,d)=>s+d.revenue/d.spend,0)/roasData.length : 0;
+
+  // ── Fit log-linear curve: purchases = α×ln(spend) + β ───────────
+  const curve = fitCurve(modelData);
+
+  // ── Purchase trend (time-based) for trend indicator only ────────
+  const xs     = activeDays.map((_,i)=>i);
+  const ypurch = activeDays.map(d=>d.purchases);
+  const rtm    = linearReg(xs, ypurch);
+  const trend  = rtm.slope > 0.1 ? 'up' : rtm.slope < -0.1 ? 'down' : 'flat';
+
+  // ── Trend % (week-over-week in last 14 days of model data) ──────
+  const sorted = [...activeDays].sort((a,b)=>a.date.localeCompare(b.date));
+  const half   = Math.floor(sorted.length/2);
+  const firstH = sorted.slice(0,half);
+  const lastH  = sorted.slice(-half);
+  const avg1   = firstH.length>0 ? firstH.reduce((s,d)=>s+d.purchases,0)/firstH.length : 0;
+  const avg2   = lastH.length>0  ? lastH.reduce((s,d)=>s+d.purchases,0)/lastH.length   : 0;
+  const trendPct = avg1>0 ? ((avg2-avg1)/avg1*100) : 0;
+
+  // ── Current period reference (for growth % comparison) ──────────
+  const curMonthPur   = daily.reduce((s,d)=>s+d.purchases,0);
+  const curMonthSpend = daily.reduce((s,d)=>s+d.spend,0);
+  const curDays       = daily.filter(d=>d.spend>0).length || 1;
+  const curAvgDay     = curMonthSpend / curDays;
+
+  // ── Project 90 days forward ──────────────────────────────────────
+  const projDays  = 90;
+  const projPurch = [];
+  const projBest  = [];
+  const projWorst = [];
+
+  for (let i=0; i<projDays; i++) {
+    if (curve) {
+      const pred = predictDaily(curve, avgSpendDay);
+      projPurch.push(+pred.exp.toFixed(2));
+      projBest.push(+pred.best.toFixed(2));
+      projWorst.push(+pred.worst.toFixed(2));
+    } else {
+      const v = Math.max(0, rtm.slope*(activeDays.length+i)+rtm.intercept);
+      projPurch.push(+v.toFixed(2));
+      projBest.push(+(v*1.2).toFixed(2));
+      projWorst.push(+(v*0.8).toFixed(2));
+    }
   }
 
-  const trend = rpurch.slope > 0.05 ? 'up' : rpurch.slope < -0.05 ? 'down' : 'flat';
-  return { projPurch, projSpend, projDays, months, trend, avgROAS };
+  // ── Monthly summaries ────────────────────────────────────────────
+  const months = [];
+  const today  = new Date();
+  let dayOffset = 0;
+
+  for (let m=1; m<=3; m++) {
+    const mDate      = new Date(today.getFullYear(), today.getMonth()+m, 1);
+    const daysInMonth= new Date(mDate.getFullYear(), mDate.getMonth()+1, 0).getDate();
+    const slice      = projPurch.slice(dayOffset, dayOffset+daysInMonth);
+    const sliceB     = projBest.slice(dayOffset,  dayOffset+daysInMonth);
+    const sliceW     = projWorst.slice(dayOffset, dayOffset+daysInMonth);
+
+    const mPurch  = slice.reduce((a,b)=>a+b,0);
+    const mBest   = sliceB.reduce((a,b)=>a+b,0);
+    const mWorst  = sliceW.reduce((a,b)=>a+b,0);
+    const mSpend  = Math.round(avgSpendDay * daysInMonth);
+    const mRev    = avgOrderVal>0 ? Math.round(mPurch*avgOrderVal) : Math.round(mSpend*avgROAS);
+    const mRevB   = avgOrderVal>0 ? Math.round(mBest*avgOrderVal)  : Math.round(mSpend*avgROAS*1.2);
+    const mRevW   = avgOrderVal>0 ? Math.round(mWorst*avgOrderVal) : Math.round(mSpend*avgROAS*0.8);
+    const mCPP    = mPurch>0  ? Math.round(mSpend/mPurch)  : 0;
+    const mROAS   = mSpend>0  ? (mRev/mSpend).toFixed(2)   : '—';
+    const mATC    = Math.round(mPurch * atcRatio);
+    const refPur  = curMonthPur / curDays * daysInMonth;
+    const growthPct = refPur>0 ? ((mPurch-refPur)/refPur*100).toFixed(1) : null;
+
+    months.push({
+      label: mDate.toLocaleString('en-US',{month:'long',year:'numeric'}),
+      daysInMonth,
+      purchases: Math.round(mPurch),
+      best:      Math.round(mBest),
+      worst:     Math.round(mWorst),
+      spend:     mSpend,
+      revenue:   mRev,
+      revBest:   mRevB,
+      revWorst:  mRevW,
+      cpp:       mCPP,
+      roas:      mROAS,
+      atc:       mATC,
+      growthPct,
+    });
+    dayOffset += daysInMonth;
+  }
+
+  return {
+    projPurch, projBest, projWorst,
+    months, trend, trendPct,
+    avgSpendDay, avgROAS, avgOrderVal, atcRatio,
+    modelDays: modelData.length,
+    curve,
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -678,24 +757,63 @@ function renderAccountTab(accKey, rawData) {
   const daily = processDaily(rawData.daily);
   const camps = rawData.campaigns.map(c=>processCamp(c,rawData.currency)).sort((a,b)=>b.spend-a.spend);
   const ads   = rawData.ads.map(a=>processAd(a,rawData.currency)).sort((a,b)=>b.p-a.p);
-  const cur   = rawData.currency;
-  const fc    = buildForecast(daily, 90);
+  const cur      = rawData.currency;
+  const daily90p = processDaily(rawData.daily90 || rawData.daily);
+  const fc       = buildForecast(daily, daily90p);
 
-  const trendBadge = fc ? (
-    fc.trend==='up'   ? '<span class="trend-badge trend-up">📈 Upward Trend</span>' :
-    fc.trend==='down' ? '<span class="trend-badge trend-down">📉 Downward Trend</span>' :
-                        '<span class="trend-badge trend-flat">➡ Stable Trend</span>'
+  const trendPctStr = fc ? (fc.trendPct>0?`+${fc.trendPct.toFixed(1)}%`:`${fc.trendPct.toFixed(1)}%`) : '';
+  const trendBadge  = fc ? (
+    fc.trend==='up'   ? `<span class="trend-badge trend-up">📈 Upward Trend &nbsp;<strong>${trendPctStr}</strong> vs prior half-period</span>` :
+    fc.trend==='down' ? `<span class="trend-badge trend-down">📉 Downward Trend &nbsp;<strong>${trendPctStr}</strong> vs prior half-period</span>` :
+                        `<span class="trend-badge trend-flat">➡ Stable Trend &nbsp;<strong>${trendPctStr}</strong> vs prior half-period</span>`
   ) : '';
 
   const fcCards = fc ? fc.months.map(m=>`
-    <div class="fc-card">
-      <div class="fc-month">${m.label}</div>
-      <div class="fc-val">${m.purchases.toLocaleString()}</div>
-      <div class="fc-sub">est. purchases</div>
-      <div style="margin-top:6px;font-size:11px;color:#f59e0b">${cur} ${m.spend.toLocaleString()}</div>
-      <div style="font-size:10px;color:var(--muted)">est. spend</div>
-      ${m.revenue>0?`<div style="margin-top:4px;font-size:11px;color:var(--green)">${cur} ${m.revenue.toLocaleString()}</div><div style="font-size:10px;color:var(--muted)">est. revenue</div>`:''}
-    </div>`).join('') : '<p style="color:var(--muted);font-size:12px">Not enough data for forecast (need 5+ days)</p>';
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;min-width:220px;flex:1">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px">
+        📅 ${m.label}
+        ${m.growthPct!==null?`<span style="float:right;font-size:11px;padding:2px 7px;border-radius:10px;
+          background:${parseFloat(m.growthPct)>=0?'rgba(34,197,94,.15)':'rgba(239,68,68,.15)'};
+          color:${parseFloat(m.growthPct)>=0?'var(--green)':'var(--red)'}">
+          ${parseFloat(m.growthPct)>=0?'▲':'▼'} ${Math.abs(parseFloat(m.growthPct))}%
+        </span>`:''}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="text-align:center;background:var(--card2);border-radius:8px;padding:10px">
+          <div style="font-size:9px;color:var(--muted)">PURCHASES</div>
+          <div style="font-size:20px;font-weight:800;color:var(--c0)">${m.purchases.toLocaleString()}</div>
+          <div style="font-size:9px;color:var(--muted)">▲${m.best.toLocaleString()} / ▼${m.worst.toLocaleString()}</div>
+        </div>
+        <div style="text-align:center;background:var(--card2);border-radius:8px;padding:10px">
+          <div style="font-size:9px;color:var(--muted)">REVENUE</div>
+          <div style="font-size:16px;font-weight:800;color:var(--green)">${m.revenue>0?m.revenue.toLocaleString():'—'}</div>
+          <div style="font-size:9px;color:var(--muted)">${cur}</div>
+        </div>
+        <div style="text-align:center;background:var(--card2);border-radius:8px;padding:10px">
+          <div style="font-size:9px;color:var(--muted)">EST. SPEND</div>
+          <div style="font-size:16px;font-weight:800;color:var(--yellow)">${m.spend.toLocaleString()}</div>
+          <div style="font-size:9px;color:var(--muted)">${cur}</div>
+        </div>
+        <div style="text-align:center;background:var(--card2);border-radius:8px;padding:10px">
+          <div style="font-size:9px;color:var(--muted)">ROAS</div>
+          <div style="font-size:16px;font-weight:800;color:${parseFloat(m.roas)>5?'var(--green)':parseFloat(m.roas)>2?'var(--yellow)':'var(--red)'}">${m.roas}x</div>
+          <div style="font-size:9px;color:var(--muted)">est.</div>
+        </div>
+        <div style="text-align:center;background:var(--card2);border-radius:8px;padding:10px">
+          <div style="font-size:9px;color:var(--muted)">CPP</div>
+          <div style="font-size:16px;font-weight:800;color:var(--c1)">${m.cpp>0?m.cpp.toLocaleString():'—'}</div>
+          <div style="font-size:9px;color:var(--muted)">${cur}</div>
+        </div>
+        <div style="text-align:center;background:var(--card2);border-radius:8px;padding:10px">
+          <div style="font-size:9px;color:var(--muted)">EST. ATC</div>
+          <div style="font-size:16px;font-weight:800;color:var(--c5)">${m.atc.toLocaleString()}</div>
+          <div style="font-size:9px;color:var(--muted)">add to cart</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:10px;color:var(--muted);text-align:center">
+        Best: ${m.revBest.toLocaleString()} ${cur} rev &nbsp;|&nbsp; Worst: ${m.revWorst.toLocaleString()} ${cur} rev
+      </div>
+    </div>`).join('') : '<p style="color:var(--muted);font-size:12px">Not enough data for forecast (need 7+ active days)</p>';
 
   const campRows = camps.slice(0,15).map(c=>`
     <tr>
@@ -733,14 +851,18 @@ function renderAccountTab(accKey, rawData) {
   let fcChartLabels = [...chartLabels];
   let fcChartActual = [...chartPur];
   let fcChartProj   = Array(chartPur.length).fill(null);
+  let fcChartBest   = Array(chartPur.length).fill(null);
+  let fcChartWorst  = Array(chartPur.length).fill(null);
   if (fc) {
     const futureDates = Array.from({length:30},(_,i)=>{
       const d=new Date(); d.setDate(d.getDate()+i+1);
       return d.toISOString().slice(5,10);
     });
     fcChartLabels = [...fcChartLabels, ...futureDates];
-    fcChartProj   = [...Array(chartPur.length).fill(null), ...fc.projPurch.slice(0,30).map(v=>+v.toFixed(1))];
     fcChartActual = [...fcChartActual, ...Array(30).fill(null)];
+    fcChartProj   = [...Array(chartPur.length).fill(null), ...fc.projPurch.slice(0,30).map(v=>+v.toFixed(1))];
+    fcChartBest   = [...Array(chartPur.length).fill(null), ...fc.projBest.slice(0,30).map(v=>+v.toFixed(1))];
+    fcChartWorst  = [...Array(chartPur.length).fill(null), ...fc.projWorst.slice(0,30).map(v=>+v.toFixed(1))];
   }
 
   const el = document.getElementById(`tab-${accKey}`);
@@ -802,34 +924,62 @@ function renderAccountTab(accKey, rawData) {
 
     <div class="section">
       <h2 style="border-bottom-color:${acc_cfg.color}">🔮 Sales Forecast – Next 3 Months</h2>
-      ${trendBadge}
-      <div class="charts-2" style="margin-bottom:16px">
-        <div class="chart-card"><h3>Actual vs Projected Purchases</h3><canvas id="ch-fc-${accKey}" height="200"></canvas></div>
-        <div class="chart-card"><h3>Key Metrics Summary</h3>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+        ${trendBadge}
+        ${fc?`<span style="font-size:11px;color:var(--muted)">
+          Based on <strong style="color:var(--text)">${fc.modelDays} days</strong> of data &nbsp;|&nbsp;
+          Avg daily spend: <strong style="color:var(--yellow)">${cur} ${Math.round(fc.avgSpendDay).toLocaleString()}</strong> &nbsp;|&nbsp;
+          Avg ROAS: <strong style="color:var(--green)">${fc.avgROAS>0?fc.avgROAS.toFixed(2)+'x':'—'}</strong>
+        </span>`:''}
+      </div>
+
+      <div class="charts-2" style="margin-bottom:20px">
+        <div class="chart-card">
+          <h3>Actual vs Projected (with Confidence Band)</h3>
+          <canvas id="ch-fc-${accKey}" height="220"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Key Metrics (from 90-day model)</h3>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
             <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center">
               <div style="font-size:10px;color:var(--muted)">Avg Daily Purchases</div>
-              <div style="font-size:20px;font-weight:800;color:var(--c1)">${daily.length>0?(daily.reduce((s,d)=>s+d.purchases,0)/daily.length).toFixed(1):'—'}</div>
+              <div style="font-size:22px;font-weight:800;color:var(--c1)">${daily90p.length>0?(daily90p.reduce((s,d)=>s+d.purchases,0)/Math.max(1,daily90p.filter(d=>d.spend>0).length)).toFixed(1):'—'}</div>
             </div>
             <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center">
               <div style="font-size:10px;color:var(--muted)">Avg Daily Spend</div>
-              <div style="font-size:20px;font-weight:800;color:var(--yellow)">${daily.length>0?fmtK(daily.reduce((s,d)=>s+d.spend,0)/daily.length):'—'}</div>
+              <div style="font-size:22px;font-weight:800;color:var(--yellow)">${fc?fmtK(fc.avgSpendDay):'—'}</div>
               <div style="font-size:9px;color:var(--muted)">${cur}</div>
             </div>
             <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--muted)">Avg Order Value</div>
+              <div style="font-size:22px;font-weight:800;color:var(--green)">${fc&&fc.avgOrderVal>0?fmtK(fc.avgOrderVal):'—'}</div>
+              <div style="font-size:9px;color:var(--muted)">${cur}</div>
+            </div>
+            <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--muted)">ATC / Purchase ratio</div>
+              <div style="font-size:22px;font-weight:800;color:var(--c0)">${fc?fc.atcRatio.toFixed(1)+'x':'—'}</div>
+              <div style="font-size:9px;color:var(--muted)">avg</div>
+            </div>
+            <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center">
               <div style="font-size:10px;color:var(--muted)">Historical ROAS</div>
-              <div style="font-size:20px;font-weight:800;color:var(--green)">${acc.roas>0?acc.roas.toFixed(2)+'x':'—'}</div>
+              <div style="font-size:22px;font-weight:800;color:var(--green)">${acc.roas>0?acc.roas.toFixed(2)+'x':'—'}</div>
             </div>
             <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center">
               <div style="font-size:10px;color:var(--muted)">Historical CPP</div>
-              <div style="font-size:20px;font-weight:800;color:var(--c0)">${acc.cpp>0?fmt(acc.cpp,0):'—'}</div>
+              <div style="font-size:22px;font-weight:800;color:var(--c0)">${acc.cpp>0?fmt(acc.cpp,0):'—'}</div>
               <div style="font-size:9px;color:var(--muted)">${cur}</div>
             </div>
           </div>
         </div>
       </div>
-      <div class="forecast-summary">${fcCards}</div>
-      <p style="font-size:11px;color:var(--muted);margin-top:10px">⚠️ Forecast based on linear trend from the selected date range. Actual results may vary due to seasonality, budget changes, or creative performance.</p>
+
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px">${fcCards}</div>
+
+      <p style="font-size:11px;color:var(--muted);line-height:1.7">
+        ⚠️ <strong>Spend projection</strong> = avg daily spend from 90-day history × days in month (not a trend prediction — spend is a business decision).
+        &nbsp;|&nbsp; <strong>Purchases</strong> = Log-Linear model (spend→purchases) with ±1σ confidence.
+        &nbsp;|&nbsp; <strong>Growth %</strong> vs current period (annualized per day).
+      </p>
     </div>
 
     <div class="section">
@@ -920,9 +1070,19 @@ function renderAccountTab(accKey, rawData) {
       backgroundColor:'rgba(34,197,94,0.7)', borderColor:'#22c55e', borderWidth:1
     }]);
     mkChart(`ch-fc-${accKey}`, 'line', fcChartLabels, [
-      { label:'Actual', data:fcChartActual, borderColor:acc_cfg.color, backgroundColor:'transparent', pointRadius:2, tension:0.3 },
-      { label:'Projected', data:fcChartProj, borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,.1)',
-        borderDash:[5,4], pointRadius:2, tension:0.3, fill:true },
+      // Confidence band: best (upper) fills DOWN to worst (lower) — draw first so actual sits on top
+      { label:'Best Case',  data:fcChartBest,  borderColor:'rgba(34,197,94,0.35)',
+        backgroundColor:'rgba(34,197,94,0.12)', borderWidth:1, pointRadius:0, tension:0.3,
+        borderDash:[3,3], fill:'+1' },
+      { label:'Worst Case', data:fcChartWorst, borderColor:'rgba(239,68,68,0.35)',
+        backgroundColor:'transparent', borderWidth:1, pointRadius:0, tension:0.3,
+        borderDash:[3,3], fill:false },
+      // Expected projection line
+      { label:'Projected (Expected)', data:fcChartProj, borderColor:'#f59e0b',
+        backgroundColor:'transparent', borderDash:[6,4], pointRadius:2, tension:0.3, fill:false },
+      // Actual historical line
+      { label:'Actual', data:fcChartActual, borderColor:acc_cfg.color,
+        backgroundColor:'transparent', pointRadius:3, tension:0.3, fill:false },
     ], {legend:true});
   }, 50);
 }
