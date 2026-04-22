@@ -1011,16 +1011,13 @@ function updateCalc(accKey) {
     if (res.fallback) {
       modelEl.innerHTML = `<span style="color:var(--yellow)">⚠️ Limited data — using simple linear model (need 4+ days with purchases)</span>`;
     } else {
-      const q = res.r2Raw>=0.7?'🟢 High':'res.r2Raw>=0.4?🟡 Medium':'🔴 Low';
       const qColor = res.r2Raw>=0.7?'var(--green)':res.r2Raw>=0.4?'var(--yellow)':'var(--red)';
+      const qIcon  = res.r2Raw>=0.7?'🟢':res.r2Raw>=0.4?'🟡':'🔴';
+      const qText  = res.r2Raw>=0.7?'High confidence':res.r2Raw>=0.4?'Moderate confidence':'Low confidence — more data needed';
       modelEl.innerHTML = `
-        <span style="color:${qColor};font-weight:700">
-          ${res.r2Raw>=0.7?'🟢':res.r2Raw>=0.4?'🟡':'🔴'} Model Accuracy: R² = ${res.r2}%
-        </span>
+        <span style="color:${qColor};font-weight:700">${qIcon} Model Accuracy: R² = ${res.r2}%</span>
         &nbsp;|&nbsp; Fitted on <strong>${res.n}</strong> days of data
-        &nbsp;|&nbsp; <span style="color:var(--muted)">
-          ${res.r2Raw>=0.7?'High confidence':'res.r2Raw>=0.4?Moderate confidence':'Low confidence — more data needed'}
-        </span>`;
+        &nbsp;|&nbsp; <span style="color:var(--muted)">${qText}</span>`;
     }
   }
 
