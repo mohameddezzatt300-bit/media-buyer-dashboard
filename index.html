@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Media Buyer – Unified Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0b0d14;--card:#151822;--card2:#1d2135;--card3:#242840;
+  --text:#e2e8f0;--muted:#64748b;--border:#252840;
+  --font:'Segoe UI',Tahoma,Arial,sans-serif;
+  --green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;
+  --c0:#6c63ff;--c1:#06b6d4;--c2:#22c55e;--c3:#f59e0b;--c4:#ec4899;--c5:#a78bfa;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh}
+
+/* ── TOP BAR ── */
+.topbar{position:sticky;top:0;z-index:100;background:#0d0f1a;border-bottom:1px solid var(--border);
+        display:flex;align-items:center;gap:10px;padding:0 18px;height:52px;overflow-x:auto}
+.logo{font-weight:800;font-size:15px;white-space:nowrap;margin-right:6px;
+      background:linear-gradient(90deg,var(--c0),var(--c1));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.acc-tabs{display:flex;gap:2px;flex:1;overflow-x:auto}
+.acc-tab{padding:6px 13px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;
+         white-space:nowrap;border:none;background:transparent;color:var(--muted);transition:.2s}
+.acc-tab:hover{background:var(--card2);color:var(--text)}
+.acc-tab.active{color:#fff}
+.controls{display:flex;align-items:center;gap:8px;margin-left:auto;white-space:nowrap}
+.date-inp{background:var(--card2);border:1px solid var(--border);color:var(--text);
+          border-radius:7px;padding:5px 9px;font-size:12px;cursor:pointer}
+.date-inp::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.5}
+.btn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;
+     border:none;transition:.2s}
+.btn-refresh{background:var(--c0);color:#fff}
+.btn-refresh:hover{opacity:.85}
+.btn-settings{background:var(--card2);color:var(--muted);border:1px solid var(--border)}
+.btn-settings:hover{color:var(--text)}
+.btn-refresh.loading{animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ── LAYOUT ── */
+.page{max-width:1400px;margin:0 auto;padding:20px 16px}
+.tab-content{display:none}.tab-content.active{display:block}
+h2{font-size:19px;font-weight:700;margin-bottom:16px;padding-bottom:9px;border-bottom:2px solid var(--border)}
+h3{font-size:14px;font-weight:600;margin-bottom:11px;color:var(--muted)}
+.section{margin-bottom:36px}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:11px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 12px;text-align:center;transition:.2s}
+.kpi:hover{border-color:var(--c0);transform:translateY(-2px)}
+.kpi .k-label{font-size:10px;color:var(--muted);margin-bottom:4px}
+.kpi .k-val{font-size:20px;font-weight:800}
+.kpi .k-sub{font-size:9px;color:var(--muted);margin-top:2px}
+.kpi.kg .k-val{color:var(--green)}.kpi.kr .k-val{color:var(--red)}
+.kpi.ky .k-val{color:var(--yellow)}.kpi.kb .k-val{color:var(--c0)}
+.kpi.kc .k-val{color:var(--c1)}
+
+/* ── CHARTS ── */
+.charts-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.charts-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:900px){.charts-2,.charts-3{grid-template-columns:1fr}}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.chart-card h3{margin-bottom:12px}
+
+/* ── TABLES ── */
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;background:var(--card)}
+thead tr{background:var(--card2)}
+th{padding:9px 9px;font-size:11px;color:var(--muted);text-align:left;font-weight:600;white-space:nowrap}
+td{padding:8px 9px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(108,99,255,.05)}
+.name-cell{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.tg{color:var(--green);font-weight:700}td.tr{color:var(--red);font-weight:700}
+td.ty{color:var(--yellow);font-weight:700}
+
+/* ── OVERVIEW CARDS ── */
+.overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:24px}
+.acc-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;
+          cursor:pointer;transition:.2s}
+.acc-card:hover{transform:translateY(-3px)}
+.acc-card .ac-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.acc-dot{width:12px;height:12px;border-radius:50%}
+.acc-card .ac-name{font-weight:700;font-size:14px}
+.acc-card .ac-cur{font-size:11px;color:var(--muted);margin-left:auto}
+.acc-card .ac-kpis{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.ac-kpi{text-align:center}
+.ac-kpi .v{font-size:17px;font-weight:800}
+.ac-kpi .l{font-size:9px;color:var(--muted);margin-top:2px}
+
+/* ── FORECAST ── */
+.forecast-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:11px;margin-top:14px}
+.fc-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.fc-card .fc-month{font-size:10px;color:var(--muted);margin-bottom:6px}
+.fc-card .fc-val{font-size:18px;font-weight:800;color:var(--c1)}
+.fc-card .fc-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.trend-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;
+             font-size:11px;font-weight:700;margin-bottom:12px}
+.trend-up{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+.trend-down{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.trend-flat{background:rgba(100,116,139,.15);color:var(--muted);border:1px solid rgba(100,116,139,.3)}
+
+/* ── BUDGET CALC ── */
+.calc-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px}
+.calc-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.calc-label{font-size:13px;color:var(--muted);white-space:nowrap}
+.calc-input{background:var(--card2);border:1px solid var(--border);color:var(--text);
+            border-radius:8px;padding:9px 13px;font-size:16px;font-weight:700;width:200px}
+.calc-input:focus{outline:none;border-color:var(--c0)}
+.calc-currency{font-size:13px;color:var(--muted)}
+.calc-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:11px}
+.calc-res-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.calc-res-card .rv{font-size:22px;font-weight:800;color:var(--c0)}
+.calc-res-card .rl{font-size:10px;color:var(--muted);margin-top:4px}
+.calc-note{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.7}
+
+/* ── TOKEN MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;
+               align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;
+       max-width:480px;width:90%}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.7}
+.modal input{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);
+             border-radius:8px;padding:10px 13px;font-size:13px;margin-bottom:14px}
+.modal input:focus{outline:none;border-color:var(--c0)}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end}
+
+/* ── LOADING ── */
+.loading-bar{height:3px;background:linear-gradient(90deg,var(--c0),var(--c1));position:fixed;
+             top:52px;left:0;width:0;z-index:99;transition:width .3s}
+
+/* ── EMPTY / ERROR STATE ── */
+.empty-state{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-state .big{font-size:36px;margin-bottom:10px}
+
+/* ── TAGS ── */
+.obj-tag{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700}
+.tag-sw{background:rgba(108,99,255,.2);color:var(--c0)}
+.tag-pe{background:rgba(6,182,212,.2);color:var(--c1)}
+.tag-sm{background:rgba(245,158,11,.2);color:var(--yellow)}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.two-col{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">📊 MediaBuyer</div>
+  <div class="acc-tabs" id="accTabs">
+    <button class="acc-tab active" onclick="switchTab('overview')" data-tab="overview">🌐 Overview</button>
+    <button class="acc-tab" onclick="switchTab('acc0')" data-tab="acc0" style="color:var(--c0)">Coctail Media</button>
+    <button class="acc-tab" onclick="switchTab('acc1')" data-tab="acc1" style="color:var(--c1)">The Mat GCC</button>
+    <button class="acc-tab" onclick="switchTab('acc2')" data-tab="acc2" style="color:var(--c2)">The Mat</button>
+    <button class="acc-tab" onclick="switchTab('acc3')" data-tab="acc3" style="color:var(--c3)">Minibinis</button>
+    <button class="acc-tab" onclick="switchTab('acc4')" data-tab="acc4" style="color:var(--c4)">Padel Lovers</button>
+    <button class="acc-tab" onclick="switchTab('acc5')" data-tab="acc5" style="color:var(--c5)">CHOU</button>
+  </div>
+  <div class="controls">
+    <input type="date" class="date-inp" id="dateFrom">
+    <span style="color:var(--muted);font-size:12px">→</span>
+    <input type="date" class="date-inp" id="dateTo">
+    <button class="btn btn-refresh" id="refreshBtn" onclick="refreshAll()">⟳ Refresh</button>
+    <button class="btn btn-settings" onclick="openModal()">⚙ Token</button>
+  </div>
+</div>
+
+<div class="loading-bar" id="loadingBar"></div>
+
+<!-- TOKEN MODAL -->
+<div class="modal-overlay" id="tokenModal">
+  <div class="modal">
+    <h3>🔑 Meta Access Token</h3>
+    <p>Enter your Meta Ads Manager token. It will be saved in your browser.<br>
+       Get it from: <strong>developers.facebook.com/tools/explorer</strong><br>
+       Required permissions: <code>ads_read</code></p>
+    <input type="password" id="tokenInput" placeholder="EAAXw6s8...">
+    <div class="modal-btns">
+      <button class="btn btn-settings" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-refresh" onclick="saveToken()">Save & Load</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="page">
+
+  <!-- ═══ OVERVIEW TAB ═══ -->
+  <div class="tab-content active" id="tab-overview">
+    <div class="section">
+      <h2>🌐 All Accounts – Overview</h2>
+      <div class="overview-grid" id="overviewCards">
+        <div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong> to load data</p></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="charts-3" id="overviewCharts">
+        <div class="chart-card"><h3>Total Spend by Account</h3><canvas id="ov-spend-chart"></canvas></div>
+        <div class="chart-card"><h3>Purchases by Account</h3><canvas id="ov-pur-chart"></canvas></div>
+        <div class="chart-card"><h3>ROAS by Account</h3><canvas id="ov-roas-chart"></canvas></div>
+      </div>
+    </div>
+    <div class="section">
+      <h2>📊 Comparison Table</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Account</th><th>Currency</th><th>Spend</th><th>Revenue</th>
+            <th>Purchases</th><th>ROAS</th><th>CPP</th><th>CTR</th><th>CPM</th><th>Frequency</th>
+          </tr></thead>
+          <tbody id="overviewTable"><tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">— Load data to see comparison —</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ INDIVIDUAL ACCOUNT TABS (x6) ═══ -->
+  <div class="tab-content" id="tab-acc0"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc1"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc2"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc3"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc4"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc5"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+
+</div><!-- /page -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
+const ACCOUNTS = [
+  { key:'acc0', name:'Coctail Media',      id:'act_1149171159569221', currency:'EGP', color:'#6c63ff' },
+  { key:'acc1', name:'The Mat GCC',        id:'act_1548007903197582', currency:'AED', color:'#06b6d4' },
+  { key:'acc2', name:'The Mat',            id:'act_2294987800786358', currency:'EGP', color:'#22c55e' },
+  { key:'acc3', name:'Minibinis',          id:'act_403326348515695',  currency:'EGP', color:'#f59e0b' },
+  { key:'acc4', name:'Padel Lovers Egypt', id:'act_3379856628908690', currency:'EGP', color:'#ec4899' },
+  { key:'acc5', name:'CHOU',               id:'act_295161357941522',  currency:'EGP', color:'#a78bfa' },
+];
+const GV = 'v21.0';
+const CHART_INSTANCES = {};
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const state = {
+  token: localStorage.getItem('meta_token') || '',
+  since: '',
+  until: '',
+  activeTab: 'overview',
+  cache: {},
+  loading: false,
+};
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+(function init() {
+  const today = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+  state.since = fmtDate(firstDay);
+  state.until = fmtDate(today);
+  document.getElementById('dateFrom').value = state.since;
+  document.getElementById('dateTo').value   = state.until;
+
+  document.getElementById('dateFrom').addEventListener('change', e => { state.since = e.target.value; state.cache = {}; });
+  document.getElementById('dateTo').addEventListener('change',   e => { state.until = e.target.value; state.cache = {}; });
+
+  if (!state.token) { setTimeout(openModal, 600); }
+  else { refreshAll(); }
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+function fmtDate(d) {
+  return d.toISOString().split('T')[0];
+}
+function fmt(v, dec=0, cur='') {
+  if (!v || v === 0) return '—';
+  return (cur ? cur+' ' : '') + parseFloat(v).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+function fmtK(v) {
+  if (!v) return '—';
+  if (v >= 1e6) return (v/1e6).toFixed(1)+'M';
+  if (v >= 1e3) return (v/1e3).toFixed(1)+'K';
+  return Math.round(v).toString();
+}
+function ga(actions, type) {
+  return parseFloat((actions||[]).find(a=>a.action_type===type)?.value||0);
+}
+function gv(actionValues, type) {
+  return parseFloat((actionValues||[]).find(a=>a.action_type===type)?.value||0);
+}
+function objTag(name) {
+  const n = (name||'').toLowerCase();
+  if (n.includes('post engagement')) return '<span class="obj-tag tag-pe">Post Engagement</span>';
+  if (n.includes('messages')) return '<span class="obj-tag tag-sm">Messages</span>';
+  return '<span class="obj-tag tag-sw">Sales Website</span>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// META API
+// ═══════════════════════════════════════════════════════════════
+async function metaFetch(path, params={}) {
+  const url = new URL(`https://graph.facebook.com/${GV}/${path}`);
+  params.access_token = state.token;
+  for (const [k,v] of Object.entries(params)) {
+    url.searchParams.set(k, typeof v === 'object' ? JSON.stringify(v) : v);
+  }
+  const res = await fetch(url.toString());
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data;
+}
+
+async function fetchAllPages(path, params={}) {
+  let results = [];
+  let r = await metaFetch(path, params);
+  results = results.concat(r.data || []);
+  while (r.paging?.next) {
+    r = await fetch(r.paging.next).then(x => x.json());
+    if (r.error) break;
+    results = results.concat(r.data || []);
+  }
+  return results;
+}
+
+async function loadAccount(acc) {
+  const tr = { since: state.since, until: state.until };
+
+  // Summary
+  const [sumData] = await fetchAllPages(`${acc.id}/insights`, {
+    fields: 'spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,actions,action_values',
+    time_range: tr,
+  });
+
+  // Daily
+  const daily = await fetchAllPages(`${acc.id}/insights`, {
+    fields: 'spend,impressions,clicks,ctr,cpc,cpm,reach,actions,action_values,date_start',
+    time_range: tr,
+    time_increment: 1,
+    limit: 90,
+  });
+
+  // Campaigns
+  const campaigns = await fetchAllPages(`${acc.id}/insights`, {
+    fields: 'campaign_name,spend,impressions,clicks,ctr,cpm,frequency,actions,action_values',
+    time_range: tr,
+    level: 'campaign',
+    limit: 50,
+  });
+
+  // Ads (for creatives)
+  const ads = await fetchAllPages(`${acc.id}/insights`, {
+    fields: 'ad_name,campaign_name,spend,impressions,clicks,ctr,cpm,actions,action_values,video_p25_watched_actions,video_p50_watched_actions,video_p100_watched_actions',
+    time_range: tr,
+    level: 'ad',
+    limit: 100,
+  });
+
+  return { summary: sumData || {}, daily, campaigns, ads, currency: acc.currency };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PROCESS DATA
+// ═══════════════════════════════════════════════════════════════
+function processSum(d, currency) {
+  if (!d) return null;
+  const spend    = parseFloat(d.spend||0);
+  const impr     = parseInt(d.impressions||0);
+  const clicks   = parseInt(d.clicks||0);
+  const reach    = parseInt(d.reach||0);
+  const purchases= ga(d.actions,'purchase');
+  const atc      = ga(d.actions,'add_to_cart');
+  const checkout = ga(d.actions,'initiate_checkout');
+  const vc       = ga(d.actions,'view_content');
+  const msgs     = ga(d.actions,'onsite_conversion.total_messaging_connection');
+  const revenue  = gv(d.action_values,'purchase');
+  return {
+    spend, impr, clicks, reach, purchases, atc, checkout, vc, msgs, revenue,
+    cpp:  purchases>0 ? spend/purchases   : 0,
+    roas: spend>0 && revenue>0 ? revenue/spend : 0,
+    ctr:  parseFloat(d.ctr||0),
+    cpm:  parseFloat(d.cpm||0),
+    cpc:  parseFloat(d.cpc||0),
+    freq: parseFloat(d.frequency||0),
+    currency,
+  };
+}
+
+function processDaily(daily) {
+  return daily.sort((a,b)=>a.date_start.localeCompare(b.date_start)).map(d => ({
+    date:      d.date_start,
+    spend:     parseFloat(d.spend||0),
+    purchases: ga(d.actions,'purchase'),
+    atc:       ga(d.actions,'add_to_cart'),
+    revenue:   gv(d.action_values,'purchase'),
+    ctr:       parseFloat(d.ctr||0),
+    cpm:       parseFloat(d.cpm||0),
+  }));
+}
+
+function processCamp(c, currency) {
+  const sp = parseFloat(c.spend||0);
+  const p  = ga(c.actions,'purchase');
+  const atc= ga(c.actions,'add_to_cart');
+  const msgs=ga(c.actions,'onsite_conversion.total_messaging_connection');
+  const rev= gv(c.action_values,'purchase');
+  return {
+    name: c.campaign_name, currency,
+    spend:sp, p, atc, msgs, revenue:rev,
+    cpp:  p>0 ? sp/p : 0,
+    roas: sp>0 && rev>0 ? rev/sp : 0,
+    ctr:  parseFloat(c.ctr||0),
+    cpm:  parseFloat(c.cpm||0),
+    freq: parseFloat(c.frequency||0),
+  };
+}
+
+function processAd(a, currency) {
+  const sp   = parseFloat(a.spend||0);
+  const impr = parseInt(a.impressions||0);
+  const p    = ga(a.actions,'purchase');
+  const vv   = ga(a.actions,'video_view');
+  const rev  = gv(a.action_values,'purchase');
+  const p50v = parseFloat(a.video_p50_watched_actions?.[0]?.value||0);
+  const p100v= parseFloat(a.video_p100_watched_actions?.[0]?.value||0);
+  return {
+    name: a.ad_name, campaign: a.campaign_name, currency,
+    spend:sp, impr, p, vv, revenue:rev,
+    cpp:  p>0 ? sp/p : 0,
+    roas: sp>0 && rev>0 ? rev/sp : 0,
+    ctr:  parseFloat(a.ctr||0),
+    cpm:  parseFloat(a.cpm||0),
+    hook: impr>0 && vv>0 ? vv/impr*100 : 0,
+    p50:  vv>0 && p50v>0 ? p50v/vv*100 : 0,
+    comp: vv>0 && p100v>0 ? p100v/vv*100 : 0,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FORECASTING (Linear Regression)
+// ═══════════════════════════════════════════════════════════════
+function linearReg(xs, ys) {
+  const n = xs.length;
+  if (n < 3) return {slope:0, intercept:ys.reduce((a,b)=>a+b,0)/n||0};
+  const mx = xs.reduce((a,b)=>a+b,0)/n;
+  const my = ys.reduce((a,b)=>a+b,0)/n;
+  const num = xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0);
+  const den = xs.reduce((s,x)=>s+(x-mx)**2,0);
+  const slope = den>0 ? num/den : 0;
+  return { slope, intercept: my - slope*mx };
+}
+
+function buildForecast(daily, futureDays=90) {
+  if (daily.length < 5) return null;
+  const xs = daily.map((_,i)=>i);
+  const ypurch = daily.map(d=>d.purchases);
+  const yspend = daily.map(d=>d.spend);
+  const yroas  = daily.map(d=>d.revenue>0 && d.spend>0 ? d.revenue/d.spend : 0).filter(v=>v>0);
+
+  const rpurch = linearReg(xs, ypurch);
+  const rspend = linearReg(xs, yspend);
+  const avgROAS= yroas.length>0 ? yroas.reduce((a,b)=>a+b,0)/yroas.length : 0;
+
+  const n = daily.length;
+  const projDays = Array.from({length:futureDays},(_,i)=>i);
+  const projPurch= projDays.map(i=>Math.max(0, rpurch.slope*(n+i)+rpurch.intercept));
+  const projSpend= projDays.map(i=>Math.max(0, rspend.slope*(n+i)+rspend.intercept));
+
+  // Monthly summaries (next 3 months)
+  const months = [];
+  const today = new Date();
+  for (let m=1; m<=3; m++) {
+    const mDate = new Date(today.getFullYear(), today.getMonth()+m, 1);
+    const daysInMonth = new Date(mDate.getFullYear(), mDate.getMonth()+1, 0).getDate();
+    const startDay = m===1 ? 0 : Array.from({length:m-1},(_,i)=>
+      new Date(today.getFullYear(),today.getMonth()+i+1,0).getDate()
+    ).reduce((a,b)=>a+b,0);
+    const slice = projPurch.slice(startDay, startDay+daysInMonth);
+    const sliceS= projSpend.slice(startDay, startDay+daysInMonth);
+    const mPurch= slice.reduce((a,b)=>a+b,0);
+    const mSpend= sliceS.reduce((a,b)=>a+b,0);
+    months.push({
+      label: mDate.toLocaleString('en-US',{month:'long',year:'numeric'}),
+      purchases: Math.round(mPurch),
+      spend: Math.round(mSpend),
+      revenue: Math.round(mSpend * avgROAS),
+      roas: avgROAS,
+    });
+  }
+
+  const trend = rpurch.slope > 0.05 ? 'up' : rpurch.slope < -0.05 ? 'down' : 'flat';
+  return { projPurch, projSpend, projDays, months, trend, avgROAS };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BUDGET CALCULATOR
+// ═══════════════════════════════════════════════════════════════
+function calcBudget(inputSpend, acc, daily) {
+  const cpp  = acc.cpp  || (daily.reduce((s,d)=>s+(d.purchases||0),0)>0 ? daily.reduce((s,d)=>s+d.spend,0)/daily.reduce((s,d)=>s+(d.purchases||0),0) : 0);
+  const roas = acc.roas || (daily.reduce((s,d)=>s+(d.revenue||0),0)>0 ? daily.reduce((s,d)=>s+d.revenue,0)/daily.reduce((s,d)=>s+d.spend,0) : 0);
+  const estPurch   = cpp>0   ? Math.round(inputSpend/cpp)  : 0;
+  const estRevenue = roas>0  ? Math.round(inputSpend*roas) : 0;
+  return { estPurch, estRevenue, cpp: Math.round(cpp), roas: roas.toFixed(2), estROAS: roas };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════════════════════
+function mkChart(id, type, labels, datasets, opts={}) {
+  if (CHART_INSTANCES[id]) { CHART_INSTANCES[id].destroy(); }
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  const grid = 'rgba(255,255,255,0.05)';
+  CHART_INSTANCES[id] = new Chart(ctx, {
+    type,
+    data: { labels, datasets },
+    options: {
+      responsive:true,
+      plugins:{ legend:{ display: opts.legend||false, labels:{color:'#94a3b8',font:{size:11}} } },
+      scales: type==='doughnut'||type==='pie' ? {} : {
+        x:{ ticks:{color:'#64748b',maxRotation:45,font:{size:10}}, grid:{color:grid} },
+        y:{ ticks:{color:'#64748b',font:{size:10}}, grid:{color:grid} },
+      },
+      ...opts.extra,
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER: INDIVIDUAL ACCOUNT TAB
+// ═══════════════════════════════════════════════════════════════
+function renderAccountTab(accKey, rawData) {
+  const acc_cfg = ACCOUNTS.find(a=>a.key===accKey);
+  const acc   = processSum(rawData.summary, rawData.currency);
+  const daily = processDaily(rawData.daily);
+  const camps = rawData.campaigns.map(c=>processCamp(c,rawData.currency)).sort((a,b)=>b.spend-a.spend);
+  const ads   = rawData.ads.map(a=>processAd(a,rawData.currency)).sort((a,b)=>b.p-a.p);
+  const cur   = rawData.currency;
+  const fc    = buildForecast(daily, 90);
+
+  const trendBadge = fc ? (
+    fc.trend==='up'   ? '<span class="trend-badge trend-up">📈 Upward Trend</span>' :
+    fc.trend==='down' ? '<span class="trend-badge trend-down">📉 Downward Trend</span>' :
+                        '<span class="trend-badge trend-flat">➡ Stable Trend</span>'
+  ) : '';
+
+  const fcCards = fc ? fc.months.map(m=>`
+    <div class="fc-card">
+      <div class="fc-month">${m.label}</div>
+      <div class="fc-val">${m.purchases.toLocaleString()}</div>
+      <div class="fc-sub">est. purchases</div>
+      <div style="margin-top:6px;font-size:11px;color:#f59e0b">${cur} ${m.spend.toLocaleString()}</div>
+      <div style="font-size:10px;color:var(--muted)">est. spend</div>
+      ${m.revenue>0?`<div style="margin-top:4px;font-size:11px;color:var(--green)">${cur} ${m.revenue.toLocaleString()}</div><div style="font-size:10px;color:var(--muted)">est. revenue</div>`:''}
+    </div>`).join('') : '<p style="color:var(--muted);font-size:12px">Not enough data for forecast (need 5+ days)</p>';
+
+  const campRows = camps.slice(0,15).map(c=>`
+    <tr>
+      <td class="name-cell">${c.name}</td>
+      <td>${objTag(c.name)}</td>
+      <td>${fmt(c.spend,0)}</td>
+      <td>${c.ctr>0?c.ctr.toFixed(2)+'%':'—'}</td>
+      <td>${fmt(c.cpm,0)}</td>
+      <td>${fmt(c.freq,2)}</td>
+      <td class="${c.p>0?'tg':''}">${c.p||'—'}</td>
+      <td>${fmt(c.atc,0)}</td>
+      <td class="${c.msgs>0?'ty':''}">${c.msgs||'—'}</td>
+      <td class="${c.cpp>0&&c.cpp<300?'tg':c.cpp>800?'tr':''}">${c.cpp>0?fmt(c.cpp,0):'—'}</td>
+      <td class="${c.roas>5?'tg':c.roas>0&&c.roas<2?'tr':''}">${c.roas>0?c.roas.toFixed(2)+'x':'—'}</td>
+    </tr>`).join('');
+
+  const topAds = ads.filter(a=>a.p>0).slice(0,10).map(a=>`
+    <tr>
+      <td class="name-cell">${a.name}</td>
+      <td class="name-cell" style="font-size:10px;color:var(--muted)">${a.campaign}</td>
+      <td>${fmt(a.spend,0)}</td>
+      <td class="${a.p>=5?'tg':''}">${a.p}</td>
+      <td class="${a.roas>5?'tg':a.roas>0&&a.roas<2?'tr':''}">${a.roas>0?a.roas.toFixed(2)+'x':'—'}</td>
+      <td>${a.cpp>0?fmt(a.cpp,0):'—'}</td>
+      <td class="${a.hook>25?'tg':a.hook>0&&a.hook<10?'tr':''}">${a.hook>0?a.hook.toFixed(1)+'%':'—'}</td>
+      <td>${a.p50>0?a.p50.toFixed(1)+'%':'—'}</td>
+      <td>${a.comp>0?a.comp.toFixed(1)+'%':'—'}</td>
+    </tr>`).join('');
+
+  const chartLabels = daily.map(d=>d.date.slice(5));
+  const chartSpend  = daily.map(d=>d.spend);
+  const chartPur    = daily.map(d=>d.purchases);
+
+  // Forecast chart data
+  let fcChartLabels = [...chartLabels];
+  let fcChartActual = [...chartPur];
+  let fcChartProj   = Array(chartPur.length).fill(null);
+  if (fc) {
+    const futureDates = Array.from({length:30},(_,i)=>{
+      const d=new Date(); d.setDate(d.getDate()+i+1);
+      return d.toISOString().slice(5,10);
+    });
+    fcChartLabels = [...fcChartLabels, ...futureDates];
+    fcChartProj   = [...Array(chartPur.length).fill(null), ...fc.projPurch.slice(0,30).map(v=>+v.toFixed(1))];
+    fcChartActual = [...fcChartActual, ...Array(30).fill(null)];
+  }
+
+  const el = document.getElementById(`tab-${accKey}`);
+  el.innerHTML = `
+    <div class="section">
+      <h2 style="border-bottom-color:${acc_cfg.color}">${acc_cfg.name} — April Overview</h2>
+      <div class="kpi-grid">
+        <div class="kpi kb"><div class="k-label">Total Spend</div><div class="k-val">${fmtK(acc.spend)}</div><div class="k-sub">${cur}</div></div>
+        <div class="kpi ${acc.revenue>0?'kg':''}"><div class="k-label">Revenue</div><div class="k-val">${fmtK(acc.revenue)}</div><div class="k-sub">${cur}</div></div>
+        <div class="kpi kg"><div class="k-label">Purchases</div><div class="k-val">${acc.purchases||'—'}</div><div class="k-sub">orders</div></div>
+        <div class="kpi ${acc.roas>5?'kg':acc.roas>2?'ky':'kr'}"><div class="k-label">ROAS</div><div class="k-val">${acc.roas>0?acc.roas.toFixed(2)+'x':'—'}</div><div class="k-sub">return on ad spend</div></div>
+        <div class="kpi ${acc.cpp>0&&acc.cpp<300?'kg':acc.cpp>800?'kr':'ky'}"><div class="k-label">CPP</div><div class="k-val">${acc.cpp>0?fmt(acc.cpp,0):'—'}</div><div class="k-sub">${cur} / purchase</div></div>
+        <div class="kpi ${acc.ctr>2?'kg':'ky'}"><div class="k-label">CTR</div><div class="k-val">${acc.ctr.toFixed(2)}%</div><div class="k-sub">click-through</div></div>
+        <div class="kpi"><div class="k-label">CPM</div><div class="k-val">${fmt(acc.cpm,0)}</div><div class="k-sub">${cur}</div></div>
+        <div class="kpi"><div class="k-label">CPC</div><div class="k-val">${fmt(acc.cpc,2)}</div><div class="k-sub">${cur}</div></div>
+        <div class="kpi ${acc.freq>3?'ky':''}"><div class="k-label">Frequency</div><div class="k-val">${acc.freq.toFixed(2)}x</div><div class="k-sub">avg per person</div></div>
+        <div class="kpi"><div class="k-label">Reach</div><div class="k-val">${fmtK(acc.reach)}</div><div class="k-sub">people</div></div>
+        <div class="kpi kc"><div class="k-label">Add to Cart</div><div class="k-val">${fmtK(acc.atc)}</div><div class="k-sub">events</div></div>
+        <div class="kpi kc"><div class="k-label">Checkout</div><div class="k-val">${fmtK(acc.checkout)}</div><div class="k-sub">initiated</div></div>
+        <div class="kpi"><div class="k-label">Messages</div><div class="k-val">${fmtK(acc.msgs)||'—'}</div><div class="k-sub">conversations</div></div>
+        <div class="kpi"><div class="k-label">View Content</div><div class="k-val">${fmtK(acc.vc)}</div><div class="k-sub">product views</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 style="border-bottom-color:${acc_cfg.color}">📅 Daily Performance</h2>
+      <div class="charts-2">
+        <div class="chart-card"><h3>Daily Spend (${cur})</h3><canvas id="ch-spend-${accKey}" height="200"></canvas></div>
+        <div class="chart-card"><h3>Daily Purchases</h3><canvas id="ch-pur-${accKey}" height="200"></canvas></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 style="border-bottom-color:${acc_cfg.color}">📁 Campaigns</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Campaign</th><th>Type</th><th>Spend</th><th>CTR</th><th>CPM</th><th>Freq</th>
+            <th>Purchases</th><th>ATC</th><th>Messages</th><th>CPP</th><th>ROAS</th>
+          </tr></thead>
+          <tbody>${campRows||'<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:20px">No campaign data</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+
+    ${topAds ? `
+    <div class="section">
+      <h2 style="border-bottom-color:${acc_cfg.color}">🎨 Top Performing Ads</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Ad Name</th><th>Campaign</th><th>Spend</th><th>Purchases</th>
+            <th>ROAS</th><th>CPP</th><th>Hook%</th><th>P50%</th><th>Completion%</th>
+          </tr></thead>
+          <tbody>${topAds}</tbody>
+        </table>
+      </div>
+    </div>` : ''}
+
+    <div class="section">
+      <h2 style="border-bottom-color:${acc_cfg.color}">🔮 Sales Forecast – Next 3 Months</h2>
+      ${trendBadge}
+      <div class="charts-2" style="margin-bottom:16px">
+        <div class="chart-card"><h3>Actual vs Projected Purchases</h3><canvas id="ch-fc-${accKey}" height="200"></canvas></div>
+        <div class="chart-card"><h3>Key Metrics Summary</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+            <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--muted)">Avg Daily Purchases</div>
+              <div style="font-size:20px;font-weight:800;color:var(--c1)">${daily.length>0?(daily.reduce((s,d)=>s+d.purchases,0)/daily.length).toFixed(1):'—'}</div>
+            </div>
+            <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--muted)">Avg Daily Spend</div>
+              <div style="font-size:20px;font-weight:800;color:var(--yellow)">${daily.length>0?fmtK(daily.reduce((s,d)=>s+d.spend,0)/daily.length):'—'}</div>
+              <div style="font-size:9px;color:var(--muted)">${cur}</div>
+            </div>
+            <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--muted)">Historical ROAS</div>
+              <div style="font-size:20px;font-weight:800;color:var(--green)">${acc.roas>0?acc.roas.toFixed(2)+'x':'—'}</div>
+            </div>
+            <div style="background:var(--card2);border-radius:8px;padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--muted)">Historical CPP</div>
+              <div style="font-size:20px;font-weight:800;color:var(--c0)">${acc.cpp>0?fmt(acc.cpp,0):'—'}</div>
+              <div style="font-size:9px;color:var(--muted)">${cur}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="forecast-summary">${fcCards}</div>
+      <p style="font-size:11px;color:var(--muted);margin-top:10px">⚠️ Forecast based on linear trend from the selected date range. Actual results may vary due to seasonality, budget changes, or creative performance.</p>
+    </div>
+
+    <div class="section">
+      <h2 style="border-bottom-color:${acc_cfg.color}">🧮 Budget Calculator</h2>
+      <div class="calc-wrap">
+        <div class="calc-row">
+          <span class="calc-label">If I spend</span>
+          <input class="calc-input" type="number" id="calc-inp-${accKey}" placeholder="e.g. 50000" oninput="updateCalc('${accKey}')">
+          <span class="calc-currency">${cur} / month</span>
+        </div>
+        <div class="calc-results" id="calc-res-${accKey}">
+          <div class="calc-res-card"><div class="rv" id="calc-pur-${accKey}">—</div><div class="rl">Estimated Purchases</div></div>
+          <div class="calc-res-card"><div class="rv" id="calc-rev-${accKey}" style="color:var(--green)">—</div><div class="rl">Estimated Revenue (${cur})</div></div>
+          <div class="calc-res-card"><div class="rv" id="calc-roas-${accKey}" style="color:var(--yellow)">—</div><div class="rl">Estimated ROAS</div></div>
+          <div class="calc-res-card"><div class="rv" id="calc-cpp-${accKey}" style="color:var(--c1)">—</div><div class="rl">CPP Used (${cur})</div></div>
+        </div>
+        <p class="calc-note" id="calc-note-${accKey}">
+          Based on: CPP = <strong>${acc.cpp>0?fmt(acc.cpp,0)+' '+cur:'N/A'}</strong> &nbsp;|&nbsp;
+          ROAS = <strong>${acc.roas>0?acc.roas.toFixed(2)+'x':'N/A'}</strong> &nbsp;|&nbsp;
+          Historical period: ${state.since} → ${state.until}
+        </p>
+      </div>
+    </div>
+  `;
+
+  // Store data for calculator
+  el._acc  = acc;
+  el._daily = daily;
+
+  // Render charts (needs DOM to exist)
+  setTimeout(()=>{
+    mkChart(`ch-spend-${accKey}`, 'bar', chartLabels, [{
+      label:'Spend', data:chartSpend,
+      backgroundColor:`${acc_cfg.color}99`, borderColor:acc_cfg.color, borderWidth:1
+    }]);
+    mkChart(`ch-pur-${accKey}`, 'bar', chartLabels, [{
+      label:'Purchases', data:chartPur,
+      backgroundColor:'rgba(34,197,94,0.7)', borderColor:'#22c55e', borderWidth:1
+    }]);
+    mkChart(`ch-fc-${accKey}`, 'line', fcChartLabels, [
+      { label:'Actual', data:fcChartActual, borderColor:acc_cfg.color, backgroundColor:'transparent', pointRadius:2, tension:0.3 },
+      { label:'Projected', data:fcChartProj, borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,.1)',
+        borderDash:[5,4], pointRadius:2, tension:0.3, fill:true },
+    ], {legend:true});
+  }, 50);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER: OVERVIEW TAB
+// ═══════════════════════════════════════════════════════════════
+function renderOverview(allData) {
+  // Cards
+  const cards = ACCOUNTS.map(acc => {
+    const raw = allData[acc.key];
+    if (!raw) return `<div class="acc-card" onclick="switchTab('${acc.key}')"><div class="ac-head"><span class="acc-dot" style="background:${acc.color}"></span><span class="ac-name">${acc.name}</span><span class="ac-cur">${acc.currency}</span></div><p style="color:var(--muted);font-size:12px">No data</p></div>`;
+    const d = processSum(raw.summary, acc.currency);
+    return `
+    <div class="acc-card" onclick="switchTab('${acc.key}')" style="border-color:${acc.color}33">
+      <div class="ac-head">
+        <span class="acc-dot" style="background:${acc.color}"></span>
+        <span class="ac-name">${acc.name}</span>
+        <span class="ac-cur">${acc.currency}</span>
+      </div>
+      <div class="ac-kpis">
+        <div class="ac-kpi"><div class="v" style="color:${acc.color}">${fmtK(d.spend)}</div><div class="l">Spend</div></div>
+        <div class="ac-kpi"><div class="v" style="color:var(--green)">${d.purchases||'—'}</div><div class="l">Purchases</div></div>
+        <div class="ac-kpi"><div class="v" style="color:${d.roas>5?'var(--green)':d.roas>2?'var(--yellow)':'var(--red)'}">${d.roas>0?d.roas.toFixed(1)+'x':'—'}</div><div class="l">ROAS</div></div>
+        <div class="ac-kpi"><div class="v">${d.cpp>0?fmtK(d.cpp):'—'}</div><div class="l">CPP</div></div>
+        <div class="ac-kpi"><div class="v" style="color:var(--c1)">${d.ctr.toFixed(1)}%</div><div class="l">CTR</div></div>
+        <div class="ac-kpi"><div class="v">${d.freq.toFixed(1)}x</div><div class="l">Freq</div></div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('overviewCards').innerHTML = cards;
+
+  // Comparison table
+  const rows = ACCOUNTS.map(acc => {
+    const raw = allData[acc.key];
+    if (!raw) return `<tr><td colspan="10" style="color:var(--muted)">${acc.name} — no data</td></tr>`;
+    const d = processSum(raw.summary, acc.currency);
+    return `<tr>
+      <td><span style="color:${acc.color}">●</span> ${acc.name}</td>
+      <td>${acc.currency}</td>
+      <td>${fmt(d.spend,0)}</td>
+      <td class="${d.revenue>0?'tg':''}">${fmt(d.revenue,0)}</td>
+      <td class="${d.purchases>0?'tg':''}">${d.purchases||'—'}</td>
+      <td class="${d.roas>5?'tg':d.roas>0&&d.roas<2?'tr':'ty'}">${d.roas>0?d.roas.toFixed(2)+'x':'—'}</td>
+      <td class="${d.cpp>0&&d.cpp<300?'tg':d.cpp>800?'tr':''}">${d.cpp>0?fmt(d.cpp,0):'—'}</td>
+      <td class="${d.ctr>2?'tg':''}">${d.ctr.toFixed(2)}%</td>
+      <td>${fmt(d.cpm,0)}</td>
+      <td class="${d.freq>3?'ty':''}">${d.freq.toFixed(2)}x</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('overviewTable').innerHTML = rows;
+
+  // Overview charts
+  const labels = ACCOUNTS.map(a=>a.name.replace(' Egypt','').replace(' Media','').replace(' GCC',''));
+  const colors = ACCOUNTS.map(a=>a.color);
+  const spends = ACCOUNTS.map(a=>{ const r=allData[a.key]; return r?parseFloat(r.summary?.spend||0):0; });
+  const purs   = ACCOUNTS.map(a=>{ const r=allData[a.key]; return r?ga(r.summary?.actions,'purchase'):0; });
+  const roass  = ACCOUNTS.map(a=>{ const r=allData[a.key]; if(!r)return 0; const d=processSum(r.summary,a.currency); return d.roas; });
+
+  setTimeout(()=>{
+    mkChart('ov-spend-chart','bar',labels,[{label:'Spend',data:spends,backgroundColor:colors.map(c=>c+'cc')}],{legend:false});
+    mkChart('ov-pur-chart','bar',labels,[{label:'Purchases',data:purs,backgroundColor:colors.map(c=>c+'cc')}],{legend:false});
+    mkChart('ov-roas-chart','bar',labels,[{label:'ROAS',data:roass,backgroundColor:colors.map(c=>c+'cc')}],{legend:false,extra:{scales:{y:{ticks:{callback:v=>v+'x'}}}}});
+  },50);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BUDGET CALCULATOR – live update
+// ═══════════════════════════════════════════════════════════════
+function updateCalc(accKey) {
+  const el = document.getElementById(`tab-${accKey}`);
+  if (!el._acc) return;
+  const input = parseFloat(document.getElementById(`calc-inp-${accKey}`)?.value||0);
+  if (!input || input<=0) return;
+  const res = calcBudget(input, el._acc, el._daily||[]);
+  const pur  = document.getElementById(`calc-pur-${accKey}`);
+  const rev  = document.getElementById(`calc-rev-${accKey}`);
+  const roas = document.getElementById(`calc-roas-${accKey}`);
+  const cpp  = document.getElementById(`calc-cpp-${accKey}`);
+  if (pur)  pur.textContent  = res.estPurch.toLocaleString();
+  if (rev)  rev.textContent  = res.estRevenue.toLocaleString();
+  if (roas) roas.textContent = res.roas+'x';
+  if (cpp)  cpp.textContent  = res.cpp.toLocaleString();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════════════
+function switchTab(tabId) {
+  state.activeTab = tabId;
+  document.querySelectorAll('.acc-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab===tabId);
+    if (t.dataset.tab===tabId) t.style.background='rgba(108,99,255,.2)';
+    else t.style.background='';
+  });
+  document.querySelectorAll('.tab-content').forEach(c => {
+    c.classList.toggle('active', c.id===`tab-${tabId}`);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REFRESH
+// ═══════════════════════════════════════════════════════════════
+async function refreshAll() {
+  if (state.loading) return;
+  if (!state.token) { openModal(); return; }
+  state.loading = true;
+  state.cache = {};
+
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('loading');
+  btn.textContent = '⟳ Loading...';
+
+  const bar = document.getElementById('loadingBar');
+  let pct = 0;
+  bar.style.width = '5%';
+
+  const allData = {};
+  const total = ACCOUNTS.length;
+
+  for (let i=0; i<total; i++) {
+    const acc = ACCOUNTS[i];
+    try {
+      const raw = await loadAccount(acc);
+      allData[acc.key] = raw;
+      state.cache[acc.key] = raw;
+      renderAccountTab(acc.key, raw);
+    } catch(e) {
+      console.error(acc.name, e);
+      document.getElementById(`tab-${acc.key}`).innerHTML =
+        `<div class="empty-state"><div class="big">⚠️</div><p style="color:var(--red)">${e.message}</p></div>`;
+    }
+    pct = Math.round((i+1)/total*90)+5;
+    bar.style.width = pct+'%';
+    btn.textContent = `⟳ ${acc.name}...`;
+  }
+
+  renderOverview(allData);
+  bar.style.width = '100%';
+  setTimeout(()=>{ bar.style.width='0'; }, 600);
+
+  btn.classList.remove('loading');
+  btn.textContent = '⟳ Refresh';
+  state.loading = false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOKEN MODAL
+// ═══════════════════════════════════════════════════════════════
+function openModal() {
+  document.getElementById('tokenInput').value = state.token || '';
+  document.getElementById('tokenModal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('tokenModal').classList.remove('open');
+}
+function saveToken() {
+  const t = document.getElementById('tokenInput').value.trim();
+  if (!t) return;
+  state.token = t;
+  localStorage.setItem('meta_token', t);
+  closeModal();
+  state.cache = {};
+  refreshAll();
+}
+</script>
+</body>
+</html>
