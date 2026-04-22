@@ -1935,37 +1935,27 @@ async function renderShopify(metaAllData) {
         <div class="shopify-kpi">
           <div class="sk-label">TOTAL REVENUE</div>
           <div class="sk-val">${summary.revenue.toLocaleString()}</div>
-          <div class="sk-sub">EGP (incl. COD)</div>
+          <div class="sk-sub">EGP</div>
         </div>
         <div class="shopify-kpi">
           <div class="sk-label">TOTAL ORDERS</div>
           <div class="sk-val" style="color:var(--c1)">${summary.orders.toLocaleString()}</div>
-          <div class="sk-sub">all active orders</div>
-        </div>
-        <div class="shopify-kpi">
-          <div class="sk-label">COD / PENDING</div>
-          <div class="sk-val" style="color:var(--yellow)">${(summary.pendingOrders||0).toLocaleString()}</div>
-          <div class="sk-sub">awaiting delivery</div>
-        </div>
-        <div class="shopify-kpi">
-          <div class="sk-label">PAID ORDERS</div>
-          <div class="sk-val" style="color:var(--green)">${(summary.paidOrders||0).toLocaleString()}</div>
-          <div class="sk-sub">card / online</div>
+          <div class="sk-sub">orders</div>
         </div>
         <div class="shopify-kpi">
           <div class="sk-label">AVG ORDER VALUE</div>
-          <div class="sk-val" style="color:var(--c0)">${summary.aov.toLocaleString()}</div>
+          <div class="sk-val" style="color:var(--yellow)">${summary.aov.toLocaleString()}</div>
           <div class="sk-sub">EGP / order</div>
         </div>
         <div class="shopify-kpi">
           <div class="sk-label">ITEMS SOLD</div>
-          <div class="sk-val" style="color:var(--c5)">${summary.totalItems.toLocaleString()}</div>
+          <div class="sk-val" style="color:var(--c0)">${summary.totalItems.toLocaleString()}</div>
           <div class="sk-sub">units</div>
         </div>
         <div class="shopify-kpi">
           <div class="sk-label">RETURNS</div>
           <div class="sk-val" style="color:var(--red)">${summary.returns > 0 ? summary.returns.toLocaleString() : '—'}</div>
-          <div class="sk-sub">EGP refunded/voided</div>
+          <div class="sk-sub">EGP</div>
         </div>
         <div class="shopify-kpi">
           <div class="sk-label">NET REVENUE</div>
