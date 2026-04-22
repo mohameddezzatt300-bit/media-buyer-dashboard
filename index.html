@@ -90,6 +90,26 @@ td.ty{color:var(--yellow);font-weight:700}
 .ac-kpi .v{font-size:17px;font-weight:800}
 .ac-kpi .l{font-size:9px;color:var(--muted);margin-top:2px}
 
+/* ── SHOPIFY ── */
+.shopify-kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px;margin-bottom:20px}
+.shopify-kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+.shopify-kpi .sk-label{font-size:10px;color:var(--muted);margin-bottom:4px}
+.shopify-kpi .sk-val{font-size:22px;font-weight:800;color:#95bf47}
+.shopify-kpi .sk-sub{font-size:9px;color:var(--muted);margin-top:2px}
+.shopify-badge{display:inline-flex;align-items:center;gap:6px;background:#95bf4720;
+               border:1px solid #95bf4740;border-radius:20px;padding:4px 12px;
+               font-size:11px;font-weight:700;color:#95bf47;margin-bottom:14px}
+.blended-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:11px;
+             background:var(--card2);border:1px solid var(--border);border-radius:14px;
+             padding:18px;margin-bottom:20px}
+.blended-metric{text-align:center}
+.blended-metric .bm-val{font-size:22px;font-weight:800}
+.blended-metric .bm-label{font-size:10px;color:var(--muted);margin-top:3px}
+.prod-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.prod-row:last-child{border-bottom:none}
+.prod-bar-wrap{flex:1;height:6px;background:var(--card3);border-radius:3px;overflow:hidden}
+.prod-bar{height:100%;background:#95bf47;border-radius:3px}
+
 /* ── FORECAST ── */
 .forecast-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:11px;margin-top:14px}
 .fc-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
@@ -163,13 +183,14 @@ td.ty{color:var(--yellow);font-weight:700}
     <button class="acc-tab" onclick="switchTab('acc3')" data-tab="acc3" style="color:var(--c3)">Minibinis</button>
     <button class="acc-tab" onclick="switchTab('acc4')" data-tab="acc4" style="color:var(--c4)">Padel Lovers</button>
     <button class="acc-tab" onclick="switchTab('acc5')" data-tab="acc5" style="color:var(--c5)">CHOU</button>
+    <button class="acc-tab" onclick="switchTab('shopify')" data-tab="shopify" style="color:#95bf47">🛍 Shopify</button>
   </div>
   <div class="controls">
     <input type="date" class="date-inp" id="dateFrom">
     <span style="color:var(--muted);font-size:12px">→</span>
     <input type="date" class="date-inp" id="dateTo">
     <button class="btn btn-refresh" id="refreshBtn" onclick="refreshAll()">⟳ Refresh</button>
-    <button class="btn btn-settings" onclick="openModal()">⚙ Token</button>
+    <button class="btn btn-settings" onclick="openModal()">⚙ Settings</button>
   </div>
 </div>
 
@@ -177,15 +198,29 @@ td.ty{color:var(--yellow);font-weight:700}
 
 <!-- TOKEN MODAL -->
 <div class="modal-overlay" id="tokenModal">
-  <div class="modal">
-    <h3>🔑 Meta Access Token</h3>
-    <p>Enter your Meta Ads Manager token. It will be saved in your browser.<br>
-       Get it from: <strong>developers.facebook.com/tools/explorer</strong><br>
-       Required permissions: <code>ads_read</code></p>
+  <div class="modal" style="max-width:540px">
+    <h3>⚙️ Dashboard Settings</h3>
+
+    <p style="margin-bottom:10px">🔵 <strong>Meta Access Token</strong><br>
+       <span style="font-size:11px">Get from: developers.facebook.com/tools/explorer → ads_read</span></p>
     <input type="password" id="tokenInput" placeholder="EAAXw6s8...">
+
+    <p style="margin-bottom:10px">🟢 <strong>Shopify Proxy URL</strong><br>
+       <span style="font-size:11px">Deploy the Google Apps Script proxy → paste the web app URL here</span></p>
+    <input type="text" id="shopifyProxyInput" placeholder="https://script.google.com/macros/s/.../exec">
+
+    <div style="background:rgba(149,191,71,.08);border:1px solid rgba(149,191,71,.2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:11px;color:var(--muted);line-height:1.7">
+      📋 <strong style="color:#95bf47">How to get Shopify Proxy URL:</strong><br>
+      1. Go to <strong>script.google.com</strong> → New Project<br>
+      2. Paste the <code>shopify_proxy.gs</code> code<br>
+      3. Click <strong>Deploy → New Deployment → Web App</strong><br>
+      4. Set "Who has access" to <strong>Anyone</strong> → Deploy<br>
+      5. Copy the URL and paste it above
+    </div>
+
     <div class="modal-btns">
       <button class="btn btn-settings" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-refresh" onclick="saveToken()">Save & Load</button>
+      <button class="btn btn-refresh" onclick="saveSettings()">Save & Load</button>
     </div>
   </div>
 </div>
@@ -208,6 +243,9 @@ td.ty{color:var(--yellow);font-weight:700}
         <div class="chart-card"><h3>ROAS by Account</h3><canvas id="ov-roas-chart"></canvas></div>
       </div>
     </div>
+    <!-- Shopify blended row — populated by renderShopify() -->
+    <div id="shopify-overview-section"></div>
+
     <div class="section">
       <h2>📊 Comparison Table</h2>
       <div class="tbl-wrap">
@@ -230,6 +268,15 @@ td.ty{color:var(--yellow);font-weight:700}
   <div class="tab-content" id="tab-acc4"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
   <div class="tab-content" id="tab-acc5"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
 
+  <!-- ═══ SHOPIFY TAB ═══ -->
+  <div class="tab-content" id="tab-shopify">
+    <div class="empty-state">
+      <div class="big">🛍</div>
+      <p>Add your Shopify Proxy URL in <strong>⚙️ Settings</strong> then click <strong>Refresh</strong></p>
+      <p style="margin-top:8px;font-size:11px;color:var(--muted)">Need the proxy URL? Follow the setup steps in Settings</p>
+    </div>
+  </div>
+
 </div><!-- /page -->
 
 <script>
@@ -250,12 +297,16 @@ const CHART_INSTANCES = {};
 // ═══════════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════════
+const SHOPIFY_STORE_NAME = 'de2457-05.myshopify.com';
+
 const state = {
-  token: localStorage.getItem('meta_token') || '',
+  token:        localStorage.getItem('meta_token') || '',
+  shopifyProxy: localStorage.getItem('shopify_proxy') || '',
   since: '',
   until: '',
   activeTab: 'overview',
   cache: {},
+  shopifyCache: null,
   loading: false,
 };
 
@@ -275,6 +326,9 @@ const state = {
 
   if (!state.token) { setTimeout(openModal, 600); }
   else { refreshAll(); }
+
+  // Pre-fill proxy URL in modal when it opens
+  document.getElementById('shopifyProxyInput').value = state.shopifyProxy;
 })();
 
 // ═══════════════════════════════════════════════════════════════
@@ -1307,6 +1361,13 @@ async function refreshAll() {
   }
 
   renderOverview(allData);
+
+  // Load Shopify (in parallel, doesn't block Meta load)
+  if (state.shopifyProxy) {
+    btn.textContent = '⟳ Shopify...';
+    renderShopify(allData).catch(e => console.warn('Shopify render error:', e));
+  }
+
   bar.style.width = '100%';
   setTimeout(()=>{ bar.style.width='0'; }, 600);
 
@@ -1316,24 +1377,288 @@ async function refreshAll() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// TOKEN MODAL
+// SETTINGS MODAL
 // ═══════════════════════════════════════════════════════════════
 function openModal() {
-  document.getElementById('tokenInput').value = state.token || '';
+  document.getElementById('tokenInput').value       = state.token || '';
+  document.getElementById('shopifyProxyInput').value = state.shopifyProxy || '';
   document.getElementById('tokenModal').classList.add('open');
 }
 function closeModal() {
   document.getElementById('tokenModal').classList.remove('open');
 }
-function saveToken() {
+function saveSettings() {
   const t = document.getElementById('tokenInput').value.trim();
-  if (!t) return;
-  state.token = t;
-  localStorage.setItem('meta_token', t);
+  const p = document.getElementById('shopifyProxyInput').value.trim();
+  if (t) {
+    state.token = t;
+    localStorage.setItem('meta_token', t);
+  }
+  if (p) {
+    state.shopifyProxy = p;
+    localStorage.setItem('shopify_proxy', p);
+    state.shopifyCache = null; // force re-fetch
+  }
   closeModal();
   state.cache = {};
   refreshAll();
 }
+
+// ═══════════════════════════════════════════════════════════════
+// SHOPIFY API
+// ═══════════════════════════════════════════════════════════════
+async function loadShopify(days = 30) {
+  if (!state.shopifyProxy) return null;
+  try {
+    const url = `${state.shopifyProxy}?endpoint=summary&days=${days}`;
+    const res  = await fetch(url);
+    const json = await res.json();
+    if (!json.ok) { console.warn('Shopify proxy error:', json.error); return null; }
+    return json.data;
+  } catch(e) {
+    console.warn('Shopify fetch failed:', e.message);
+    return null;
+  }
+}
+
+async function loadShopifyProducts(days = 30) {
+  if (!state.shopifyProxy) return null;
+  try {
+    const url = `${state.shopifyProxy}?endpoint=products&days=${days}`;
+    const res  = await fetch(url);
+    const json = await res.json();
+    return json.ok ? json.data : null;
+  } catch(e) { return null; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER: SHOPIFY TAB
+// ═══════════════════════════════════════════════════════════════
+async function renderShopify(metaAllData) {
+  const el = document.getElementById('tab-shopify');
+
+  if (!state.shopifyProxy) {
+    el.innerHTML = `<div class="empty-state">
+      <div class="big">🛍</div>
+      <p>Add your <strong>Shopify Proxy URL</strong> in ⚙️ Settings</p>
+      <p style="margin-top:8px;font-size:11px;color:var(--muted)">Follow the steps in the Settings modal</p>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = `<div class="empty-state"><div class="big" style="animation:pulse 1s infinite">🛍</div><p>Loading Shopify data…</p></div>`;
+
+  // Calculate days from date picker
+  const d1   = new Date(state.since);
+  const d2   = new Date(state.until);
+  const days = Math.max(1, Math.round((d2 - d1) / 86400000)) + 1;
+
+  const [summary, productsData] = await Promise.all([
+    loadShopify(days),
+    loadShopifyProducts(days),
+  ]);
+
+  if (!summary) {
+    el.innerHTML = `<div class="empty-state"><div class="big">⚠️</div>
+      <p>Could not load Shopify data. Check the proxy URL in Settings.</p></div>`;
+    return;
+  }
+
+  state.shopifyCache = summary;
+
+  // ── Blended ROAS across all Meta accounts ──────────────────
+  let totalMetaSpend = 0;
+  ACCOUNTS.forEach(acc => {
+    const raw = metaAllData[acc.key];
+    if (raw?.summary) totalMetaSpend += parseFloat(raw.summary.spend || 0);
+  });
+  const blendedROAS = totalMetaSpend > 0 ? (summary.revenue / totalMetaSpend) : 0;
+  const blendedCPA  = summary.orders > 0 ? totalMetaSpend / summary.orders : 0;
+  const profitEst   = summary.revenue - totalMetaSpend; // rough (no COGS)
+
+  // ── Update Overview tab with Shopify blended banner ────────
+  const ovSection = document.getElementById('shopify-overview-section');
+  if (ovSection) {
+    ovSection.innerHTML = `
+    <div class="section">
+      <h2 style="border-bottom-color:#95bf47">🛍 Shopify + Meta — Blended Performance</h2>
+      <div class="blended-row" style="cursor:pointer" onclick="switchTab('shopify')">
+        <div class="blended-metric">
+          <div class="bm-val" style="color:#95bf47">${blendedROAS > 0 ? blendedROAS.toFixed(2)+'x' : '—'}</div>
+          <div class="bm-label">Blended ROAS</div>
+        </div>
+        <div class="blended-metric">
+          <div class="bm-val" style="color:#95bf47">${summary.revenue.toLocaleString()} EGP</div>
+          <div class="bm-label">Shopify Revenue</div>
+        </div>
+        <div class="blended-metric">
+          <div class="bm-val" style="color:var(--yellow)">${Math.round(totalMetaSpend).toLocaleString()} EGP</div>
+          <div class="bm-label">Total Meta Spend</div>
+        </div>
+        <div class="blended-metric">
+          <div class="bm-val" style="color:var(--c1)">${summary.orders.toLocaleString()}</div>
+          <div class="bm-label">Shopify Orders</div>
+        </div>
+        <div class="blended-metric">
+          <div class="bm-val" style="color:var(--c1)">${summary.aov.toLocaleString()} EGP</div>
+          <div class="bm-label">Avg Order Value</div>
+        </div>
+        <div class="blended-metric">
+          <div class="bm-val" style="color:${profitEst>=0?'var(--green)':'var(--red)'}">
+            ${profitEst>=0?'+':''}${Math.round(profitEst).toLocaleString()} EGP</div>
+          <div class="bm-label">Rev − Ad Spend</div>
+        </div>
+      </div>
+      <p style="font-size:10px;color:var(--muted)">Click to open full Shopify tab ↗</p>
+    </div>`;
+  }
+
+  // ── Daily chart data ───────────────────────────────────────
+  const dailyLabels  = summary.daily.map(d => d.date.slice(5));
+  const dailyRevenue = summary.daily.map(d => d.revenue);
+  const dailyOrders  = summary.daily.map(d => d.orders);
+
+  // ── Product rows ───────────────────────────────────────────
+  const products    = productsData?.products || [];
+  const maxRevProd  = products.length > 0 ? products[0].revenue : 1;
+  const prodRows    = products.map((p,i) => `
+    <div class="prod-row">
+      <div style="width:20px;font-size:10px;color:var(--muted);text-align:right">${i+1}</div>
+      <div style="flex:2;font-size:12px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</div>
+      <div class="prod-bar-wrap"><div class="prod-bar" style="width:${Math.round(p.revenue/maxRevProd*100)}%"></div></div>
+      <div style="min-width:80px;text-align:right;font-size:12px;font-weight:700;color:#95bf47">${Math.round(p.revenue).toLocaleString()}</div>
+      <div style="min-width:50px;text-align:right;font-size:11px;color:var(--muted)">${p.orders} orders</div>
+      <div style="min-width:40px;text-align:right;font-size:11px;color:var(--muted)">${p.units} units</div>
+    </div>`).join('');
+
+  // ── Wow badge ─────────────────────────────────────────────
+  const wowColor  = summary.wow >= 0 ? 'var(--green)' : 'var(--red)';
+  const wowSymbol = summary.wow >= 0 ? '▲' : '▼';
+
+  el.innerHTML = `
+    <div class="section">
+      <h2 style="border-bottom-color:#95bf47">🛍 Shopify — ${SHOPIFY_STORE_NAME}</h2>
+      <div class="shopify-badge">
+        🟢 Live data &nbsp;·&nbsp; Last ${days} days &nbsp;·&nbsp;
+        <span style="color:${wowColor}">${wowSymbol} ${Math.abs(summary.wow)}% vs prior half-period</span>
+      </div>
+
+      <!-- KPIs -->
+      <div class="shopify-kpi-grid">
+        <div class="shopify-kpi">
+          <div class="sk-label">TOTAL REVENUE</div>
+          <div class="sk-val">${summary.revenue.toLocaleString()}</div>
+          <div class="sk-sub">EGP</div>
+        </div>
+        <div class="shopify-kpi">
+          <div class="sk-label">TOTAL ORDERS</div>
+          <div class="sk-val" style="color:var(--c1)">${summary.orders.toLocaleString()}</div>
+          <div class="sk-sub">paid orders</div>
+        </div>
+        <div class="shopify-kpi">
+          <div class="sk-label">AVG ORDER VALUE</div>
+          <div class="sk-val" style="color:var(--yellow)">${summary.aov.toLocaleString()}</div>
+          <div class="sk-sub">EGP / order</div>
+        </div>
+        <div class="shopify-kpi">
+          <div class="sk-label">TOTAL ITEMS SOLD</div>
+          <div class="sk-val" style="color:var(--c0)">${summary.totalItems.toLocaleString()}</div>
+          <div class="sk-sub">units</div>
+        </div>
+        <div class="shopify-kpi">
+          <div class="sk-label">REFUNDS</div>
+          <div class="sk-val" style="color:var(--red)">${summary.refunds > 0 ? summary.refunds.toLocaleString() : '—'}</div>
+          <div class="sk-sub">EGP</div>
+        </div>
+        <div class="shopify-kpi">
+          <div class="sk-label">NET REVENUE</div>
+          <div class="sk-val" style="color:var(--green)">${Math.round(summary.revenue - summary.refunds).toLocaleString()}</div>
+          <div class="sk-sub">EGP after refunds</div>
+        </div>
+      </div>
+
+      <!-- Blended Performance -->
+      <h3 style="color:var(--muted);margin-bottom:10px">⚡ Blended Performance (Shopify + Meta)</h3>
+      <div class="blended-row">
+        <div class="blended-metric">
+          <div class="bm-val" style="color:#95bf47">${blendedROAS > 0 ? blendedROAS.toFixed(2)+'x' : '—'}</div>
+          <div class="bm-label">Blended ROAS</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">Shopify Rev ÷ Meta Spend</div>
+        </div>
+        <div class="blended-metric">
+          <div class="bm-val" style="color:var(--yellow)">${Math.round(totalMetaSpend).toLocaleString()}</div>
+          <div class="bm-label">Total Meta Spend (EGP)</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">all accounts combined</div>
+        </div>
+        <div class="blended-metric">
+          <div class="bm-val" style="color:var(--green)">${summary.revenue.toLocaleString()}</div>
+          <div class="bm-label">Shopify Revenue (EGP)</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">paid orders only</div>
+        </div>
+        <div class="blended-metric">
+          <div class="bm-val" style="color:${profitEst >= 0 ? 'var(--green)' : 'var(--red)'}">
+            ${profitEst >= 0 ? '+' : ''}${Math.round(profitEst).toLocaleString()}</div>
+          <div class="bm-label">Rev minus Ad Spend</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">excl. COGS & fees</div>
+        </div>
+        <div class="blended-metric">
+          <div class="bm-val" style="color:var(--c1)">${blendedCPA > 0 ? Math.round(blendedCPA).toLocaleString() : '—'}</div>
+          <div class="bm-label">Blended CPA (EGP)</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">Meta Spend ÷ Orders</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="section">
+      <div class="charts-2">
+        <div class="chart-card">
+          <h3>Daily Revenue (EGP)</h3>
+          <canvas id="sh-revenue-chart" height="200"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Daily Orders</h3>
+          <canvas id="sh-orders-chart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Products -->
+    ${products.length > 0 ? `
+    <div class="section">
+      <h2 style="border-bottom-color:#95bf47">🏆 Top Products by Revenue</h2>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px">
+        <div style="display:flex;gap:10px;font-size:10px;color:var(--muted);font-weight:700;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:4px">
+          <div style="width:20px">#</div>
+          <div style="flex:2">Product</div>
+          <div style="flex:3"></div>
+          <div style="min-width:80px;text-align:right">Revenue</div>
+          <div style="min-width:50px;text-align:right">Orders</div>
+          <div style="min-width:40px;text-align:right">Units</div>
+        </div>
+        ${prodRows}
+      </div>
+    </div>` : ''}
+
+    <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-top:8px">
+      ⚠️ <strong>Blended ROAS</strong> compares Shopify revenue (EGP) against Meta spend (EGP) — only valid when both are in EGP.
+      &nbsp;|&nbsp; <strong>Rev minus Ad Spend</strong> does not include COGS, shipping, or Shopify fees.
+      &nbsp;|&nbsp; Data refreshes with the date range selected above.
+    </p>
+  `;
+
+  setTimeout(() => {
+    mkChart('sh-revenue-chart', 'bar', dailyLabels, [{
+      label: 'Revenue', data: dailyRevenue,
+      backgroundColor: 'rgba(149,191,71,0.6)', borderColor: '#95bf47', borderWidth: 1
+    }]);
+    mkChart('sh-orders-chart', 'bar', dailyLabels, [{
+      label: 'Orders', data: dailyOrders,
+      backgroundColor: 'rgba(6,182,212,0.6)', borderColor: '#06b6d4', borderWidth: 1
+    }]);
+  }, 50);
+}
+
 </script>
 </body>
 </html>
