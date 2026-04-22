@@ -320,7 +320,7 @@ const CHART_INSTANCES = {};
 const SHOPIFY_STORE      = 'de2457-05.myshopify.com';
 const SHOPIFY_STORE_NAME = SHOPIFY_STORE;
 // Google Apps Script proxy URL — hardcoded, no setup needed
-const SHOPIFY_PROXY_URL  = 'https://script.google.com/macros/s/AKfycbxtWD63j-l0lI3vgVrp7YktAQTpCwe3ErHLmKcCkn9XJh2XDjKaE5O1tXkTl50jveM2/exec';
+const SHOPIFY_PROXY_URL  = 'https://script.google.com/macros/s/AKfycbxVAMd29rOHMZOgEFBfCtVU8Wfotr-Z6j5std8GAGHBK_6Xa4GOTfbqeKo9fVmq2Isy/exec';
 
 const state = {
   token:         localStorage.getItem('meta_token') || '',
@@ -1843,9 +1843,10 @@ async function renderShopify(metaAllData) {
     const raw = metaAllData[acc.key];
     if (raw?.summary) totalMetaSpend += parseFloat(raw.summary.spend || 0);
   });
-  const blendedROAS = totalMetaSpend > 0 ? (summary.revenue / totalMetaSpend) : 0;
+  const shopifyRev  = summary.netSales != null ? summary.netSales : summary.revenue;
+  const blendedROAS = totalMetaSpend > 0 ? (shopifyRev / totalMetaSpend) : 0;
   const blendedCPA  = summary.orders > 0 ? totalMetaSpend / summary.orders : 0;
-  const profitEst   = summary.revenue - totalMetaSpend; // rough (no COGS)
+  const profitEst   = shopifyRev - totalMetaSpend; // rough (no COGS)
 
   // ── Update Overview tab with Shopify blended banner ────────
   const ovSection = document.getElementById('shopify-overview-section');
@@ -1859,8 +1860,8 @@ async function renderShopify(metaAllData) {
           <div class="bm-label">Blended ROAS</div>
         </div>
         <div class="blended-metric">
-          <div class="bm-val" style="color:#95bf47">${summary.revenue.toLocaleString()} EGP</div>
-          <div class="bm-label">Shopify Revenue</div>
+          <div class="bm-val" style="color:#95bf47">${shopifyRev.toLocaleString()} EGP</div>
+          <div class="bm-label">Shopify Net Sales</div>
         </div>
         <div class="blended-metric">
           <div class="bm-val" style="color:var(--yellow)">${Math.round(totalMetaSpend).toLocaleString()} EGP</div>
@@ -1877,7 +1878,7 @@ async function renderShopify(metaAllData) {
         <div class="blended-metric">
           <div class="bm-val" style="color:${profitEst>=0?'var(--green)':'var(--red)'}">
             ${profitEst>=0?'+':''}${Math.round(profitEst).toLocaleString()} EGP</div>
-          <div class="bm-label">Rev − Ad Spend</div>
+          <div class="bm-label">Net Sales − Ad Spend</div>
         </div>
       </div>
       <p style="font-size:10px;color:var(--muted)">Click to open full Shopify tab ↗</p>
@@ -1930,38 +1931,65 @@ async function renderShopify(metaAllData) {
         <span style="color:${wowColor}">${wowSymbol} ${Math.abs(summary.wow)}% vs prior half-period</span>
       </div>
 
-      <!-- KPIs -->
-      <div class="shopify-kpi-grid">
+      <!-- KPIs — matching Shopify Admin Sales report -->
+      <div class="shopify-kpi-grid" style="grid-template-columns:repeat(auto-fill,minmax(155px,1fr))">
+
         <div class="shopify-kpi">
-          <div class="sk-label">TOTAL REVENUE</div>
-          <div class="sk-val">${summary.revenue.toLocaleString()}</div>
+          <div class="sk-label">GROSS SALES</div>
+          <div class="sk-val">${(summary.grossSales ?? summary.revenue).toLocaleString()}</div>
+          <div class="sk-sub">EGP before discounts</div>
+        </div>
+
+        <div class="shopify-kpi">
+          <div class="sk-label">DISCOUNTS</div>
+          <div class="sk-val" style="color:var(--yellow)">
+            ${summary.discounts > 0 ? '−' + summary.discounts.toLocaleString() : '—'}
+          </div>
           <div class="sk-sub">EGP</div>
         </div>
+
+        <div class="shopify-kpi">
+          <div class="sk-label">RETURNS</div>
+          <div class="sk-val" style="color:var(--red)">
+            ${summary.returns > 0 ? '−' + summary.returns.toLocaleString() : '—'}
+          </div>
+          <div class="sk-sub">EGP refunded</div>
+        </div>
+
+        <div class="shopify-kpi">
+          <div class="sk-label">NET SALES</div>
+          <div class="sk-val" style="color:var(--green)">
+            ${(summary.netSales ?? (summary.revenue - (summary.returns||0))).toLocaleString()}
+          </div>
+          <div class="sk-sub">Gross − Disc − Returns</div>
+        </div>
+
+        <div class="shopify-kpi">
+          <div class="sk-label">SHIPPING</div>
+          <div class="sk-val" style="color:var(--c1)">
+            ${(summary.shipping ?? 0) > 0 ? summary.shipping.toLocaleString() : '—'}
+          </div>
+          <div class="sk-sub">EGP collected</div>
+        </div>
+
         <div class="shopify-kpi">
           <div class="sk-label">TOTAL ORDERS</div>
-          <div class="sk-val" style="color:var(--c1)">${summary.orders.toLocaleString()}</div>
-          <div class="sk-sub">orders</div>
+          <div class="sk-val" style="color:var(--c0)">${summary.orders.toLocaleString()}</div>
+          <div class="sk-sub">all non-cancelled</div>
         </div>
+
         <div class="shopify-kpi">
           <div class="sk-label">AVG ORDER VALUE</div>
           <div class="sk-val" style="color:var(--yellow)">${summary.aov.toLocaleString()}</div>
           <div class="sk-sub">EGP / order</div>
         </div>
+
         <div class="shopify-kpi">
           <div class="sk-label">ITEMS SOLD</div>
-          <div class="sk-val" style="color:var(--c0)">${summary.totalItems.toLocaleString()}</div>
+          <div class="sk-val" style="color:var(--muted)">${summary.totalItems.toLocaleString()}</div>
           <div class="sk-sub">units</div>
         </div>
-        <div class="shopify-kpi">
-          <div class="sk-label">RETURNS</div>
-          <div class="sk-val" style="color:var(--red)">${summary.returns > 0 ? summary.returns.toLocaleString() : '—'}</div>
-          <div class="sk-sub">EGP</div>
-        </div>
-        <div class="shopify-kpi">
-          <div class="sk-label">NET REVENUE</div>
-          <div class="sk-val" style="color:var(--green)">${Math.max(0, summary.revenue - summary.returns).toLocaleString()}</div>
-          <div class="sk-sub">EGP after returns</div>
-        </div>
+
       </div>
 
       <!-- Blended Performance -->
@@ -1978,9 +2006,9 @@ async function renderShopify(metaAllData) {
           <div style="font-size:9px;color:var(--muted);margin-top:2px">all accounts combined</div>
         </div>
         <div class="blended-metric">
-          <div class="bm-val" style="color:var(--green)">${summary.revenue.toLocaleString()}</div>
-          <div class="bm-label">Shopify Revenue (EGP)</div>
-          <div style="font-size:9px;color:var(--muted);margin-top:2px">incl. COD pending</div>
+          <div class="bm-val" style="color:var(--green)">${shopifyRev.toLocaleString()}</div>
+          <div class="bm-label">Shopify Net Sales (EGP)</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">after disc &amp; returns</div>
         </div>
         <div class="blended-metric">
           <div class="bm-val" style="color:${profitEst >= 0 ? 'var(--green)' : 'var(--red)'}">
