@@ -115,6 +115,9 @@ td.ty{color:var(--yellow);font-weight:700}
 .calc-res-card .rv{font-size:22px;font-weight:800;color:var(--c0)}
 .calc-res-card .rl{font-size:10px;color:var(--muted);margin-top:4px}
 .calc-note{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.7}
+@media(max-width:600px){
+  [id^="calc-scenarios-"]{grid-template-columns:1fr!important}
+}
 
 /* ── TOKEN MODAL ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;
@@ -500,14 +503,133 @@ function buildForecast(daily, futureDays=90) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// BUDGET CALCULATOR
+// BUDGET CALCULATOR – Advanced (Log-Linear + Diminishing Returns)
 // ═══════════════════════════════════════════════════════════════
-function calcBudget(inputSpend, acc, daily) {
-  const cpp  = acc.cpp  || (daily.reduce((s,d)=>s+(d.purchases||0),0)>0 ? daily.reduce((s,d)=>s+d.spend,0)/daily.reduce((s,d)=>s+(d.purchases||0),0) : 0);
-  const roas = acc.roas || (daily.reduce((s,d)=>s+(d.revenue||0),0)>0 ? daily.reduce((s,d)=>s+d.revenue,0)/daily.reduce((s,d)=>s+d.spend,0) : 0);
-  const estPurch   = cpp>0   ? Math.round(inputSpend/cpp)  : 0;
-  const estRevenue = roas>0  ? Math.round(inputSpend*roas) : 0;
-  return { estPurch, estRevenue, cpp: Math.round(cpp), roas: roas.toFixed(2), estROAS: roas };
+
+// Fit log-linear curve: purchases_per_day = α × ln(spend_per_day) + β
+// This naturally models diminishing returns
+function fitCurve(daily) {
+  const valid = daily.filter(d => d.spend > 10 && d.purchases > 0);
+  if (valid.length < 4) return null;
+
+  const xs = valid.map(d => Math.log(d.spend));       // ln(spend)
+  const ys = valid.map(d => d.purchases);
+  const n  = xs.length;
+
+  // Linear regression on log-transformed X
+  const mx = xs.reduce((a,b)=>a+b,0)/n;
+  const my = ys.reduce((a,b)=>a+b,0)/n;
+  const num = xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0);
+  const den = xs.reduce((s,x)=>s+(x-mx)**2,0);
+  const slope     = den>0 ? num/den : 0;
+  const intercept = my - slope*mx;
+
+  // R² and residual standard deviation
+  const ssTot = ys.reduce((s,y)=>s+(y-my)**2,0);
+  const ssRes = valid.reduce((s,d,i)=>{
+    const pred = slope*Math.log(d.spend)+intercept;
+    return s+(ys[i]-pred)**2;
+  },0);
+  const r2     = ssTot>0 ? Math.max(0, 1-ssRes/ssTot) : 0;
+  const stdErr = n>2 ? Math.sqrt(ssRes/(n-2)) : 0;
+
+  // Average CPM from data (for CPM scaling model)
+  const validCpm = daily.filter(d=>d.spend>10 && d.cpm>0);
+  const avgCpm   = validCpm.length>0 ? validCpm.reduce((s,d)=>s+d.cpm,0)/validCpm.length : 0;
+  const avgSpend = daily.filter(d=>d.spend>0).reduce((s,d)=>s+d.spend,0) /
+                   Math.max(1, daily.filter(d=>d.spend>0).length);
+  // Average ROAS (revenue / spend per day)
+  const validRoas = daily.filter(d=>d.spend>0&&d.revenue>0);
+  const avgRoas   = validRoas.length>0
+    ? validRoas.reduce((s,d)=>s+d.revenue/d.spend,0)/validRoas.length : 0;
+
+  return { slope, intercept, r2, stdErr, avgCpm, avgSpend, avgRoas, n };
+}
+
+// Predict daily purchases at a given daily spend using fitted curve
+function predictDaily(curve, spendPerDay) {
+  if (!curve || spendPerDay <= 0) return { exp:0, best:0, worst:0 };
+  const x   = Math.log(spendPerDay);
+  const exp = Math.max(0, curve.slope*x + curve.intercept);
+  return {
+    exp,
+    best:  Math.max(0, exp + curve.stdErr),
+    worst: Math.max(0, exp - curve.stdErr),
+  };
+}
+
+// Estimate CPM at new spend level (CPM grows slightly with scale)
+function scaleCpm(baseCpm, baseSpendDay, newSpendDay) {
+  if (!baseCpm || !baseSpendDay || newSpendDay<=0) return baseCpm||0;
+  const scaleFactor = 1 + 0.12 * Math.log(newSpendDay / baseSpendDay);
+  return baseCpm * Math.max(0.8, scaleFactor);
+}
+
+// Full advanced calculation
+function advancedCalc(monthlySpend, daily, accSummary) {
+  const curve = fitCurve(daily);
+  const days  = 30;
+  const spendPerDay = monthlySpend / days;
+
+  // Fallback if not enough data for curve
+  if (!curve || curve.slope <= 0) {
+    const cpp  = accSummary.cpp  || 0;
+    const roas = accSummary.roas || 0;
+    const exp  = cpp>0 ? Math.round(monthlySpend/cpp) : 0;
+    return {
+      exp, best: Math.round(exp*1.2), worst: Math.round(exp*0.8),
+      expRev:  roas>0?Math.round(monthlySpend*roas):0,
+      bestRev: roas>0?Math.round(monthlySpend*roas*1.2):0,
+      worstRev:roas>0?Math.round(monthlySpend*roas*0.8):0,
+      expCpp:  cpp>0?Math.round(cpp):0,
+      expCpm:  accSummary.cpm||0,
+      expRoas: roas>0?roas.toFixed(2):'—',
+      r2: null, curve: null, fallback: true,
+    };
+  }
+
+  const pred    = predictDaily(curve, spendPerDay);
+  const expPur  = Math.round(pred.exp   * days);
+  const bestPur = Math.round(pred.best  * days);
+  const wrstPur = Math.round(pred.worst * days);
+
+  const expCpp  = expPur  > 0 ? Math.round(monthlySpend / expPur)  : 0;
+  const bestCpp = bestPur > 0 ? Math.round(monthlySpend / bestPur) : 0;
+  const wrstCpp = wrstPur > 0 ? Math.round(monthlySpend / wrstPur) : 0;
+
+  const roas    = curve.avgRoas || accSummary.roas || 0;
+  const expRev  = Math.round(monthlySpend * roas);
+  const bestRev = Math.round(monthlySpend * roas * (pred.best  / Math.max(pred.exp,0.001)));
+  const wrstRev = Math.round(monthlySpend * roas * (pred.worst / Math.max(pred.exp,0.001)));
+
+  const estCpm  = scaleCpm(curve.avgCpm, curve.avgSpend, spendPerDay);
+
+  // Scaling curve: CPP at 6 spend levels
+  const currentMonthly = curve.avgSpend * days;
+  const levels = [0.25,0.5,0.75,1,1.5,2,3].map(mult => {
+    const s = Math.max(100, currentMonthly * mult);
+    const p = predictDaily(curve, s/days);
+    const cpp = p.exp>0 ? Math.round(s/p.exp/days) : 0;   // daily CPP
+    return { label: (mult*100).toFixed(0)+'%', spend: Math.round(s), cpp };
+  });
+  // Also include target spend in the curve
+  const targetLevel = {
+    label: 'Target', spend: Math.round(monthlySpend),
+    cpp: expCpp
+  };
+
+  return {
+    exp: expPur, best: bestPur, worst: wrstPur,
+    expCpp, bestCpp, wrstCpp,
+    expRev, bestRev, wrstRev,
+    expRoas: roas>0?roas.toFixed(2):'—',
+    estCpm: Math.round(estCpm),
+    r2: (curve.r2*100).toFixed(0),
+    r2Raw: curve.r2,
+    n: curve.n,
+    levels, targetLevel,
+    curve, fallback: false,
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -697,23 +819,71 @@ function renderAccountTab(accKey, rawData) {
     </div>
 
     <div class="section">
-      <h2 style="border-bottom-color:${acc_cfg.color}">🧮 Budget Calculator</h2>
+      <h2 style="border-bottom-color:${acc_cfg.color}">🧮 Advanced Budget Calculator</h2>
       <div class="calc-wrap">
+
+        <!-- Input row -->
         <div class="calc-row">
-          <span class="calc-label">If I spend</span>
-          <input class="calc-input" type="number" id="calc-inp-${accKey}" placeholder="e.g. 50000" oninput="updateCalc('${accKey}')">
+          <span class="calc-label">Monthly Budget</span>
+          <input class="calc-input" type="number" id="calc-inp-${accKey}"
+                 placeholder="e.g. 50000" oninput="updateCalc('${accKey}')">
           <span class="calc-currency">${cur} / month</span>
         </div>
-        <div class="calc-results" id="calc-res-${accKey}">
-          <div class="calc-res-card"><div class="rv" id="calc-pur-${accKey}">—</div><div class="rl">Estimated Purchases</div></div>
-          <div class="calc-res-card"><div class="rv" id="calc-rev-${accKey}" style="color:var(--green)">—</div><div class="rl">Estimated Revenue (${cur})</div></div>
-          <div class="calc-res-card"><div class="rv" id="calc-roas-${accKey}" style="color:var(--yellow)">—</div><div class="rl">Estimated ROAS</div></div>
-          <div class="calc-res-card"><div class="rv" id="calc-cpp-${accKey}" style="color:var(--c1)">—</div><div class="rl">CPP Used (${cur})</div></div>
+
+        <!-- Model quality badge -->
+        <div id="calc-model-${accKey}" style="margin-bottom:14px;font-size:12px;color:var(--muted)">
+          Enter a budget to see predictions
         </div>
-        <p class="calc-note" id="calc-note-${accKey}">
-          Based on: CPP = <strong>${acc.cpp>0?fmt(acc.cpp,0)+' '+cur:'N/A'}</strong> &nbsp;|&nbsp;
-          ROAS = <strong>${acc.roas>0?acc.roas.toFixed(2)+'x':'N/A'}</strong> &nbsp;|&nbsp;
-          Historical period: ${state.since} → ${state.until}
+
+        <!-- 3 scenario cards -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px" id="calc-scenarios-${accKey}">
+          <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:10px;color:var(--green);font-weight:700;margin-bottom:6px">🟢 BEST CASE</div>
+            <div style="font-size:22px;font-weight:800;color:var(--green)" id="calc-best-pur-${accKey}">—</div>
+            <div style="font-size:10px;color:var(--muted)">purchases</div>
+            <div style="font-size:13px;font-weight:700;color:var(--green);margin-top:6px" id="calc-best-rev-${accKey}">—</div>
+            <div style="font-size:10px;color:var(--muted)">revenue (${cur})</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">CPP: <span id="calc-best-cpp-${accKey}">—</span></div>
+          </div>
+          <div style="background:rgba(108,99,255,.08);border:2px solid rgba(108,99,255,.4);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:10px;color:var(--c0);font-weight:700;margin-bottom:6px">🎯 EXPECTED</div>
+            <div style="font-size:26px;font-weight:800;color:var(--c0)" id="calc-exp-pur-${accKey}">—</div>
+            <div style="font-size:10px;color:var(--muted)">purchases</div>
+            <div style="font-size:14px;font-weight:700;color:var(--c0);margin-top:6px" id="calc-exp-rev-${accKey}">—</div>
+            <div style="font-size:10px;color:var(--muted)">revenue (${cur})</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">CPP: <span id="calc-exp-cpp-${accKey}">—</span> | ROAS: <span id="calc-exp-roas-${accKey}">—</span></div>
+          </div>
+          <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:10px;color:var(--red);font-weight:700;margin-bottom:6px">🔴 WORST CASE</div>
+            <div style="font-size:22px;font-weight:800;color:var(--red)" id="calc-wrst-pur-${accKey}">—</div>
+            <div style="font-size:10px;color:var(--muted)">purchases</div>
+            <div style="font-size:13px;font-weight:700;color:var(--red);margin-top:6px" id="calc-wrst-rev-${accKey}">—</div>
+            <div style="font-size:10px;color:var(--muted)">revenue (${cur})</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">CPP: <span id="calc-wrst-cpp-${accKey}">—</span></div>
+          </div>
+        </div>
+
+        <!-- Extra metrics row -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px">
+          <div class="calc-res-card"><div class="rv" id="calc-cpm-${accKey}" style="color:var(--c1)">—</div><div class="rl">Est. CPM at Scale (${cur})</div></div>
+          <div class="calc-res-card"><div class="rv" id="calc-daily-${accKey}" style="color:var(--yellow)">—</div><div class="rl">Daily Budget (${cur})</div></div>
+          <div class="calc-res-card"><div class="rv" id="calc-r2-${accKey}" style="color:var(--c0)">—</div><div class="rl">Model Accuracy (R²)</div></div>
+          <div class="calc-res-card"><div class="rv" id="calc-cpe-${accKey}" style="color:var(--green)">—</div><div class="rl">Break-even ROAS</div></div>
+        </div>
+
+        <!-- Scaling curve chart -->
+        <div style="background:var(--card2);border-radius:10px;padding:16px;margin-bottom:12px">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600">
+            📉 Diminishing Returns Curve — CPP at Different Spend Levels
+          </div>
+          <canvas id="calc-curve-${accKey}" height="120"></canvas>
+        </div>
+
+        <p class="calc-note">
+          <strong>Model:</strong> Log-Linear (captures diminishing returns) &nbsp;|&nbsp;
+          <strong>Historical:</strong> ${state.since} → ${state.until} &nbsp;|&nbsp;
+          <strong>Scenarios:</strong> ±1σ standard deviation from expected &nbsp;|&nbsp;
+          <strong>CPM Scaling:</strong> +12% per doubling of daily budget
         </p>
       </div>
     </div>
@@ -804,22 +974,93 @@ function renderOverview(allData) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// BUDGET CALCULATOR – live update
+// BUDGET CALCULATOR – live update (Advanced)
 // ═══════════════════════════════════════════════════════════════
 function updateCalc(accKey) {
   const el = document.getElementById(`tab-${accKey}`);
   if (!el._acc) return;
   const input = parseFloat(document.getElementById(`calc-inp-${accKey}`)?.value||0);
   if (!input || input<=0) return;
-  const res = calcBudget(input, el._acc, el._daily||[]);
-  const pur  = document.getElementById(`calc-pur-${accKey}`);
-  const rev  = document.getElementById(`calc-rev-${accKey}`);
-  const roas = document.getElementById(`calc-roas-${accKey}`);
-  const cpp  = document.getElementById(`calc-cpp-${accKey}`);
-  if (pur)  pur.textContent  = res.estPurch.toLocaleString();
-  if (rev)  rev.textContent  = res.estRevenue.toLocaleString();
-  if (roas) roas.textContent = res.roas+'x';
-  if (cpp)  cpp.textContent  = res.cpp.toLocaleString();
+
+  const res = advancedCalc(input, el._daily||[], el._acc);
+  const cur = el._acc.currency || 'EGP';
+  const set = (id, val) => { const e=document.getElementById(id); if(e) e.textContent=val; };
+
+  // 3 scenarios
+  set(`calc-best-pur-${accKey}`,  res.best.toLocaleString());
+  set(`calc-best-rev-${accKey}`,  res.bestRev.toLocaleString());
+  set(`calc-best-cpp-${accKey}`,  res.bestCpp>0?res.bestCpp.toLocaleString()+' '+cur:'—');
+  set(`calc-exp-pur-${accKey}`,   res.exp.toLocaleString());
+  set(`calc-exp-rev-${accKey}`,   res.expRev.toLocaleString());
+  set(`calc-exp-cpp-${accKey}`,   res.expCpp>0?res.expCpp.toLocaleString()+' '+cur:'—');
+  set(`calc-exp-roas-${accKey}`,  res.expRoas+'x');
+  set(`calc-wrst-pur-${accKey}`,  res.worst.toLocaleString());
+  set(`calc-wrst-rev-${accKey}`,  res.wrstRev.toLocaleString());
+  set(`calc-wrst-cpp-${accKey}`,  res.wrstCpp>0?res.wrstCpp.toLocaleString()+' '+cur:'—');
+
+  // Extra metrics
+  set(`calc-cpm-${accKey}`,   res.estCpm>0?res.estCpm.toLocaleString():'—');
+  set(`calc-daily-${accKey}`, Math.round(input/30).toLocaleString());
+  set(`calc-r2-${accKey}`,    res.r2!==null ? res.r2+'%' : 'Limited data');
+  const breakEven = el._acc.revenue>0&&el._acc.spend>0 ? (el._acc.spend/el._acc.revenue).toFixed(2)+'x' : '—';
+  set(`calc-cpe-${accKey}`, breakEven);
+
+  // Model quality message
+  const modelEl = document.getElementById(`calc-model-${accKey}`);
+  if (modelEl) {
+    if (res.fallback) {
+      modelEl.innerHTML = `<span style="color:var(--yellow)">⚠️ Limited data — using simple linear model (need 4+ days with purchases)</span>`;
+    } else {
+      const q = res.r2Raw>=0.7?'🟢 High':'res.r2Raw>=0.4?🟡 Medium':'🔴 Low';
+      const qColor = res.r2Raw>=0.7?'var(--green)':res.r2Raw>=0.4?'var(--yellow)':'var(--red)';
+      modelEl.innerHTML = `
+        <span style="color:${qColor};font-weight:700">
+          ${res.r2Raw>=0.7?'🟢':res.r2Raw>=0.4?'🟡':'🔴'} Model Accuracy: R² = ${res.r2}%
+        </span>
+        &nbsp;|&nbsp; Fitted on <strong>${res.n}</strong> days of data
+        &nbsp;|&nbsp; <span style="color:var(--muted)">
+          ${res.r2Raw>=0.7?'High confidence':'res.r2Raw>=0.4?Moderate confidence':'Low confidence — more data needed'}
+        </span>`;
+    }
+  }
+
+  // Scaling curve chart
+  if (res.levels && !res.fallback) {
+    const allLevels = [...res.levels];
+    // insert target spend marker
+    const targetIdx = allLevels.findIndex(l=>l.spend >= input);
+    const chartLabels = allLevels.map(l=>`${l.label}\n${(l.spend/1000).toFixed(0)}K`);
+    const cppData     = allLevels.map(l=>l.cpp);
+    const bgColors    = allLevels.map(l =>
+      Math.abs(l.spend - input) < input*0.15 ? 'rgba(108,99,255,0.9)' : 'rgba(108,99,255,0.35)'
+    );
+    if (CHART_INSTANCES[`calc-curve-${accKey}`]) CHART_INSTANCES[`calc-curve-${accKey}`].destroy();
+    const ctx = document.getElementById(`calc-curve-${accKey}`);
+    if (ctx) {
+      CHART_INSTANCES[`calc-curve-${accKey}`] = new Chart(ctx, {
+        type:'bar',
+        data:{ labels: chartLabels, datasets:[{
+          label:'CPP', data: cppData,
+          backgroundColor: bgColors,
+          borderRadius: 4,
+        }]},
+        options:{
+          responsive:true,
+          plugins:{
+            legend:{display:false},
+            tooltip:{callbacks:{label:c=>`CPP: ${c.raw.toLocaleString()} ${cur}`}},
+            annotation:{},
+          },
+          scales:{
+            x:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},
+            y:{ticks:{color:'#64748b',font:{size:10},callback:v=>v.toLocaleString()},
+               grid:{color:'rgba(255,255,255,.04)'},
+               title:{display:true,text:'CPP ('+cur+')',color:'#64748b',font:{size:10}}},
+          }
+        }
+      });
+    }
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
