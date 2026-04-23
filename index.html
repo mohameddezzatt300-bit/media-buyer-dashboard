@@ -45,6 +45,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .qd-btn:hover{background:var(--card3);color:var(--text)}
 .qd-btn.active{background:var(--c0);color:#fff;border-color:var(--c0)}
 
+/* ── PERIOD DELTA BADGES ── */
+.delta{display:inline-block;font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;
+       margin-top:3px;letter-spacing:.02em}
+.delta-up{background:rgba(34,197,94,.15);color:#22c55e}
+.delta-down{background:rgba(239,68,68,.15);color:#ef4444}
+.delta-flat{background:rgba(100,116,139,.15);color:#64748b}
+.period-banner{font-size:10px;color:var(--muted);margin-bottom:12px;
+               padding:6px 12px;background:var(--card2);border-radius:8px;
+               border:1px solid var(--border);display:inline-flex;gap:6px;align-items:center}
+.period-banner strong{color:var(--text)}
+
 /* ── DAY-OF-WEEK HEATMAP ── */
 .heatmap-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
 .heatmap-toolbar span{font-size:12px;color:var(--muted);font-weight:600}
@@ -344,6 +355,7 @@ const state = {
   until: '',
   activeTab: 'overview',
   cache: {},
+  prevCache: {},
   loading: false,
 };
 
@@ -526,6 +538,34 @@ async function loadAccount(acc) {
   }).catch(() => []);
 
   return { summary: sumData || {}, daily, daily90, campaigns, ads, demographics, currency: acc.currency };
+}
+
+async function loadAccountSummaryOnly(acc, tr) {
+  const [sumData] = await fetchAllPages(`${acc.id}/insights`, {
+    fields: 'spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,actions,action_values',
+    time_range: tr,
+  });
+  return sumData || null;
+}
+
+function prevPeriodRange() {
+  if (!state.since || !state.until) return null;
+  const sinceD  = new Date(state.since + 'T12:00:00');
+  const untilD  = new Date(state.until + 'T12:00:00');
+  const days    = Math.round((untilD - sinceD) / 86400000) + 1;
+  const prevUntil = new Date(sinceD); prevUntil.setDate(prevUntil.getDate() - 1);
+  const prevSince = new Date(prevUntil); prevSince.setDate(prevSince.getDate() - (days - 1));
+  return { since: fmtDate(prevSince), until: fmtDate(prevUntil), days };
+}
+
+function deltaBadge(curr, prev, reverse=false) {
+  if (prev == null || prev === 0 || curr == null) return '';
+  const pct = ((curr - prev) / Math.abs(prev)) * 100;
+  if (Math.abs(pct) < 0.5) return `<span class="delta delta-flat">= 0%</span>`;
+  const isGood = reverse ? pct < 0 : pct > 0;
+  const arrow  = pct > 0 ? '▲' : '▼';
+  const cls    = isGood ? 'delta-up' : 'delta-down';
+  return `<span class="delta ${cls}">${arrow} ${Math.abs(pct) < 100 ? Math.abs(pct).toFixed(1) : Math.round(Math.abs(pct))}%</span>`;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1035,24 +1075,31 @@ function renderAccountTab(accKey, rawData) {
   const savedBudget = state.budgets[accKey] || '';
 
   const el = document.getElementById(`tab-${accKey}`);
+  const prevSum = state.prevCache[accKey] ? processSum(state.prevCache[accKey], cur) : null;
+  const prevTrInfo = prevPeriodRange();
+  const prevLabel = prevTrInfo ? `vs ${prevTrInfo.since} → ${prevTrInfo.until}` : '';
+  const kd = (curr, prev, rev=false) => prev ? `<div style="margin-top:2px">${deltaBadge(curr, prev, rev)}</div>` : '';
+
   el.innerHTML = `
     <div class="section">
-      <h2 style="border-bottom-color:${acc_cfg.color}">${acc_cfg.name} — April Overview</h2>
+      <h2 style="border-bottom-color:${acc_cfg.color}">${acc_cfg.name}
+        ${prevLabel ? `<span class="period-banner" style="margin-left:10px;vertical-align:middle;font-size:10px">📅 ${state.since} → ${state.until} &nbsp;vs&nbsp; <strong>${prevTrInfo.since} → ${prevTrInfo.until}</strong></span>` : ''}
+      </h2>
       <div class="kpi-grid">
-        <div class="kpi kb"><div class="k-label">Total Spend</div><div class="k-val">${fmtK(acc.spend)}</div><div class="k-sub">${cur}</div></div>
-        <div class="kpi ${acc.revenue>0?'kg':''}"><div class="k-label">Revenue</div><div class="k-val">${fmtK(acc.revenue)}</div><div class="k-sub">${cur}</div></div>
-        <div class="kpi kg"><div class="k-label">Purchases</div><div class="k-val">${acc.purchases||'—'}</div><div class="k-sub">orders</div></div>
-        <div class="kpi ${acc.roas>5?'kg':acc.roas>2?'ky':'kr'}"><div class="k-label">ROAS</div><div class="k-val">${acc.roas>0?acc.roas.toFixed(2)+'x':'—'}</div><div class="k-sub">return on ad spend</div></div>
-        <div class="kpi ${acc.cpp>0&&acc.cpp<300?'kg':acc.cpp>800?'kr':'ky'}"><div class="k-label">CPP</div><div class="k-val">${acc.cpp>0?fmt(acc.cpp,0):'—'}</div><div class="k-sub">${cur} / purchase</div></div>
-        <div class="kpi ${acc.ctr>2?'kg':'ky'}"><div class="k-label">CTR</div><div class="k-val">${acc.ctr.toFixed(2)}%</div><div class="k-sub">click-through</div></div>
-        <div class="kpi"><div class="k-label">CPM</div><div class="k-val">${fmt(acc.cpm,0)}</div><div class="k-sub">${cur}</div></div>
-        <div class="kpi"><div class="k-label">CPC</div><div class="k-val">${fmt(acc.cpc,2)}</div><div class="k-sub">${cur}</div></div>
-        <div class="kpi ${acc.freq>3?'ky':''}"><div class="k-label">Frequency</div><div class="k-val">${acc.freq.toFixed(2)}x</div><div class="k-sub">avg per person</div></div>
-        <div class="kpi"><div class="k-label">Reach</div><div class="k-val">${fmtK(acc.reach)}</div><div class="k-sub">people</div></div>
-        <div class="kpi kc"><div class="k-label">Add to Cart</div><div class="k-val">${fmtK(acc.atc)}</div><div class="k-sub">events</div></div>
-        <div class="kpi kc"><div class="k-label">Checkout</div><div class="k-val">${fmtK(acc.checkout)}</div><div class="k-sub">initiated</div></div>
-        <div class="kpi"><div class="k-label">Messages</div><div class="k-val">${fmtK(acc.msgs)||'—'}</div><div class="k-sub">conversations</div></div>
-        <div class="kpi"><div class="k-label">View Content</div><div class="k-val">${fmtK(acc.vc)}</div><div class="k-sub">product views</div></div>
+        <div class="kpi kb"><div class="k-label">Total Spend</div><div class="k-val">${fmtK(acc.spend)}</div>${kd(acc.spend,prevSum?.spend,true)}<div class="k-sub">${cur}</div></div>
+        <div class="kpi ${acc.revenue>0?'kg':''}"><div class="k-label">Revenue</div><div class="k-val">${fmtK(acc.revenue)}</div>${kd(acc.revenue,prevSum?.revenue)}<div class="k-sub">${cur}</div></div>
+        <div class="kpi kg"><div class="k-label">Purchases</div><div class="k-val">${acc.purchases||'—'}</div>${kd(acc.purchases,prevSum?.purchases)}<div class="k-sub">orders</div></div>
+        <div class="kpi ${acc.roas>5?'kg':acc.roas>2?'ky':'kr'}"><div class="k-label">ROAS</div><div class="k-val">${acc.roas>0?acc.roas.toFixed(2)+'x':'—'}</div>${kd(acc.roas,prevSum?.roas)}<div class="k-sub">return on ad spend</div></div>
+        <div class="kpi ${acc.cpp>0&&acc.cpp<300?'kg':acc.cpp>800?'kr':'ky'}"><div class="k-label">CPP</div><div class="k-val">${acc.cpp>0?fmt(acc.cpp,0):'—'}</div>${kd(acc.cpp,prevSum?.cpp,true)}<div class="k-sub">${cur} / purchase</div></div>
+        <div class="kpi ${acc.ctr>2?'kg':'ky'}"><div class="k-label">CTR</div><div class="k-val">${acc.ctr.toFixed(2)}%</div>${kd(acc.ctr,prevSum?.ctr)}<div class="k-sub">click-through</div></div>
+        <div class="kpi"><div class="k-label">CPM</div><div class="k-val">${fmt(acc.cpm,0)}</div>${kd(acc.cpm,prevSum?.cpm,true)}<div class="k-sub">${cur}</div></div>
+        <div class="kpi"><div class="k-label">CPC</div><div class="k-val">${fmt(acc.cpc,2)}</div>${kd(acc.cpc,prevSum?.cpc,true)}<div class="k-sub">${cur}</div></div>
+        <div class="kpi ${acc.freq>3?'ky':''}"><div class="k-label">Frequency</div><div class="k-val">${acc.freq.toFixed(2)}x</div>${kd(acc.freq,prevSum?.freq,true)}<div class="k-sub">avg per person</div></div>
+        <div class="kpi"><div class="k-label">Reach</div><div class="k-val">${fmtK(acc.reach)}</div>${kd(acc.reach,prevSum?.reach)}<div class="k-sub">people</div></div>
+        <div class="kpi kc"><div class="k-label">Add to Cart</div><div class="k-val">${fmtK(acc.atc)}</div>${kd(acc.atc,prevSum?.atc)}<div class="k-sub">events</div></div>
+        <div class="kpi kc"><div class="k-label">Checkout</div><div class="k-val">${fmtK(acc.checkout)}</div>${kd(acc.checkout,prevSum?.checkout)}<div class="k-sub">initiated</div></div>
+        <div class="kpi"><div class="k-label">Messages</div><div class="k-val">${fmtK(acc.msgs)||'—'}</div>${kd(acc.msgs,prevSum?.msgs)}<div class="k-sub">conversations</div></div>
+        <div class="kpi"><div class="k-label">View Content</div><div class="k-val">${fmtK(acc.vc)}</div>${kd(acc.vc,prevSum?.vc)}<div class="k-sub">product views</div></div>
       </div>
     </div>
 
@@ -1294,11 +1341,26 @@ function renderAccountTab(accKey, rawData) {
 // RENDER: OVERVIEW TAB
 // ═══════════════════════════════════════════════════════════════
 function renderOverview(allData) {
-  // Cards
+  const prevTr = prevPeriodRange();
+
+  // ── Period comparison banner ───────────────────────────────
+  const overviewHead = document.querySelector('#tab-overview .section:first-child h2');
+  if (overviewHead && prevTr) {
+    overviewHead.innerHTML = `🌐 All Accounts – Overview
+      <span class="period-banner" style="font-size:10px;margin-left:12px;vertical-align:middle">
+        📅 <strong>${state.since}</strong> → <strong>${state.until}</strong>
+        &nbsp;vs&nbsp;
+        <strong>${prevTr.since}</strong> → <strong>${prevTr.until}</strong>
+      </span>`;
+  }
+
+  // Cards (with delta badges)
   const cards = ACCOUNTS.map(acc => {
-    const raw = allData[acc.key];
+    const raw  = allData[acc.key];
     if (!raw) return `<div class="acc-card" onclick="switchTab('${acc.key}')"><div class="ac-head"><span class="acc-dot" style="background:${acc.color}"></span><span class="ac-name">${acc.name}</span><span class="ac-cur">${acc.currency}</span></div><p style="color:var(--muted);font-size:12px">No data</p></div>`;
-    const d = processSum(raw.summary, acc.currency);
+    const d    = processSum(raw.summary, acc.currency);
+    const prev = state.prevCache[acc.key] ? processSum(state.prevCache[acc.key], acc.currency) : null;
+
     return `
     <div class="acc-card" onclick="switchTab('${acc.key}')" style="border-color:${acc.color}33">
       <div class="ac-head">
@@ -1307,12 +1369,36 @@ function renderOverview(allData) {
         <span class="ac-cur">${acc.currency}</span>
       </div>
       <div class="ac-kpis">
-        <div class="ac-kpi"><div class="v" style="color:${acc.color}">${fmtK(d.spend)}</div><div class="l">Spend</div></div>
-        <div class="ac-kpi"><div class="v" style="color:var(--green)">${d.purchases||'—'}</div><div class="l">Purchases</div></div>
-        <div class="ac-kpi"><div class="v" style="color:${d.roas>5?'var(--green)':d.roas>2?'var(--yellow)':'var(--red)'}">${d.roas>0?d.roas.toFixed(1)+'x':'—'}</div><div class="l">ROAS</div></div>
-        <div class="ac-kpi"><div class="v">${d.cpp>0?fmtK(d.cpp):'—'}</div><div class="l">CPP</div></div>
-        <div class="ac-kpi"><div class="v" style="color:var(--c1)">${d.ctr.toFixed(1)}%</div><div class="l">CTR</div></div>
-        <div class="ac-kpi"><div class="v">${d.freq.toFixed(1)}x</div><div class="l">Freq</div></div>
+        <div class="ac-kpi">
+          <div class="v" style="color:${acc.color}">${fmtK(d.spend)}</div>
+          ${prev ? deltaBadge(d.spend, prev.spend, true) : ''}
+          <div class="l">Spend</div>
+        </div>
+        <div class="ac-kpi">
+          <div class="v" style="color:var(--green)">${d.purchases||'—'}</div>
+          ${prev ? deltaBadge(d.purchases, prev.purchases) : ''}
+          <div class="l">Purchases</div>
+        </div>
+        <div class="ac-kpi">
+          <div class="v" style="color:${d.roas>5?'var(--green)':d.roas>2?'var(--yellow)':'var(--red)'}">${d.roas>0?d.roas.toFixed(1)+'x':'—'}</div>
+          ${prev ? deltaBadge(d.roas, prev.roas) : ''}
+          <div class="l">ROAS</div>
+        </div>
+        <div class="ac-kpi">
+          <div class="v">${d.cpp>0?fmtK(d.cpp):'—'}</div>
+          ${prev ? deltaBadge(d.cpp, prev.cpp, true) : ''}
+          <div class="l">CPP</div>
+        </div>
+        <div class="ac-kpi">
+          <div class="v" style="color:var(--c1)">${d.ctr.toFixed(1)}%</div>
+          ${prev ? deltaBadge(d.ctr, prev.ctr) : ''}
+          <div class="l">CTR</div>
+        </div>
+        <div class="ac-kpi">
+          <div class="v">${d.freq.toFixed(1)}x</div>
+          ${prev ? deltaBadge(d.freq, prev.freq, true) : ''}
+          <div class="l">Freq</div>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -1329,22 +1415,25 @@ function renderOverview(allData) {
     document.getElementById('insightsSection').style.display = 'block';
   }
 
-  // Comparison table
+  // Comparison table (with delta inline)
+  const hasPrev = Object.keys(state.prevCache).length > 0;
   const rows = ACCOUNTS.map(acc => {
-    const raw = allData[acc.key];
+    const raw  = allData[acc.key];
     if (!raw) return `<tr><td colspan="10" style="color:var(--muted)">${acc.name} — no data</td></tr>`;
-    const d = processSum(raw.summary, acc.currency);
+    const d    = processSum(raw.summary, acc.currency);
+    const prev = state.prevCache[acc.key] ? processSum(state.prevCache[acc.key], acc.currency) : null;
+    const inl  = (curr, p, rev=false) => prev && p ? `<br>${deltaBadge(curr, p, rev)}` : '';
     return `<tr>
       <td><span style="color:${acc.color}">●</span> ${acc.name}</td>
       <td>${acc.currency}</td>
-      <td>${fmt(d.spend,0)}</td>
-      <td class="${d.revenue>0?'tg':''}">${fmt(d.revenue,0)}</td>
-      <td class="${d.purchases>0?'tg':''}">${d.purchases||'—'}</td>
-      <td class="${d.roas>5?'tg':d.roas>0&&d.roas<2?'tr':'ty'}">${d.roas>0?d.roas.toFixed(2)+'x':'—'}</td>
-      <td class="${d.cpp>0&&d.cpp<300?'tg':d.cpp>800?'tr':''}">${d.cpp>0?fmt(d.cpp,0):'—'}</td>
-      <td class="${d.ctr>2?'tg':''}">${d.ctr.toFixed(2)}%</td>
-      <td>${fmt(d.cpm,0)}</td>
-      <td class="${d.freq>3?'ty':''}">${d.freq.toFixed(2)}x</td>
+      <td>${fmt(d.spend,0)}${inl(d.spend,prev?.spend,true)}</td>
+      <td class="${d.revenue>0?'tg':''}">${fmt(d.revenue,0)}${inl(d.revenue,prev?.revenue)}</td>
+      <td class="${d.purchases>0?'tg':''}">${d.purchases||'—'}${inl(d.purchases,prev?.purchases)}</td>
+      <td class="${d.roas>5?'tg':d.roas>0&&d.roas<2?'tr':'ty'}">${d.roas>0?d.roas.toFixed(2)+'x':'—'}${inl(d.roas,prev?.roas)}</td>
+      <td class="${d.cpp>0&&d.cpp<300?'tg':d.cpp>800?'tr':''}">${d.cpp>0?fmt(d.cpp,0):'—'}${inl(d.cpp,prev?.cpp,true)}</td>
+      <td class="${d.ctr>2?'tg':''}">${d.ctr.toFixed(2)}%${inl(d.ctr,prev?.ctr)}</td>
+      <td>${fmt(d.cpm,0)}${inl(d.cpm,prev?.cpm,true)}</td>
+      <td class="${d.freq>3?'ty':''}">${d.freq.toFixed(2)}x${inl(d.freq,prev?.freq,true)}</td>
     </tr>`;
   }).join('');
   document.getElementById('overviewTable').innerHTML = rows;
@@ -1851,8 +1940,22 @@ async function refreshAll() {
     btn.textContent = `⟳ ${acc.name}...`;
   }
 
-  renderOverview(allData);
+  // ── Fetch previous-period summaries in parallel ──────────────
+  const prevTr = prevPeriodRange();
+  if (prevTr) {
+    btn.textContent = '⟳ Prev period...';
+    const prevResults = await Promise.all(
+      ACCOUNTS.map(acc =>
+        loadAccountSummaryOnly(acc, prevTr)
+          .then(s => ({ key: acc.key, summary: s }))
+          .catch(() => ({ key: acc.key, summary: null }))
+      )
+    );
+    state.prevCache = {};
+    prevResults.forEach(r => { state.prevCache[r.key] = r.summary; });
+  }
 
+  renderOverview(allData);
 
   bar.style.width = '100%';
   setTimeout(()=>{ bar.style.width='0'; }, 600);
