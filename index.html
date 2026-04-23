@@ -45,6 +45,25 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .qd-btn:hover{background:var(--card3);color:var(--text)}
 .qd-btn.active{background:var(--c0);color:#fff;border-color:var(--c0)}
 
+/* ── DAY-OF-WEEK HEATMAP ── */
+.heatmap-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.heatmap-toolbar span{font-size:12px;color:var(--muted);font-weight:600}
+.hm-toggle{display:flex;gap:4px}
+.hm-btn{padding:5px 13px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;
+        border:1px solid var(--border);background:var(--card2);color:var(--muted);transition:.15s}
+.hm-btn:hover{background:var(--card3);color:var(--text)}
+.hm-btn.active{background:var(--c0);color:#fff;border-color:var(--c0)}
+.hm-table{width:100%;border-collapse:separate;border-spacing:4px}
+.hm-table th{font-size:11px;color:var(--muted);font-weight:600;text-align:center;padding:4px 6px;white-space:nowrap}
+.hm-table th.day-label{text-align:left;padding-right:12px;width:90px}
+.hm-cell{border-radius:8px;padding:10px 6px;text-align:center;transition:.2s;cursor:default;position:relative}
+.hm-cell:hover{transform:scale(1.07);z-index:2}
+.hm-cell .hm-val{font-size:14px;font-weight:800;line-height:1.2}
+.hm-cell .hm-sub{font-size:9px;opacity:.75;margin-top:2px}
+.hm-legend{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:11px;color:var(--muted)}
+.hm-legend-bar{display:flex;gap:2px}
+.hm-legend-swatch{width:18px;height:10px;border-radius:3px}
+
 /* ── LAYOUT ── */
 .page{max-width:1400px;margin:0 auto;padding:20px 16px}
 .tab-content{display:none}.tab-content.active{display:block}
@@ -261,6 +280,29 @@ td.ty{color:var(--yellow);font-weight:700}
     <div class="section" id="insightsSection" style="display:none">
       <h2>💡 Auto Insights</h2>
       <div id="overviewInsights"></div>
+    </div>
+
+    <div class="section" id="heatmapSection" style="display:none">
+      <h2>🗓 Day-of-Week Performance</h2>
+      <div class="heatmap-toolbar">
+        <span>Metric:</span>
+        <div class="hm-toggle">
+          <button class="hm-btn active" onclick="setHeatmapMetric('roas')">ROAS</button>
+          <button class="hm-btn" onclick="setHeatmapMetric('spend')">Spend</button>
+          <button class="hm-btn" onclick="setHeatmapMetric('purchases')">Purchases</button>
+          <button class="hm-btn" onclick="setHeatmapMetric('ctr')">CTR</button>
+        </div>
+        <span id="heatmapSubtitle" style="margin-left:auto;font-size:11px;color:var(--muted)"></span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="hm-table" id="heatmapTable"></table>
+      </div>
+      <div class="hm-legend">
+        <span>Worst</span>
+        <div class="hm-legend-bar" id="heatmapLegend"></div>
+        <span>Best</span>
+        <span style="margin-left:12px;font-size:10px" id="heatmapLegendNote"></span>
+      </div>
     </div>
   </div>
 
@@ -1319,6 +1361,174 @@ function renderOverview(allData) {
     mkChart('ov-pur-chart','bar',labels,[{label:'Purchases',data:purs,backgroundColor:colors.map(c=>c+'cc')}],{legend:false});
     mkChart('ov-roas-chart','bar',labels,[{label:'ROAS',data:roass,backgroundColor:colors.map(c=>c+'cc')}],{legend:false,extra:{scales:{y:{ticks:{callback:v=>v+'x'}}}}});
   },50);
+
+  // Day-of-Week Heatmap
+  renderHeatmap(allData);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DAY-OF-WEEK HEATMAP
+// ═══════════════════════════════════════════════════════════════
+let _hmData = null; // cached aggregated heatmap data
+let _hmMetric = 'roas';
+
+function renderHeatmap(allData) {
+  const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const DOW_IDX = [1,2,3,4,5,6,0]; // Mon=1...Sun=0 (JS getDay)
+
+  // Aggregate across all accounts by day-of-week
+  // dayMap[dowIndex] = { roas_sum, roas_count, spend_sum, spend_days,
+  //                      purchases_sum, purchases_days, ctr_sum, ctr_count }
+  const dayMap = {};
+  DOW_IDX.forEach(d => { dayMap[d] = { roas_sum:0, roas_count:0, spend_sum:0, spend_days:0, purchases_sum:0, purchases_days:0, ctr_sum:0, ctr_count:0, days:0 }; });
+
+  let totalDays = 0;
+  ACCOUNTS.forEach(acc => {
+    const raw = allData[acc.key];
+    if (!raw || !raw.daily) return;
+    const daily = processDaily(raw.daily);
+    daily.forEach(d => {
+      if (d.spend <= 0) return; // skip days with no spend
+      const dow = new Date(d.date + 'T12:00:00').getDay(); // 0=Sun..6=Sat
+      const entry = dayMap[dow];
+      if (!entry) return;
+      entry.spend_sum += d.spend;
+      entry.spend_days++;
+      entry.days++;
+      totalDays++;
+      if (d.purchases > 0) {
+        entry.purchases_sum += d.purchases;
+        entry.purchases_days++;
+      }
+      if (d.revenue > 0 && d.spend > 0) {
+        entry.roas_sum += d.revenue / d.spend;
+        entry.roas_count++;
+      }
+      if (d.ctr > 0) {
+        entry.ctr_sum += d.ctr;
+        entry.ctr_count++;
+      }
+    });
+  });
+
+  // Compute averages per day
+  const rows = DAYS.map((label, i) => {
+    const dow = DOW_IDX[i];
+    const e = dayMap[dow];
+    return {
+      label,
+      roas:      e.roas_count      > 0 ? e.roas_sum      / e.roas_count      : 0,
+      spend:     e.spend_days      > 0 ? e.spend_sum      / e.spend_days      : 0,
+      purchases: e.purchases_days  > 0 ? e.purchases_sum  / e.purchases_days  : 0,
+      ctr:       e.ctr_count       > 0 ? e.ctr_sum        / e.ctr_count       : 0,
+      days:      e.days,
+    };
+  });
+
+  // Store for metric toggle re-renders
+  _hmData = rows;
+
+  const section = document.getElementById('heatmapSection');
+  if (!section) return;
+
+  if (totalDays === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  const subtitle = document.getElementById('heatmapSubtitle');
+  if (subtitle) subtitle.textContent = `Based on ${totalDays} account-days across ${ACCOUNTS.length} accounts`;
+
+  drawHeatmap();
+}
+
+function setHeatmapMetric(metric) {
+  _hmMetric = metric;
+  document.querySelectorAll('.hm-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.hm-btn[onclick="setHeatmapMetric('${metric}')"]`);
+  if (btn) btn.classList.add('active');
+  drawHeatmap();
+}
+
+function drawHeatmap() {
+  if (!_hmData) return;
+  const metric = _hmMetric;
+  const rows   = _hmData;
+
+  const vals = rows.map(r => r[metric]);
+  const min  = Math.min(...vals.filter(v => v > 0));
+  const max  = Math.max(...vals);
+  const range = max - min || 1;
+
+  // Color scale: red → amber → green  (HSL 0→120)
+  function heatColor(val) {
+    if (val <= 0) return 'rgba(255,255,255,0.04)';
+    const t = (val - min) / range; // 0=worst, 1=best
+    const h = Math.round(t * 120); // 0=red, 60=yellow, 120=green
+    return `hsla(${h},65%,48%,0.85)`;
+  }
+  function heatTextColor(val) {
+    if (val <= 0) return 'var(--muted)';
+    const t = (val - min) / range;
+    return t > 0.4 ? '#fff' : '#e2e8f0';
+  }
+
+  // Format value label
+  function fmtVal(v) {
+    if (v <= 0) return '—';
+    if (metric === 'roas')      return v.toFixed(2) + 'x';
+    if (metric === 'spend')     return fmtK(v);
+    if (metric === 'purchases') return v.toFixed(1);
+    if (metric === 'ctr')       return v.toFixed(2) + '%';
+    return v.toFixed(1);
+  }
+  function fmtSub(r) {
+    return r.days > 0 ? `${r.days} days` : '—';
+  }
+
+  const metricLabel = {roas:'Avg ROAS', spend:'Avg Daily Spend', purchases:'Avg Daily Purchases', ctr:'Avg CTR'}[metric];
+
+  // Best/worst labels
+  const activeRows = rows.filter(r => r[metric] > 0);
+  const bestDay  = activeRows.length ? activeRows.reduce((a,b) => b[metric]>a[metric]?b:a) : null;
+  const worstDay = activeRows.length ? activeRows.reduce((a,b) => b[metric]<a[metric]?b:a) : null;
+
+  // Build table — single row layout (days as columns)
+  let html = `<thead><tr>
+    <th class="day-label">${metricLabel}</th>
+    ${rows.map(r=>`<th>${r.label}</th>`).join('')}
+  </tr></thead><tbody><tr>
+    <th class="day-label" style="font-weight:400;color:var(--muted);font-size:10px">All Accounts</th>
+    ${rows.map(r => {
+      const v = r[metric];
+      const bg = heatColor(v);
+      const fg = heatTextColor(v);
+      const isBest  = bestDay  && r.label === bestDay.label  ? ' title="🏆 Best day"'  : '';
+      const isWorst = worstDay && r.label === worstDay.label ? ' title="⚠️ Worst day"' : '';
+      const badge = bestDay  && r.label === bestDay.label  ? '<div style="font-size:8px;margin-top:1px">🏆</div>' :
+                    worstDay && r.label === worstDay.label ? '<div style="font-size:8px;margin-top:1px">⚠️</div>' : '';
+      return `<td><div class="hm-cell" style="background:${bg};color:${fg}"${isBest}${isWorst}>
+        <div class="hm-val">${fmtVal(v)}</div>
+        <div class="hm-sub">${fmtSub(r)}</div>
+        ${badge}
+      </div></td>`;
+    }).join('')}
+  </tr></tbody>`;
+
+  document.getElementById('heatmapTable').innerHTML = html;
+
+  // Legend
+  const swatches = 7;
+  const legendBar = Array.from({length:swatches}, (_,i) => {
+    const t = i / (swatches-1);
+    const h = Math.round(t * 120);
+    return `<div class="hm-legend-swatch" style="background:hsla(${h},65%,48%,0.85)"></div>`;
+  }).join('');
+  const legendEl = document.getElementById('heatmapLegend');
+  if (legendEl) legendEl.innerHTML = legendBar;
+
+  const noteEl = document.getElementById('heatmapLegendNote');
+  if (noteEl && bestDay && worstDay) {
+    noteEl.innerHTML = `Best: <strong style="color:var(--green)">${bestDay.label}</strong> (${fmtVal(bestDay[metric])}) &nbsp;·&nbsp; Worst: <strong style="color:var(--red)">${worstDay.label}</strong> (${fmtVal(worstDay[metric])})`;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
