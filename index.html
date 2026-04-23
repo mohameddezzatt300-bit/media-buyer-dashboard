@@ -1343,15 +1343,42 @@ function renderAccountTab(accKey, rawData) {
 function renderOverview(allData) {
   const prevTr = prevPeriodRange();
 
-  // ── Period comparison banner ───────────────────────────────
+  // ── Period comparison banner (always show if dates set) ──────
   const overviewHead = document.querySelector('#tab-overview .section:first-child h2');
-  if (overviewHead && prevTr) {
-    overviewHead.innerHTML = `🌐 All Accounts – Overview
-      <span class="period-banner" style="font-size:10px;margin-left:12px;vertical-align:middle">
-        📅 <strong>${state.since}</strong> → <strong>${state.until}</strong>
-        &nbsp;vs&nbsp;
-        <strong>${prevTr.since}</strong> → <strong>${prevTr.until}</strong>
-      </span>`;
+  if (overviewHead) {
+    const prevLabel = prevTr
+      ? `<span class="period-banner" style="font-size:10px;margin-left:10px;vertical-align:middle">
+           📅 <strong>${state.since}</strong> → <strong>${state.until}</strong>
+           &nbsp;<span style="color:var(--muted)">vs</span>&nbsp;
+           <strong>${prevTr.since}</strong> → <strong>${prevTr.until}</strong>
+         </span>`
+      : '';
+    overviewHead.innerHTML = `🌐 All Accounts – Overview ${prevLabel}`;
+  }
+
+  // ── Comparison period info strip above cards ───────────────
+  const hasPrevData = Object.values(state.prevCache).some(v => v !== null);
+  const stripId = 'overviewPeriodStrip';
+  let strip = document.getElementById(stripId);
+  if (!strip) {
+    strip = document.createElement('div');
+    strip.id = stripId;
+    strip.style.cssText = 'margin-bottom:12px;padding:8px 14px;background:var(--card2);border:1px solid var(--border);border-radius:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap';
+    const grid = document.getElementById('overviewCards');
+    if (grid) grid.parentNode.insertBefore(strip, grid);
+  }
+  if (prevTr) {
+    strip.innerHTML = hasPrevData
+      ? `<span style="color:var(--c0);font-weight:700">📊 Period Comparison</span>
+         <span style="color:var(--muted)">Current: <strong style="color:var(--text)">${state.since} → ${state.until}</strong></span>
+         <span style="color:var(--muted)">vs Previous: <strong style="color:var(--text)">${prevTr.since} → ${prevTr.until}</strong></span>
+         <span style="color:var(--green);font-size:11px">▲ green = better &nbsp;·&nbsp;</span><span style="color:var(--red);font-size:11px">▼ red = worse</span>`
+      : `<span style="color:var(--c0);font-weight:700">📊 Period Comparison</span>
+         <span style="color:var(--muted)">Current: <strong style="color:var(--text)">${state.since} → ${state.until}</strong></span>
+         <span style="color:var(--muted)">vs Previous: <strong style="color:var(--text)">${prevTr.since} → ${prevTr.until}</strong> — <em>no prev data found</em></span>`;
+    strip.style.display = 'flex';
+  } else {
+    strip.style.display = 'none';
   }
 
   // Cards (with delta badges)
@@ -1416,7 +1443,6 @@ function renderOverview(allData) {
   }
 
   // Comparison table (with delta inline)
-  const hasPrev = Object.keys(state.prevCache).length > 0;
   const rows = ACCOUNTS.map(acc => {
     const raw  = allData[acc.key];
     if (!raw) return `<tr><td colspan="10" style="color:var(--muted)">${acc.name} — no data</td></tr>`;
@@ -1520,8 +1546,18 @@ function renderHeatmap(allData) {
   const section = document.getElementById('heatmapSection');
   if (!section) return;
 
-  if (totalDays === 0) { section.style.display = 'none'; return; }
-  section.style.display = 'block';
+  section.style.display = 'block'; // always show after data loads
+
+  if (totalDays === 0) {
+    document.getElementById('heatmapTable').innerHTML =
+      `<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--muted);font-size:13px">
+        📊 No daily spend data found for this period.<br>
+        <span style="font-size:11px;opacity:.7">Select a wider date range or verify spend data exists.</span>
+      </td></tr>`;
+    const subtitle = document.getElementById('heatmapSubtitle');
+    if (subtitle) subtitle.textContent = '0 days with spend found';
+    return;
+  }
 
   const subtitle = document.getElementById('heatmapSubtitle');
   if (subtitle) subtitle.textContent = `Based on ${totalDays} account-days across ${ACCOUNTS.length} accounts`;
