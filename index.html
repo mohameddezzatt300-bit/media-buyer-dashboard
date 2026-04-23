@@ -38,6 +38,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .btn-settings:hover{color:var(--text)}
 .btn-refresh.loading{animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.quick-dates{display:flex;gap:4px}
+.qd-btn{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;
+        border:1px solid var(--border);background:var(--card2);color:var(--muted);
+        transition:.15s;white-space:nowrap}
+.qd-btn:hover{background:var(--card3);color:var(--text)}
+.qd-btn.active{background:var(--c0);color:#fff;border-color:var(--c0)}
 
 /* ── LAYOUT ── */
 .page{max-width:1400px;margin:0 auto;padding:20px 16px}
@@ -184,6 +190,14 @@ td.ty{color:var(--yellow);font-weight:700}
     <button class="acc-tab" onclick="switchTab('acc5')" data-tab="acc5" style="color:var(--c5)">CHOU</button>
   </div>
   <div class="controls">
+    <div class="quick-dates">
+      <button class="qd-btn" onclick="setRange('today')">Today</button>
+      <button class="qd-btn" onclick="setRange('yesterday')">Yesterday</button>
+      <button class="qd-btn" onclick="setRange('7d')">7D</button>
+      <button class="qd-btn" onclick="setRange('30d')">30D</button>
+      <button class="qd-btn" onclick="setRange('this_month')">This Month</button>
+      <button class="qd-btn" onclick="setRange('last_month')">Last Month</button>
+    </div>
     <input type="date" class="date-inp" id="dateFrom">
     <span style="color:var(--muted);font-size:12px">→</span>
     <input type="date" class="date-inp" id="dateTo">
@@ -302,8 +316,17 @@ const state = {
   document.getElementById('dateFrom').value = state.since;
   document.getElementById('dateTo').value   = state.until;
 
-  document.getElementById('dateFrom').addEventListener('change', e => { state.since = e.target.value; state.cache = {}; });
-  document.getElementById('dateTo').addEventListener('change',   e => { state.until = e.target.value; state.cache = {}; });
+  document.getElementById('dateFrom').addEventListener('change', e => {
+    state.since = e.target.value; state.cache = {};
+    document.querySelectorAll('.qd-btn').forEach(b => b.classList.remove('active'));
+  });
+  document.getElementById('dateTo').addEventListener('change', e => {
+    state.until = e.target.value; state.cache = {};
+    document.querySelectorAll('.qd-btn').forEach(b => b.classList.remove('active'));
+  });
+
+  // Highlight default (This Month)
+  document.querySelector(".qd-btn[onclick=\"setRange('this_month')\"]")?.classList.add('active');
 
   if (!state.token) { setTimeout(openModal, 600); }
   else { refreshAll(); }
@@ -314,6 +337,46 @@ const state = {
 // ═══════════════════════════════════════════════════════════════
 function fmtDate(d) {
   return d.toISOString().split('T')[0];
+}
+
+function setRange(preset) {
+  const t = new Date();
+  const today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  let from, to;
+
+  if (preset === 'today') {
+    from = to = today;
+  } else if (preset === 'yesterday') {
+    const y = new Date(today); y.setDate(y.getDate() - 1);
+    from = to = y;
+  } else if (preset === '7d') {
+    from = new Date(today); from.setDate(from.getDate() - 6);
+    to   = today;
+  } else if (preset === '30d') {
+    from = new Date(today); from.setDate(from.getDate() - 29);
+    to   = today;
+  } else if (preset === 'this_month') {
+    from = new Date(t.getFullYear(), t.getMonth(), 1);
+    to   = today;
+  } else if (preset === 'last_month') {
+    from = new Date(t.getFullYear(), t.getMonth() - 1, 1);
+    to   = new Date(t.getFullYear(), t.getMonth(), 0);
+  }
+
+  state.since = fmtDate(from);
+  state.until = fmtDate(to);
+  state.cache = {};
+
+  document.getElementById('dateFrom').value = state.since;
+  document.getElementById('dateTo').value   = state.until;
+
+  // Highlight active button
+  document.querySelectorAll('.qd-btn').forEach(b => b.classList.remove('active'));
+  const map = { today:'today', yesterday:'yesterday', '7d':'7d', '30d':'30d', this_month:'this_month', last_month:'last_month' };
+  const btn = document.querySelector(`.qd-btn[onclick="setRange('${preset}')"]`);
+  if (btn) btn.classList.add('active');
+
+  refreshAll();
 }
 function fmt(v, dec=0, cur='') {
   if (!v || v === 0) return '—';
