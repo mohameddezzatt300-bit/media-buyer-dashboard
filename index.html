@@ -1989,6 +1989,12 @@ async function refreshAll() {
     );
     state.prevCache = {};
     prevResults.forEach(r => { state.prevCache[r.key] = r.summary; });
+
+    // Re-render account tabs now that prevCache is ready → shows delta badges
+    ACCOUNTS.forEach(acc => {
+      const raw = state.cache[acc.key];
+      if (raw) renderAccountTab(acc.key, raw);
+    });
   }
 
   renderOverview(allData);
