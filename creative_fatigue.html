@@ -1521,15 +1521,6 @@ function renderTable() {
       <td class="num" style="color:${r.roas >= 2 ? 'var(--green)' : r.roas >= 1 ? 'var(--yellow)' : 'var(--txt-mute)'}">${r.roas ? r.roas.toFixed(2) + 'x' : '—'}</td>
     </tr>`;
   }).join('');
-      <td class="num">${fmtCur(r.spend, r.currency, 0)}</td>
-      <td class="num">${r.freq ? r.freq.toFixed(2) : '—'}</td>
-      <td class="num" style="${r.ctr > 0 && r.ctr < CTR_TAX_THRESHOLD ? 'color:var(--red)' : ''}">${r.ctr > 0 && r.ctr < CTR_TAX_THRESHOLD ? '⚠ ' : ''}${fmtPct(r.ctr)}</td>
-      <td class="num">${r.cpm ? r.cpm.toFixed(2) : '—'}</td>
-      <td class="num">${r.purchases || '—'}</td>
-      <td class="num">${r.cpp ? r.cpp.toFixed(0) : '—'}</td>
-      <td class="num" style="color:${r.roas >= 2 ? 'var(--green)' : r.roas >= 1 ? 'var(--yellow)' : 'var(--txt-mute)'}">${r.roas ? r.roas.toFixed(2) + 'x' : '—'}</td>
-    </tr>
-  `).join('');
 }
 
 function badgeFor(rec) {
