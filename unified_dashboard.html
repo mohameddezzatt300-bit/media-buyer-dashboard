@@ -38,6 +38,66 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .btn-settings:hover{color:var(--text)}
 .btn-refresh.loading{animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.quick-dates{display:flex;gap:4px}
+.qd-btn{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;
+        border:1px solid var(--border);background:var(--card2);color:var(--muted);
+        transition:.15s;white-space:nowrap}
+.qd-btn:hover{background:var(--card3);color:var(--text)}
+.qd-btn.active{background:var(--c0);color:#fff;border-color:var(--c0)}
+
+/* ── PERIOD DELTA BADGES ── */
+.delta{display:inline-block;font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;
+       margin-top:3px;letter-spacing:.02em}
+.delta-up{background:rgba(34,197,94,.15);color:#22c55e}
+.delta-down{background:rgba(239,68,68,.15);color:#ef4444}
+.delta-flat{background:rgba(100,116,139,.15);color:#64748b}
+/* avg comparison badges — slightly different style */
+.avg-good{background:rgba(34,197,94,.08);color:#4ade80;border:1px solid rgba(34,197,94,.25)}
+.avg-bad {background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+.avg-cmp {background:rgba(100,116,139,.08);color:#94a3b8;border:1px solid rgba(100,116,139,.2)}
+.period-banner{font-size:10px;color:var(--muted);margin-bottom:12px;
+               padding:6px 12px;background:var(--card2);border-radius:8px;
+               border:1px solid var(--border);display:inline-flex;gap:6px;align-items:center}
+.period-banner strong{color:var(--text)}
+
+/* ── ALERTS & THRESHOLDS ── */
+.alerts-grid{display:flex;flex-direction:column;gap:8px}
+.alert-card{display:flex;align-items:center;gap:14px;padding:13px 16px;border-radius:11px;border:1px solid transparent}
+.alert-card.alert-critical{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)}
+.alert-card.alert-warn{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.3)}
+.alert-icon{font-size:20px;flex-shrink:0}
+.alert-body{flex:1}
+.alert-title{font-size:13px;font-weight:700;margin-bottom:2px}
+.alert-desc{font-size:11px;color:var(--muted)}
+.alert-val{font-size:18px;font-weight:800;margin-left:auto;white-space:nowrap}
+.alert-card.alert-critical .alert-val{color:var(--red)}
+.alert-card.alert-warn .alert-val{color:var(--yellow)}
+.thr-row{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:12px 16px;
+         background:var(--card2);border-radius:10px;border:1px solid var(--border);margin-bottom:14px}
+.thr-group{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.thr-input{width:72px;background:var(--card3);border:1px solid var(--border);color:var(--text);
+           border-radius:6px;padding:4px 8px;font-size:12px;text-align:center}
+.thr-label{white-space:nowrap}
+.no-alerts{padding:16px;color:var(--green);font-size:13px;font-weight:600}
+
+/* ── DAY-OF-WEEK HEATMAP ── */
+.heatmap-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.heatmap-toolbar span{font-size:12px;color:var(--muted);font-weight:600}
+.hm-toggle{display:flex;gap:4px}
+.hm-btn{padding:5px 13px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;
+        border:1px solid var(--border);background:var(--card2);color:var(--muted);transition:.15s}
+.hm-btn:hover{background:var(--card3);color:var(--text)}
+.hm-btn.active{background:var(--c0);color:#fff;border-color:var(--c0)}
+.hm-table{width:100%;border-collapse:separate;border-spacing:4px}
+.hm-table th{font-size:11px;color:var(--muted);font-weight:600;text-align:center;padding:4px 6px;white-space:nowrap}
+.hm-table th.day-label{text-align:left;padding-right:12px;width:90px}
+.hm-cell{border-radius:8px;padding:10px 6px;text-align:center;transition:.2s;cursor:default;position:relative}
+.hm-cell:hover{transform:scale(1.07);z-index:2}
+.hm-cell .hm-val{font-size:14px;font-weight:800;line-height:1.2}
+.hm-cell .hm-sub{font-size:9px;opacity:.75;margin-top:2px}
+.hm-legend{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:11px;color:var(--muted)}
+.hm-legend-bar{display:flex;gap:2px}
+.hm-legend-swatch{width:18px;height:10px;border-radius:3px}
 
 /* ── LAYOUT ── */
 .page{max-width:1400px;margin:0 auto;padding:20px 16px}
@@ -90,25 +150,6 @@ td.ty{color:var(--yellow);font-weight:700}
 .ac-kpi .v{font-size:17px;font-weight:800}
 .ac-kpi .l{font-size:9px;color:var(--muted);margin-top:2px}
 
-/* ── SHOPIFY ── */
-.shopify-kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px;margin-bottom:20px}
-.shopify-kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
-.shopify-kpi .sk-label{font-size:10px;color:var(--muted);margin-bottom:4px}
-.shopify-kpi .sk-val{font-size:22px;font-weight:800;color:#95bf47}
-.shopify-kpi .sk-sub{font-size:9px;color:var(--muted);margin-top:2px}
-.shopify-badge{display:inline-flex;align-items:center;gap:6px;background:#95bf4720;
-               border:1px solid #95bf4740;border-radius:20px;padding:4px 12px;
-               font-size:11px;font-weight:700;color:#95bf47;margin-bottom:14px}
-.blended-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:11px;
-             background:var(--card2);border:1px solid var(--border);border-radius:14px;
-             padding:18px;margin-bottom:20px}
-.blended-metric{text-align:center}
-.blended-metric .bm-val{font-size:22px;font-weight:800}
-.blended-metric .bm-label{font-size:10px;color:var(--muted);margin-top:3px}
-.prod-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
-.prod-row:last-child{border-bottom:none}
-.prod-bar-wrap{flex:1;height:6px;background:var(--card3);border-radius:3px;overflow:hidden}
-.prod-bar{height:100%;background:#95bf47;border-radius:3px}
 
 /* ── FORECAST ── */
 .forecast-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:11px;margin-top:14px}
@@ -195,15 +236,31 @@ td.ty{color:var(--yellow);font-weight:700}
   <div class="logo">📊 MediaBuyer</div>
   <div class="acc-tabs" id="accTabs">
     <button class="acc-tab active" onclick="switchTab('overview')" data-tab="overview">🌐 Overview</button>
-    <button class="acc-tab" onclick="switchTab('acc0')" data-tab="acc0" style="color:var(--c0)">Coctail Media</button>
-    <button class="acc-tab" onclick="switchTab('acc1')" data-tab="acc1" style="color:var(--c1)">The Mat GCC</button>
-    <button class="acc-tab" onclick="switchTab('acc2')" data-tab="acc2" style="color:var(--c2)">The Mat</button>
-    <button class="acc-tab" onclick="switchTab('acc3')" data-tab="acc3" style="color:var(--c3)">Minibinis</button>
-    <button class="acc-tab" onclick="switchTab('acc4')" data-tab="acc4" style="color:var(--c4)">Padel Lovers</button>
-    <button class="acc-tab" onclick="switchTab('acc5')" data-tab="acc5" style="color:var(--c5)">CHOU</button>
-    <button class="acc-tab" onclick="switchTab('shopify')" data-tab="shopify" style="color:#95bf47">🛍 Shopify</button>
+    <button class="acc-tab" onclick="switchTab('acc0')"  data-tab="acc0"  style="color:var(--c0)">Coctail Media</button>
+    <button class="acc-tab" onclick="switchTab('acc1')"  data-tab="acc1"  style="color:var(--c1)">The Mat GCC</button>
+    <button class="acc-tab" onclick="switchTab('acc2')"  data-tab="acc2"  style="color:var(--c2)">The Mat</button>
+    <button class="acc-tab" onclick="switchTab('acc3')"  data-tab="acc3"  style="color:var(--c3)">Minibinis</button>
+    <button class="acc-tab" onclick="switchTab('acc4')"  data-tab="acc4"  style="color:var(--c4)">Padel Lovers</button>
+    <button class="acc-tab" onclick="switchTab('acc5')"  data-tab="acc5"  style="color:var(--c5)">CHOU</button>
+    <button class="acc-tab" onclick="switchTab('acc6')"  data-tab="acc6"  style="color:#f97316">Brisk Padel</button>
+    <button class="acc-tab" onclick="switchTab('acc7')"  data-tab="acc7"  style="color:#14b8a6">Gant EG</button>
+    <button class="acc-tab" onclick="switchTab('acc8')"  data-tab="acc8"  style="color:#a855f7">Altamra</button>
+    <button class="acc-tab" onclick="switchTab('acc9')"  data-tab="acc9"  style="color:#ef4444">Seven Secrets</button>
+    <button class="acc-tab" onclick="switchTab('acc10')" data-tab="acc10" style="color:#84cc16">nShades</button>
+    <button class="acc-tab" onclick="switchTab('acc11')" data-tab="acc11" style="color:#0ea5e9">PIXI EGP New</button>
+    <button class="acc-tab" onclick="switchTab('acc12')" data-tab="acc12" style="color:#f43f5e">Junior - New</button>
+    <button class="acc-tab" onclick="switchTab('acc13')" data-tab="acc13" style="color:#fb923c">Junior - Old</button>
+    <button class="acc-tab" onclick="switchTab('acc14')" data-tab="acc14" style="color:#10b981">Dr. Baby 2</button>
   </div>
   <div class="controls">
+    <div class="quick-dates">
+      <button class="qd-btn" onclick="setRange('today')">Today</button>
+      <button class="qd-btn" onclick="setRange('yesterday')">Yesterday</button>
+      <button class="qd-btn" onclick="setRange('7d')">7D</button>
+      <button class="qd-btn" onclick="setRange('30d')">30D</button>
+      <button class="qd-btn" onclick="setRange('this_month')">This Month</button>
+      <button class="qd-btn" onclick="setRange('last_month')">Last Month</button>
+    </div>
     <input type="date" class="date-inp" id="dateFrom">
     <span style="color:var(--muted);font-size:12px">→</span>
     <input type="date" class="date-inp" id="dateTo">
@@ -224,13 +281,6 @@ td.ty{color:var(--yellow);font-weight:700}
        <span style="font-size:11px;color:var(--muted)">developers.facebook.com/tools/explorer → ads_read</span></p>
     <input type="password" id="tokenInput" placeholder="EAAXw6s8...">
 
-    <div style="background:rgba(149,191,71,.1);border:1px solid rgba(149,191,71,.3);border-radius:8px;padding:10px 13px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.8">
-      🛍 <strong style="color:#95bf47">Shopify متصل تلقائياً</strong><br>
-      Store: <strong style="color:var(--text)">Coctail — de2457-05.myshopify.com</strong><br>
-      Proxy: Google Apps Script ✅ — لا يحتاج إعداد
-    </div>
-    <input type="hidden" id="shopifyTokenInput" value="">
-    <input type="hidden" id="shopifyProxyInput" value="">
 
     <div class="modal-btns">
       <button class="btn btn-settings" onclick="closeModal()">Cancel</button>
@@ -257,8 +307,6 @@ td.ty{color:var(--yellow);font-weight:700}
         <div class="chart-card"><h3>ROAS by Account</h3><canvas id="ov-roas-chart"></canvas></div>
       </div>
     </div>
-    <!-- Shopify blended row — populated by renderShopify() -->
-    <div id="shopify-overview-section"></div>
 
     <div class="section">
       <h2>📊 Comparison Table</h2>
@@ -277,24 +325,49 @@ td.ty{color:var(--yellow);font-weight:700}
       <h2>💡 Auto Insights</h2>
       <div id="overviewInsights"></div>
     </div>
+
+    <div class="section" id="heatmapSection" style="display:none">
+      <h2>🗓 Day-of-Week Performance</h2>
+      <div class="heatmap-toolbar">
+        <span>Metric:</span>
+        <div class="hm-toggle">
+          <button class="hm-btn active" onclick="setHeatmapMetric('roas')">ROAS</button>
+          <button class="hm-btn" onclick="setHeatmapMetric('spend')">Spend</button>
+          <button class="hm-btn" onclick="setHeatmapMetric('purchases')">Purchases</button>
+          <button class="hm-btn" onclick="setHeatmapMetric('ctr')">CTR</button>
+        </div>
+        <span id="heatmapSubtitle" style="margin-left:auto;font-size:11px;color:var(--muted)"></span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="hm-table" id="heatmapTable"></table>
+      </div>
+      <div class="hm-legend">
+        <span>Worst</span>
+        <div class="hm-legend-bar" id="heatmapLegend"></div>
+        <span>Best</span>
+        <span style="margin-left:12px;font-size:10px" id="heatmapLegendNote"></span>
+      </div>
+    </div>
+
   </div>
 
-  <!-- ═══ INDIVIDUAL ACCOUNT TABS (x6) ═══ -->
+  <!-- ═══ INDIVIDUAL ACCOUNT TABS (x15) ═══ -->
   <div class="tab-content" id="tab-acc0"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
   <div class="tab-content" id="tab-acc1"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
   <div class="tab-content" id="tab-acc2"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
   <div class="tab-content" id="tab-acc3"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
   <div class="tab-content" id="tab-acc4"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
   <div class="tab-content" id="tab-acc5"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc6"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc7"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc8"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc9"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc10"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc11"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc12"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc13"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc14"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
 
-  <!-- ═══ SHOPIFY TAB ═══ -->
-  <div class="tab-content" id="tab-shopify">
-    <div class="empty-state">
-      <div class="big">🛍</div>
-      <p>Add your Shopify Proxy URL in <strong>⚙️ Settings</strong> then click <strong>Refresh</strong></p>
-      <p style="margin-top:8px;font-size:11px;color:var(--muted)">Need the proxy URL? Follow the setup steps in Settings</p>
-    </div>
-  </div>
 
 </div><!-- /page -->
 
@@ -303,12 +376,21 @@ td.ty{color:var(--yellow);font-weight:700}
 // CONFIG
 // ═══════════════════════════════════════════════════════════════
 const ACCOUNTS = [
-  { key:'acc0', name:'Coctail Media',      id:'act_1149171159569221', currency:'EGP', color:'#6c63ff' },
-  { key:'acc1', name:'The Mat GCC',        id:'act_1548007903197582', currency:'AED', color:'#06b6d4' },
-  { key:'acc2', name:'The Mat',            id:'act_2294987800786358', currency:'EGP', color:'#22c55e' },
-  { key:'acc3', name:'Minibinis',          id:'act_403326348515695',  currency:'EGP', color:'#f59e0b' },
-  { key:'acc4', name:'Padel Lovers Egypt', id:'act_3379856628908690', currency:'EGP', color:'#ec4899' },
-  { key:'acc5', name:'CHOU',               id:'act_295161357941522',  currency:'EGP', color:'#a78bfa' },
+  { key:'acc0',  name:'Coctail Media',      id:'act_1149171159569221',   currency:'EGP', color:'#6c63ff' },
+  { key:'acc1',  name:'The Mat GCC',        id:'act_1548007903197582',   currency:'AED', color:'#06b6d4' },
+  { key:'acc2',  name:'The Mat',            id:'act_2294987800786358',   currency:'EGP', color:'#22c55e' },
+  { key:'acc3',  name:'Minibinis',          id:'act_403326348515695',    currency:'EGP', color:'#f59e0b' },
+  { key:'acc4',  name:'Padel Lovers Egypt', id:'act_3379856628908690',   currency:'EGP', color:'#ec4899' },
+  { key:'acc5',  name:'CHOU',               id:'act_295161357941522',    currency:'EGP', color:'#a78bfa' },
+  { key:'acc6',  name:'Brisk Padel',        id:'act_2249215978922506',   currency:'EGP', color:'#f97316' },
+  { key:'acc7',  name:'Gant EG',            id:'act_954964246206785',    currency:'EGP', color:'#14b8a6' },
+  { key:'acc8',  name:'Altamra',            id:'act_599023763095510',    currency:'EGP', color:'#a855f7' },
+  { key:'acc9',  name:'Seven Secrets',      id:'act_2756208384609907',   currency:'EGP', color:'#ef4444' },
+  { key:'acc10', name:'nShades',            id:'act_296080994981476',    currency:'EGP', color:'#84cc16' },
+  { key:'acc11', name:'PIXI EGP New',       id:'act_537839628807557',    currency:'EGP', color:'#0ea5e9' },
+  { key:'acc12', name:'Junior - New',       id:'act_1194462875300018',   currency:'EGP', color:'#f43f5e' },
+  { key:'acc13', name:'Junior - Old',       id:'act_1672376679865023',   currency:'EGP', color:'#fb923c' },
+  { key:'acc14', name:'Dr. Baby 2',         id:'act_365417869449239',    currency:'EGP', color:'#10b981' },
 ];
 const GV = 'v21.0';
 const CHART_INSTANCES = {};
@@ -316,22 +398,17 @@ const CHART_INSTANCES = {};
 // ═══════════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════════
-// ── Shopify config ────────────────────────────────────────────
-const SHOPIFY_STORE      = 'de2457-05.myshopify.com';
-const SHOPIFY_STORE_NAME = SHOPIFY_STORE;
-// Google Apps Script proxy URL — hardcoded, no setup needed
-const SHOPIFY_PROXY_URL  = 'https://script.google.com/macros/s/AKfycbxVAMd29rOHMZOgEFBfCtVU8Wfotr-Z6j5std8GAGHBK_6Xa4GOTfbqeKo9fVmq2Isy/exec';
 
 const state = {
   token:         localStorage.getItem('meta_token') || '',
-  shopifyProxy:  SHOPIFY_PROXY_URL,
   budgets:       JSON.parse(localStorage.getItem('budgets') || '{}'),
 
   since: '',
   until: '',
   activeTab: 'overview',
   cache: {},
-  shopifyCache: null,
+  prevCache: {},
+  thresholds: JSON.parse(localStorage.getItem('thresholds') || 'null') || { roas: 2, cpp: 500, ctr: 1, freq: 4 },
   loading: false,
 };
 
@@ -346,8 +423,17 @@ const state = {
   document.getElementById('dateFrom').value = state.since;
   document.getElementById('dateTo').value   = state.until;
 
-  document.getElementById('dateFrom').addEventListener('change', e => { state.since = e.target.value; state.cache = {}; });
-  document.getElementById('dateTo').addEventListener('change',   e => { state.until = e.target.value; state.cache = {}; });
+  document.getElementById('dateFrom').addEventListener('change', e => {
+    state.since = e.target.value; state.cache = {};
+    document.querySelectorAll('.qd-btn').forEach(b => b.classList.remove('active'));
+  });
+  document.getElementById('dateTo').addEventListener('change', e => {
+    state.until = e.target.value; state.cache = {};
+    document.querySelectorAll('.qd-btn').forEach(b => b.classList.remove('active'));
+  });
+
+  // Highlight default (This Month)
+  document.querySelector(".qd-btn[onclick=\"setRange('this_month')\"]")?.classList.add('active');
 
   if (!state.token) { setTimeout(openModal, 600); }
   else { refreshAll(); }
@@ -358,6 +444,46 @@ const state = {
 // ═══════════════════════════════════════════════════════════════
 function fmtDate(d) {
   return d.toISOString().split('T')[0];
+}
+
+function setRange(preset) {
+  const t = new Date();
+  const today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  let from, to;
+
+  if (preset === 'today') {
+    from = to = today;
+  } else if (preset === 'yesterday') {
+    const y = new Date(today); y.setDate(y.getDate() - 1);
+    from = to = y;
+  } else if (preset === '7d') {
+    from = new Date(today); from.setDate(from.getDate() - 6);
+    to   = today;
+  } else if (preset === '30d') {
+    from = new Date(today); from.setDate(from.getDate() - 29);
+    to   = today;
+  } else if (preset === 'this_month') {
+    from = new Date(t.getFullYear(), t.getMonth(), 1);
+    to   = today;
+  } else if (preset === 'last_month') {
+    from = new Date(t.getFullYear(), t.getMonth() - 1, 1);
+    to   = new Date(t.getFullYear(), t.getMonth(), 0);
+  }
+
+  state.since = fmtDate(from);
+  state.until = fmtDate(to);
+  state.cache = {};
+
+  document.getElementById('dateFrom').value = state.since;
+  document.getElementById('dateTo').value   = state.until;
+
+  // Highlight active button
+  document.querySelectorAll('.qd-btn').forEach(b => b.classList.remove('active'));
+  const map = { today:'today', yesterday:'yesterday', '7d':'7d', '30d':'30d', this_month:'this_month', last_month:'last_month' };
+  const btn = document.querySelector(`.qd-btn[onclick="setRange('${preset}')"]`);
+  if (btn) btn.classList.add('active');
+
+  refreshAll();
 }
 function fmt(v, dec=0, cur='') {
   if (!v || v === 0) return '—';
@@ -465,6 +591,71 @@ async function loadAccount(acc) {
   }).catch(() => []);
 
   return { summary: sumData || {}, daily, daily90, campaigns, ads, demographics, currency: acc.currency };
+}
+
+async function loadAccountPrevData(acc, tr) {
+  const [[sumData], campaigns] = await Promise.all([
+    fetchAllPages(`${acc.id}/insights`, {
+      fields: 'spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,actions,action_values',
+      time_range: tr,
+    }),
+    fetchAllPages(`${acc.id}/insights`, {
+      fields: 'campaign_name,spend,actions,action_values',
+      time_range: tr,
+      level: 'campaign',
+      limit: 50,
+    }),
+  ]);
+  return { summary: sumData || null, campaigns: campaigns || [] };
+}
+
+function prevPeriodRange() {
+  if (!state.since || !state.until) return null;
+  const sinceD  = new Date(state.since + 'T12:00:00');
+  const untilD  = new Date(state.until + 'T12:00:00');
+  const days    = Math.round((untilD - sinceD) / 86400000) + 1;
+  const prevUntil = new Date(sinceD); prevUntil.setDate(prevUntil.getDate() - 1);
+  const prevSince = new Date(prevUntil); prevSince.setDate(prevSince.getDate() - (days - 1));
+  return { since: fmtDate(prevSince), until: fmtDate(prevUntil), days };
+}
+
+function deltaBadge(curr, prev, reverse=false) {
+  if (prev == null || prev === 0 || curr == null) return '';
+  const pct = ((curr - prev) / Math.abs(prev)) * 100;
+  if (Math.abs(pct) < 0.5) return `<span class="delta delta-flat">= 0%</span>`;
+  const isGood = reverse ? pct < 0 : pct > 0;
+  const arrow  = pct > 0 ? '▲' : '▼';
+  const cls    = isGood ? 'delta-up' : 'delta-down';
+  return `<span class="delta ${cls}">${arrow} ${Math.abs(pct) < 100 ? Math.abs(pct).toFixed(1) : Math.round(Math.abs(pct))}%</span>`;
+}
+
+function avgBadge(curr, avg, reverse=false) {
+  if (!avg || avg === 0 || !curr && curr !== 0) return '';
+  const pct = ((curr - avg) / Math.abs(avg)) * 100;
+  if (Math.abs(pct) < 1) return `<span class="delta avg-cmp">≈ avg</span>`;
+  const isGood = reverse ? pct < 0 : pct > 0;
+  const arrow  = pct > 0 ? '▲' : '▼';
+  const cls    = isGood ? 'avg-good' : 'avg-bad';
+  const ap     = Math.abs(pct);
+  return `<span class="delta ${cls}">${arrow} ${ap < 100 ? ap.toFixed(0) : Math.round(ap)}% vs avg</span>`;
+}
+
+function calc90dAvg(daily90p) {
+  const active = daily90p.filter(d => d.spend > 0);
+  if (!active.length) return null;
+  const n        = active.length;
+  const totSpend = active.reduce((s,d) => s + d.spend, 0);
+  const totRev   = active.reduce((s,d) => s + d.revenue, 0);
+  const totPurch = active.reduce((s,d) => s + d.purchases, 0);
+  return {
+    spend:     totSpend / n,
+    revenue:   totRev   / n,
+    purchases: totPurch / n,
+    roas:      totSpend > 0 ? totRev   / totSpend : 0,
+    cpp:       totPurch > 0 ? totSpend / totPurch  : 0,
+    ctr:       active.reduce((s,d) => s + d.ctr, 0) / n,
+    cpm:       active.reduce((s,d) => s + d.cpm, 0) / n,
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -900,20 +1091,27 @@ function renderAccountTab(accKey, rawData) {
       </div>
     </div>`).join('') : '<p style="color:var(--muted);font-size:12px">Not enough data for forecast (need 7+ active days)</p>';
 
-  const campRows = camps.slice(0,15).map(c=>`
-    <tr>
+  const prevCamps = (state.prevCache[accKey]?.campaigns || []).map(c => processCamp(c, cur));
+  const prevCampMap = {};
+  prevCamps.forEach(c => { prevCampMap[c.name] = c; });
+
+  const campRows = camps.slice(0,15).map(c=>{
+    const pc = prevCampMap[c.name];
+    const cd = (curr, prev, rev=false) => pc ? (deltaBadge(curr, prev, rev) ? `<br>${deltaBadge(curr, prev, rev)}` : '') : '';
+    return `<tr>
       <td class="name-cell">${c.name}</td>
       <td>${objTag(c.name)}</td>
-      <td>${fmt(c.spend,0)}</td>
+      <td>${fmt(c.spend,0)}${cd(c.spend, pc?.spend, true)}</td>
       <td>${c.ctr>0?c.ctr.toFixed(2)+'%':'—'}</td>
       <td>${fmt(c.cpm,0)}</td>
       <td>${fmt(c.freq,2)}</td>
-      <td class="${c.p>0?'tg':''}">${c.p||'—'}</td>
+      <td class="${c.p>0?'tg':''}">${c.p||'—'}${cd(c.p, pc?.p)}</td>
       <td>${fmt(c.atc,0)}</td>
       <td class="${c.msgs>0?'ty':''}">${c.msgs||'—'}</td>
-      <td class="${c.cpp>0&&c.cpp<300?'tg':c.cpp>800?'tr':''}">${c.cpp>0?fmt(c.cpp,0):'—'}</td>
-      <td class="${c.roas>5?'tg':c.roas>0&&c.roas<2?'tr':''}">${c.roas>0?c.roas.toFixed(2)+'x':'—'}</td>
-    </tr>`).join('');
+      <td class="${c.cpp>0&&c.cpp<300?'tg':c.cpp>800?'tr':''}">${c.cpp>0?fmt(c.cpp,0):'—'}${cd(c.cpp, pc?.cpp, true)}</td>
+      <td class="${c.roas>5?'tg':c.roas>0&&c.roas<2?'tr':''}">${c.roas>0?c.roas.toFixed(2)+'x':'—'}${cd(c.roas, pc?.roas)}</td>
+    </tr>`;
+  }).join('');
 
   const topAds = ads.filter(a=>a.p>0).slice(0,10).map(a=>`
     <tr>
@@ -974,41 +1172,51 @@ function renderAccountTab(accKey, rawData) {
   const savedBudget = state.budgets[accKey] || '';
 
   const el = document.getElementById(`tab-${accKey}`);
+  const prevSum    = state.prevCache[accKey]?.summary ? processSum(state.prevCache[accKey].summary, cur) : null;
+  const prevTrInfo = prevPeriodRange();
+  const prevLabel  = prevTrInfo ? `vs ${prevTrInfo.since} → ${prevTrInfo.until}` : '';
+  const kd = (curr, prev, rev=false) => prev ? `<div style="margin-top:2px">${deltaBadge(curr, prev, rev)}</div>` : '';
+
+  // ── 90-day average comparison ─────────────────────────────────
+  const avg90    = calc90dAvg(daily90p);
+  const actDays  = daily.filter(d => d.spend > 0).length || 1; // active days in selected period
+  // For volume metrics: normalise to daily avg for fair comparison
+  const ka = (curr, avgVal, rev=false) =>
+    avg90 && avgVal ? `<div style="margin-top:1px">${avgBadge(curr, avgVal, rev)}</div>` : '';
+
   el.innerHTML = `
     <div class="section">
-      <h2 style="border-bottom-color:${acc_cfg.color}">${acc_cfg.name} — April Overview</h2>
+      <h2 style="border-bottom-color:${acc_cfg.color}">${acc_cfg.name}
+        ${prevLabel ? `<span class="period-banner" style="margin-left:10px;vertical-align:middle;font-size:10px">📅 ${state.since} → ${state.until} &nbsp;vs&nbsp; <strong>${prevTrInfo.since} → ${prevTrInfo.until}</strong></span>` : ''}
+      </h2>
       <div class="kpi-grid">
-        <div class="kpi kb"><div class="k-label">Total Spend</div><div class="k-val">${fmtK(acc.spend)}</div><div class="k-sub">${cur}</div></div>
-        <div class="kpi ${acc.revenue>0?'kg':''}"><div class="k-label">Revenue</div><div class="k-val">${fmtK(acc.revenue)}</div><div class="k-sub">${cur}</div></div>
-        <div class="kpi kg"><div class="k-label">Purchases</div><div class="k-val">${acc.purchases||'—'}</div><div class="k-sub">orders</div></div>
-        <div class="kpi ${acc.roas>5?'kg':acc.roas>2?'ky':'kr'}"><div class="k-label">ROAS</div><div class="k-val">${acc.roas>0?acc.roas.toFixed(2)+'x':'—'}</div><div class="k-sub">return on ad spend</div></div>
-        <div class="kpi ${acc.cpp>0&&acc.cpp<300?'kg':acc.cpp>800?'kr':'ky'}"><div class="k-label">CPP</div><div class="k-val">${acc.cpp>0?fmt(acc.cpp,0):'—'}</div><div class="k-sub">${cur} / purchase</div></div>
-        <div class="kpi ${acc.ctr>2?'kg':'ky'}"><div class="k-label">CTR</div><div class="k-val">${acc.ctr.toFixed(2)}%</div><div class="k-sub">click-through</div></div>
-        <div class="kpi"><div class="k-label">CPM</div><div class="k-val">${fmt(acc.cpm,0)}</div><div class="k-sub">${cur}</div></div>
-        <div class="kpi"><div class="k-label">CPC</div><div class="k-val">${fmt(acc.cpc,2)}</div><div class="k-sub">${cur}</div></div>
-        <div class="kpi ${acc.freq>3?'ky':''}"><div class="k-label">Frequency</div><div class="k-val">${acc.freq.toFixed(2)}x</div><div class="k-sub">avg per person</div></div>
-        <div class="kpi"><div class="k-label">Reach</div><div class="k-val">${fmtK(acc.reach)}</div><div class="k-sub">people</div></div>
-        <div class="kpi kc"><div class="k-label">Add to Cart</div><div class="k-val">${fmtK(acc.atc)}</div><div class="k-sub">events</div></div>
-        <div class="kpi kc"><div class="k-label">Checkout</div><div class="k-val">${fmtK(acc.checkout)}</div><div class="k-sub">initiated</div></div>
-        <div class="kpi"><div class="k-label">Messages</div><div class="k-val">${fmtK(acc.msgs)||'—'}</div><div class="k-sub">conversations</div></div>
-        <div class="kpi"><div class="k-label">View Content</div><div class="k-val">${fmtK(acc.vc)}</div><div class="k-sub">product views</div></div>
+        <div class="kpi kb"><div class="k-label">Total Spend</div><div class="k-val">${fmtK(acc.spend)}</div>${kd(acc.spend,prevSum?.spend,true)}${ka(acc.spend/actDays,avg90?.spend,true)}<div class="k-sub">${cur}</div></div>
+        <div class="kpi ${acc.revenue>0?'kg':''}"><div class="k-label">Revenue</div><div class="k-val">${fmtK(acc.revenue)}</div>${kd(acc.revenue,prevSum?.revenue)}${ka(acc.revenue/actDays,avg90?.revenue)}<div class="k-sub">${cur}</div></div>
+        <div class="kpi kg"><div class="k-label">Purchases</div><div class="k-val">${acc.purchases||'—'}</div>${kd(acc.purchases,prevSum?.purchases)}${ka(acc.purchases/actDays,avg90?.purchases)}<div class="k-sub">orders</div></div>
+        <div class="kpi ${acc.roas>5?'kg':acc.roas>2?'ky':'kr'}"><div class="k-label">ROAS</div><div class="k-val">${acc.roas>0?acc.roas.toFixed(2)+'x':'—'}</div>${kd(acc.roas,prevSum?.roas)}${ka(acc.roas,avg90?.roas)}<div class="k-sub">return on ad spend</div></div>
+        <div class="kpi ${acc.cpp>0&&acc.cpp<300?'kg':acc.cpp>800?'kr':'ky'}"><div class="k-label">CPP</div><div class="k-val">${acc.cpp>0?fmt(acc.cpp,0):'—'}</div>${kd(acc.cpp,prevSum?.cpp,true)}${ka(acc.cpp,avg90?.cpp,true)}<div class="k-sub">${cur} / purchase</div></div>
+        <div class="kpi ${acc.ctr>2?'kg':'ky'}"><div class="k-label">CTR</div><div class="k-val">${acc.ctr.toFixed(2)}%</div>${kd(acc.ctr,prevSum?.ctr)}${ka(acc.ctr,avg90?.ctr)}<div class="k-sub">click-through</div></div>
+        <div class="kpi"><div class="k-label">CPM</div><div class="k-val">${fmt(acc.cpm,0)}</div>${kd(acc.cpm,prevSum?.cpm,true)}${ka(acc.cpm,avg90?.cpm,true)}<div class="k-sub">${cur}</div></div>
+        <div class="kpi"><div class="k-label">CPC</div><div class="k-val">${fmt(acc.cpc,2)}</div>${kd(acc.cpc,prevSum?.cpc,true)}<div class="k-sub">${cur}</div></div>
+        <div class="kpi ${acc.freq>3?'ky':''}"><div class="k-label">Frequency</div><div class="k-val">${acc.freq.toFixed(2)}x</div>${kd(acc.freq,prevSum?.freq,true)}<div class="k-sub">avg per person</div></div>
+        <div class="kpi"><div class="k-label">Reach</div><div class="k-val">${fmtK(acc.reach)}</div>${kd(acc.reach,prevSum?.reach)}<div class="k-sub">people</div></div>
+        <div class="kpi kc"><div class="k-label">Add to Cart</div><div class="k-val">${fmtK(acc.atc)}</div>${kd(acc.atc,prevSum?.atc)}<div class="k-sub">events</div></div>
+        <div class="kpi kc"><div class="k-label">Checkout</div><div class="k-val">${fmtK(acc.checkout)}</div>${kd(acc.checkout,prevSum?.checkout)}<div class="k-sub">initiated</div></div>
+        <div class="kpi"><div class="k-label">Messages</div><div class="k-val">${fmtK(acc.msgs)||'—'}</div>${kd(acc.msgs,prevSum?.msgs)}<div class="k-sub">conversations</div></div>
+        <div class="kpi"><div class="k-label">View Content</div><div class="k-val">${fmtK(acc.vc)}</div>${kd(acc.vc,prevSum?.vc)}<div class="k-sub">product views</div></div>
       </div>
     </div>
 
-    <div class="section">
-      <h2 style="border-bottom-color:${acc_cfg.color}">📊 Budget Pacing</h2>
-      <div class="calc-wrap">
-        <div class="calc-row">
-          <span class="calc-label">Monthly Budget</span>
-          <input class="calc-input" type="number" id="budget-inp-${accKey}"
-                 placeholder="e.g. 50000" value="${savedBudget}"
-                 oninput="updatePacing('${accKey}')">
-          <span class="calc-currency">${cur} / month</span>
-        </div>
-        <div id="pacing-display-${accKey}">
-          <p style="color:var(--muted);font-size:12px">Enter monthly budget above to see pacing</p>
-        </div>
+    <div class="section" id="alerts-section-${accKey}">
+      <h2 style="border-bottom-color:${acc_cfg.color}">🚨 Alerts & Thresholds</h2>
+      <div class="thr-row">
+        <span style="font-size:12px;font-weight:700;color:var(--text)">Thresholds:</span>
+        <div class="thr-group"><span class="thr-label">ROAS min</span><input class="thr-input" id="thr-roas-${accKey}" type="number" step="0.1" value="${state.thresholds.roas}" oninput="saveThr('${accKey}')"><span class="thr-label">x</span></div>
+        <div class="thr-group"><span class="thr-label">CPP max</span><input class="thr-input" id="thr-cpp-${accKey}" type="number" step="10" value="${state.thresholds.cpp}" oninput="saveThr('${accKey}')"></div>
+        <div class="thr-group"><span class="thr-label">CTR min</span><input class="thr-input" id="thr-ctr-${accKey}" type="number" step="0.1" value="${state.thresholds.ctr}" oninput="saveThr('${accKey}')"><span class="thr-label">%</span></div>
+        <div class="thr-group"><span class="thr-label">Freq max</span><input class="thr-input" id="thr-freq-${accKey}" type="number" step="0.1" value="${state.thresholds.freq}" oninput="saveThr('${accKey}')"><span class="thr-label">x</span></div>
       </div>
+      <div class="alerts-grid" id="alerts-grid-${accKey}"></div>
     </div>
 
     <div class="section">
@@ -1224,20 +1432,135 @@ function renderAccountTab(accKey, rawData) {
       ], {legend:true});
     }
 
-    // Auto-trigger pacing if budget was previously saved
-    if (savedBudget) updatePacing(accKey);
   }, 50);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ALERTS & THRESHOLDS
+// ═══════════════════════════════════════════════════════════════
+function saveThr(accKey) {
+  const t = {
+    roas: parseFloat(document.getElementById(`thr-roas-${accKey}`)?.value) || 2,
+    cpp:  parseFloat(document.getElementById(`thr-cpp-${accKey}`)?.value)  || 500,
+    ctr:  parseFloat(document.getElementById(`thr-ctr-${accKey}`)?.value)  || 1,
+    freq: parseFloat(document.getElementById(`thr-freq-${accKey}`)?.value) || 4,
+  };
+  state.thresholds = t;
+  localStorage.setItem('thresholds', JSON.stringify(t));
+  // Sync all visible threshold inputs and re-check all accounts
+  ACCOUNTS.forEach(acc => {
+    ['roas','cpp','ctr','freq'].forEach(k => {
+      const el = document.getElementById(`thr-${k}-${acc.key}`);
+      if (el) el.value = t[k];
+    });
+    const raw = state.cache[acc.key];
+    if (raw) checkAccountAlerts(acc.key, processSum(raw.summary, acc.currency), acc.currency);
+  });
+}
+
+function checkAccountAlerts(accKey, d, cur) {
+  const grid = document.getElementById(`alerts-grid-${accKey}`);
+  if (!grid || !d || d.spend <= 0) return;
+  const t = state.thresholds;
+  const alerts = [];
+
+  if (t.roas > 0 && d.roas > 0 && d.roas < t.roas) {
+    const lvl = d.roas < t.roas * 0.6 ? 'critical' : 'warn';
+    alerts.push({ lvl, icon: lvl==='critical'?'🔴':'⚠️',
+      title: 'Low ROAS',
+      desc:  `${d.roas.toFixed(2)}x — threshold ${t.roas}x`,
+      val:   `${d.roas.toFixed(2)}x` });
+  }
+  if (t.cpp > 0 && d.cpp > 0 && d.cpp > t.cpp) {
+    const lvl = d.cpp > t.cpp * 1.5 ? 'critical' : 'warn';
+    alerts.push({ lvl, icon: lvl==='critical'?'🔴':'⚠️',
+      title: 'High CPP',
+      desc:  `${Math.round(d.cpp).toLocaleString()} ${cur} — threshold ${t.cpp.toLocaleString()}`,
+      val:   Math.round(d.cpp).toLocaleString() });
+  }
+  if (t.ctr > 0 && d.ctr > 0 && d.ctr < t.ctr) {
+    const lvl = d.ctr < t.ctr * 0.5 ? 'critical' : 'warn';
+    alerts.push({ lvl, icon: lvl==='critical'?'🔴':'⚠️',
+      title: 'Low CTR',
+      desc:  `${d.ctr.toFixed(2)}% — threshold ${t.ctr}%`,
+      val:   `${d.ctr.toFixed(2)}%` });
+  }
+  if (t.freq > 0 && d.freq > 0 && d.freq > t.freq) {
+    const lvl = d.freq > t.freq * 1.3 ? 'critical' : 'warn';
+    alerts.push({ lvl, icon: lvl==='critical'?'🔴':'⚠️',
+      title: 'High Frequency',
+      desc:  `${d.freq.toFixed(2)}x — audience fatigue risk (threshold ${t.freq}x)`,
+      val:   `${d.freq.toFixed(2)}x` });
+  }
+
+  if (alerts.length === 0) {
+    grid.innerHTML = `<div class="no-alerts">✅ All metrics within thresholds</div>`;
+    return;
+  }
+  alerts.sort((a,b) => a.lvl==='critical' && b.lvl!=='critical' ? -1 : 1);
+  grid.innerHTML = alerts.map(a => `
+    <div class="alert-card alert-${a.lvl}">
+      <div class="alert-icon">${a.icon}</div>
+      <div class="alert-body">
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-desc">${a.desc}</div>
+      </div>
+      <div class="alert-val">${a.val}</div>
+    </div>`).join('');
 }
 
 // ═══════════════════════════════════════════════════════════════
 // RENDER: OVERVIEW TAB
 // ═══════════════════════════════════════════════════════════════
 function renderOverview(allData) {
-  // Cards
+  const prevTr = prevPeriodRange();
+
+  // ── Period comparison banner (always show if dates set) ──────
+  const overviewHead = document.querySelector('#tab-overview .section:first-child h2');
+  if (overviewHead) {
+    const prevLabel = prevTr
+      ? `<span class="period-banner" style="font-size:10px;margin-left:10px;vertical-align:middle">
+           📅 <strong>${state.since}</strong> → <strong>${state.until}</strong>
+           &nbsp;<span style="color:var(--muted)">vs</span>&nbsp;
+           <strong>${prevTr.since}</strong> → <strong>${prevTr.until}</strong>
+         </span>`
+      : '';
+    overviewHead.innerHTML = `🌐 All Accounts – Overview ${prevLabel}`;
+  }
+
+  // ── Comparison period info strip above cards ───────────────
+  const hasPrevData = Object.values(state.prevCache).some(v => v?.summary !== null && v?.summary !== undefined);
+  const stripId = 'overviewPeriodStrip';
+  let strip = document.getElementById(stripId);
+  if (!strip) {
+    strip = document.createElement('div');
+    strip.id = stripId;
+    strip.style.cssText = 'margin-bottom:12px;padding:8px 14px;background:var(--card2);border:1px solid var(--border);border-radius:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap';
+    const grid = document.getElementById('overviewCards');
+    if (grid) grid.parentNode.insertBefore(strip, grid);
+  }
+  if (prevTr) {
+    strip.innerHTML = hasPrevData
+      ? `<span style="color:var(--c0);font-weight:700">📊 Period Comparison</span>
+         <span style="color:var(--muted)">Current: <strong style="color:var(--text)">${state.since} → ${state.until}</strong></span>
+         <span style="color:var(--muted)">vs Previous: <strong style="color:var(--text)">${prevTr.since} → ${prevTr.until}</strong></span>
+         <span style="color:var(--green);font-size:11px">▲ green = better &nbsp;·&nbsp;</span><span style="color:var(--red);font-size:11px">▼ red = worse</span>`
+      : `<span style="color:var(--c0);font-weight:700">📊 Period Comparison</span>
+         <span style="color:var(--muted)">Current: <strong style="color:var(--text)">${state.since} → ${state.until}</strong></span>
+         <span style="color:var(--muted)">vs Previous: <strong style="color:var(--text)">${prevTr.since} → ${prevTr.until}</strong> — <em>no prev data found</em></span>`;
+    strip.style.display = 'flex';
+  } else {
+    strip.style.display = 'none';
+  }
+
+  // Cards (with delta badges)
   const cards = ACCOUNTS.map(acc => {
-    const raw = allData[acc.key];
+    const raw  = allData[acc.key];
     if (!raw) return `<div class="acc-card" onclick="switchTab('${acc.key}')"><div class="ac-head"><span class="acc-dot" style="background:${acc.color}"></span><span class="ac-name">${acc.name}</span><span class="ac-cur">${acc.currency}</span></div><p style="color:var(--muted);font-size:12px">No data</p></div>`;
-    const d = processSum(raw.summary, acc.currency);
+    const d    = processSum(raw.summary, acc.currency);
+    const prevRaw = state.prevCache[acc.key];
+    const prev = prevRaw?.summary ? processSum(prevRaw.summary, acc.currency) : null;
+
     return `
     <div class="acc-card" onclick="switchTab('${acc.key}')" style="border-color:${acc.color}33">
       <div class="ac-head">
@@ -1246,12 +1569,36 @@ function renderOverview(allData) {
         <span class="ac-cur">${acc.currency}</span>
       </div>
       <div class="ac-kpis">
-        <div class="ac-kpi"><div class="v" style="color:${acc.color}">${fmtK(d.spend)}</div><div class="l">Spend</div></div>
-        <div class="ac-kpi"><div class="v" style="color:var(--green)">${d.purchases||'—'}</div><div class="l">Purchases</div></div>
-        <div class="ac-kpi"><div class="v" style="color:${d.roas>5?'var(--green)':d.roas>2?'var(--yellow)':'var(--red)'}">${d.roas>0?d.roas.toFixed(1)+'x':'—'}</div><div class="l">ROAS</div></div>
-        <div class="ac-kpi"><div class="v">${d.cpp>0?fmtK(d.cpp):'—'}</div><div class="l">CPP</div></div>
-        <div class="ac-kpi"><div class="v" style="color:var(--c1)">${d.ctr.toFixed(1)}%</div><div class="l">CTR</div></div>
-        <div class="ac-kpi"><div class="v">${d.freq.toFixed(1)}x</div><div class="l">Freq</div></div>
+        <div class="ac-kpi">
+          <div class="v" style="color:${acc.color}">${fmtK(d.spend)}</div>
+          ${prev ? deltaBadge(d.spend, prev.spend, true) : ''}
+          <div class="l">Spend</div>
+        </div>
+        <div class="ac-kpi">
+          <div class="v" style="color:var(--green)">${d.purchases||'—'}</div>
+          ${prev ? deltaBadge(d.purchases, prev.purchases) : ''}
+          <div class="l">Purchases</div>
+        </div>
+        <div class="ac-kpi">
+          <div class="v" style="color:${d.roas>5?'var(--green)':d.roas>2?'var(--yellow)':'var(--red)'}">${d.roas>0?d.roas.toFixed(1)+'x':'—'}</div>
+          ${prev ? deltaBadge(d.roas, prev.roas) : ''}
+          <div class="l">ROAS</div>
+        </div>
+        <div class="ac-kpi">
+          <div class="v">${d.cpp>0?fmtK(d.cpp):'—'}</div>
+          ${prev ? deltaBadge(d.cpp, prev.cpp, true) : ''}
+          <div class="l">CPP</div>
+        </div>
+        <div class="ac-kpi">
+          <div class="v" style="color:var(--c1)">${d.ctr.toFixed(1)}%</div>
+          ${prev ? deltaBadge(d.ctr, prev.ctr) : ''}
+          <div class="l">CTR</div>
+        </div>
+        <div class="ac-kpi">
+          <div class="v">${d.freq.toFixed(1)}x</div>
+          ${prev ? deltaBadge(d.freq, prev.freq, true) : ''}
+          <div class="l">Freq</div>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -1268,22 +1615,25 @@ function renderOverview(allData) {
     document.getElementById('insightsSection').style.display = 'block';
   }
 
-  // Comparison table
+  // Comparison table (with delta inline)
   const rows = ACCOUNTS.map(acc => {
-    const raw = allData[acc.key];
+    const raw  = allData[acc.key];
     if (!raw) return `<tr><td colspan="10" style="color:var(--muted)">${acc.name} — no data</td></tr>`;
-    const d = processSum(raw.summary, acc.currency);
+    const d    = processSum(raw.summary, acc.currency);
+    const prevRaw = state.prevCache[acc.key];
+    const prev = prevRaw?.summary ? processSum(prevRaw.summary, acc.currency) : null;
+    const inl  = (curr, p, rev=false) => prev && p ? `<br>${deltaBadge(curr, p, rev)}` : '';
     return `<tr>
       <td><span style="color:${acc.color}">●</span> ${acc.name}</td>
       <td>${acc.currency}</td>
-      <td>${fmt(d.spend,0)}</td>
-      <td class="${d.revenue>0?'tg':''}">${fmt(d.revenue,0)}</td>
-      <td class="${d.purchases>0?'tg':''}">${d.purchases||'—'}</td>
-      <td class="${d.roas>5?'tg':d.roas>0&&d.roas<2?'tr':'ty'}">${d.roas>0?d.roas.toFixed(2)+'x':'—'}</td>
-      <td class="${d.cpp>0&&d.cpp<300?'tg':d.cpp>800?'tr':''}">${d.cpp>0?fmt(d.cpp,0):'—'}</td>
-      <td class="${d.ctr>2?'tg':''}">${d.ctr.toFixed(2)}%</td>
-      <td>${fmt(d.cpm,0)}</td>
-      <td class="${d.freq>3?'ty':''}">${d.freq.toFixed(2)}x</td>
+      <td>${fmt(d.spend,0)}${inl(d.spend,prev?.spend,true)}</td>
+      <td class="${d.revenue>0?'tg':''}">${fmt(d.revenue,0)}${inl(d.revenue,prev?.revenue)}</td>
+      <td class="${d.purchases>0?'tg':''}">${d.purchases||'—'}${inl(d.purchases,prev?.purchases)}</td>
+      <td class="${d.roas>5?'tg':d.roas>0&&d.roas<2?'tr':'ty'}">${d.roas>0?d.roas.toFixed(2)+'x':'—'}${inl(d.roas,prev?.roas)}</td>
+      <td class="${d.cpp>0&&d.cpp<300?'tg':d.cpp>800?'tr':''}">${d.cpp>0?fmt(d.cpp,0):'—'}${inl(d.cpp,prev?.cpp,true)}</td>
+      <td class="${d.ctr>2?'tg':''}">${d.ctr.toFixed(2)}%${inl(d.ctr,prev?.ctr)}</td>
+      <td>${fmt(d.cpm,0)}${inl(d.cpm,prev?.cpm,true)}</td>
+      <td class="${d.freq>3?'ty':''}">${d.freq.toFixed(2)}x${inl(d.freq,prev?.freq,true)}</td>
     </tr>`;
   }).join('');
   document.getElementById('overviewTable').innerHTML = rows;
@@ -1300,6 +1650,184 @@ function renderOverview(allData) {
     mkChart('ov-pur-chart','bar',labels,[{label:'Purchases',data:purs,backgroundColor:colors.map(c=>c+'cc')}],{legend:false});
     mkChart('ov-roas-chart','bar',labels,[{label:'ROAS',data:roass,backgroundColor:colors.map(c=>c+'cc')}],{legend:false,extra:{scales:{y:{ticks:{callback:v=>v+'x'}}}}});
   },50);
+
+  // Day-of-Week Heatmap
+  renderHeatmap(allData);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DAY-OF-WEEK HEATMAP
+// ═══════════════════════════════════════════════════════════════
+let _hmData = null; // cached aggregated heatmap data
+let _hmMetric = 'roas';
+
+function renderHeatmap(allData) {
+  const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const DOW_IDX = [1,2,3,4,5,6,0]; // Mon=1...Sun=0 (JS getDay)
+
+  // Aggregate across all accounts by day-of-week
+  // dayMap[dowIndex] = { roas_sum, roas_count, spend_sum, spend_days,
+  //                      purchases_sum, purchases_days, ctr_sum, ctr_count }
+  const dayMap = {};
+  DOW_IDX.forEach(d => { dayMap[d] = { roas_sum:0, roas_count:0, spend_sum:0, spend_days:0, purchases_sum:0, purchases_days:0, ctr_sum:0, ctr_count:0, days:0 }; });
+
+  let totalDays = 0;
+  ACCOUNTS.forEach(acc => {
+    const raw = allData[acc.key];
+    if (!raw || !raw.daily) return;
+    const daily = processDaily(raw.daily);
+    daily.forEach(d => {
+      if (d.spend <= 0) return; // skip days with no spend
+      const dow = new Date(d.date + 'T12:00:00').getDay(); // 0=Sun..6=Sat
+      const entry = dayMap[dow];
+      if (!entry) return;
+      entry.spend_sum += d.spend;
+      entry.spend_days++;
+      entry.days++;
+      totalDays++;
+      if (d.purchases > 0) {
+        entry.purchases_sum += d.purchases;
+        entry.purchases_days++;
+      }
+      if (d.revenue > 0 && d.spend > 0) {
+        entry.roas_sum += d.revenue / d.spend;
+        entry.roas_count++;
+      }
+      if (d.ctr > 0) {
+        entry.ctr_sum += d.ctr;
+        entry.ctr_count++;
+      }
+    });
+  });
+
+  // Compute averages per day
+  const rows = DAYS.map((label, i) => {
+    const dow = DOW_IDX[i];
+    const e = dayMap[dow];
+    return {
+      label,
+      roas:      e.roas_count      > 0 ? e.roas_sum      / e.roas_count      : 0,
+      spend:     e.spend_days      > 0 ? e.spend_sum      / e.spend_days      : 0,
+      purchases: e.purchases_days  > 0 ? e.purchases_sum  / e.purchases_days  : 0,
+      ctr:       e.ctr_count       > 0 ? e.ctr_sum        / e.ctr_count       : 0,
+      days:      e.days,
+    };
+  });
+
+  // Store for metric toggle re-renders
+  _hmData = rows;
+
+  const section = document.getElementById('heatmapSection');
+  if (!section) return;
+
+  section.style.display = 'block'; // always show after data loads
+
+  if (totalDays === 0) {
+    document.getElementById('heatmapTable').innerHTML =
+      `<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--muted);font-size:13px">
+        📊 No daily spend data found for this period.<br>
+        <span style="font-size:11px;opacity:.7">Select a wider date range or verify spend data exists.</span>
+      </td></tr>`;
+    const subtitle = document.getElementById('heatmapSubtitle');
+    if (subtitle) subtitle.textContent = '0 days with spend found';
+    return;
+  }
+
+  const subtitle = document.getElementById('heatmapSubtitle');
+  if (subtitle) subtitle.textContent = `Based on ${totalDays} account-days across ${ACCOUNTS.length} accounts`;
+
+  drawHeatmap();
+}
+
+function setHeatmapMetric(metric) {
+  _hmMetric = metric;
+  document.querySelectorAll('.hm-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.hm-btn[onclick="setHeatmapMetric('${metric}')"]`);
+  if (btn) btn.classList.add('active');
+  drawHeatmap();
+}
+
+function drawHeatmap() {
+  if (!_hmData) return;
+  const metric = _hmMetric;
+  const rows   = _hmData;
+
+  const vals = rows.map(r => r[metric]);
+  const min  = Math.min(...vals.filter(v => v > 0));
+  const max  = Math.max(...vals);
+  const range = max - min || 1;
+
+  // Color scale: red → amber → green  (HSL 0→120)
+  function heatColor(val) {
+    if (val <= 0) return 'rgba(255,255,255,0.04)';
+    const t = (val - min) / range; // 0=worst, 1=best
+    const h = Math.round(t * 120); // 0=red, 60=yellow, 120=green
+    return `hsla(${h},65%,48%,0.85)`;
+  }
+  function heatTextColor(val) {
+    if (val <= 0) return 'var(--muted)';
+    const t = (val - min) / range;
+    return t > 0.4 ? '#fff' : '#e2e8f0';
+  }
+
+  // Format value label
+  function fmtVal(v) {
+    if (v <= 0) return '—';
+    if (metric === 'roas')      return v.toFixed(2) + 'x';
+    if (metric === 'spend')     return fmtK(v);
+    if (metric === 'purchases') return v.toFixed(1);
+    if (metric === 'ctr')       return v.toFixed(2) + '%';
+    return v.toFixed(1);
+  }
+  function fmtSub(r) {
+    return r.days > 0 ? `${r.days} days` : '—';
+  }
+
+  const metricLabel = {roas:'Avg ROAS', spend:'Avg Daily Spend', purchases:'Avg Daily Purchases', ctr:'Avg CTR'}[metric];
+
+  // Best/worst labels
+  const activeRows = rows.filter(r => r[metric] > 0);
+  const bestDay  = activeRows.length ? activeRows.reduce((a,b) => b[metric]>a[metric]?b:a) : null;
+  const worstDay = activeRows.length ? activeRows.reduce((a,b) => b[metric]<a[metric]?b:a) : null;
+
+  // Build table — single row layout (days as columns)
+  let html = `<thead><tr>
+    <th class="day-label">${metricLabel}</th>
+    ${rows.map(r=>`<th>${r.label}</th>`).join('')}
+  </tr></thead><tbody><tr>
+    <th class="day-label" style="font-weight:400;color:var(--muted);font-size:10px">All Accounts</th>
+    ${rows.map(r => {
+      const v = r[metric];
+      const bg = heatColor(v);
+      const fg = heatTextColor(v);
+      const isBest  = bestDay  && r.label === bestDay.label  ? ' title="🏆 Best day"'  : '';
+      const isWorst = worstDay && r.label === worstDay.label ? ' title="⚠️ Worst day"' : '';
+      const badge = bestDay  && r.label === bestDay.label  ? '<div style="font-size:8px;margin-top:1px">🏆</div>' :
+                    worstDay && r.label === worstDay.label ? '<div style="font-size:8px;margin-top:1px">⚠️</div>' : '';
+      return `<td><div class="hm-cell" style="background:${bg};color:${fg}"${isBest}${isWorst}>
+        <div class="hm-val">${fmtVal(v)}</div>
+        <div class="hm-sub">${fmtSub(r)}</div>
+        ${badge}
+      </div></td>`;
+    }).join('')}
+  </tr></tbody>`;
+
+  document.getElementById('heatmapTable').innerHTML = html;
+
+  // Legend
+  const swatches = 7;
+  const legendBar = Array.from({length:swatches}, (_,i) => {
+    const t = i / (swatches-1);
+    const h = Math.round(t * 120);
+    return `<div class="hm-legend-swatch" style="background:hsla(${h},65%,48%,0.85)"></div>`;
+  }).join('');
+  const legendEl = document.getElementById('heatmapLegend');
+  if (legendEl) legendEl.innerHTML = legendBar;
+
+  const noteEl = document.getElementById('heatmapLegendNote');
+  if (noteEl && bestDay && worstDay) {
+    noteEl.innerHTML = `Best: <strong style="color:var(--green)">${bestDay.label}</strong> (${fmtVal(bestDay[metric])}) &nbsp;·&nbsp; Worst: <strong style="color:var(--red)">${worstDay.label}</strong> (${fmtVal(worstDay[metric])})`;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1405,69 +1933,6 @@ function updateCalc(accKey) {
       });
     }
   }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// BUDGET PACING
-// ═══════════════════════════════════════════════════════════════
-function updatePacing(accKey) {
-  const el  = document.getElementById(`tab-${accKey}`);
-  const acc = el?._acc;
-  if (!acc) return;
-
-  const budget = parseFloat(document.getElementById(`budget-inp-${accKey}`)?.value || 0);
-  const display = document.getElementById(`pacing-display-${accKey}`);
-  if (!display) return;
-
-  if (!budget || budget <= 0) {
-    display.innerHTML = '<p style="color:var(--muted);font-size:12px">Enter monthly budget above to see pacing</p>';
-    return;
-  }
-
-  const budgets = JSON.parse(localStorage.getItem('budgets') || '{}');
-  budgets[accKey] = budget;
-  localStorage.setItem('budgets', JSON.stringify(budgets));
-  state.budgets[accKey] = budget;
-
-  const today       = new Date();
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const daysPassed  = today.getDate();
-  const daysLeft    = daysInMonth - daysPassed;
-
-  const expectedSpend = budget / daysInMonth * daysPassed;
-  const spent         = acc.spend || 0;
-  const pacePct       = expectedSpend > 0 ? spent / expectedSpend * 100 : 100;
-  const projectedEOM  = daysPassed > 0 ? spent / daysPassed * daysInMonth : 0;
-  const remaining     = Math.max(0, budget - spent);
-  const spentPct      = Math.min(100, spent / budget * 100);
-  const dailyNeeded   = daysLeft > 0 ? remaining / daysLeft : 0;
-
-  const status     = pacePct < 80 ? 'under' : pacePct > 120 ? 'over' : 'on';
-  const paceColor  = status === 'on' ? 'var(--green)' : status === 'under' ? 'var(--yellow)' : 'var(--red)';
-  const statusLabel = status === 'on' ? '✅ On Pace' : status === 'under' ? '⚠️ Underpacing' : '🔴 Overpacing';
-  const cur = acc.currency;
-
-  display.innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">
-      <span style="font-size:14px;font-weight:800;color:${paceColor}">${statusLabel}</span>
-      <span style="font-size:11px;color:var(--muted)">${pacePct.toFixed(0)}% of expected pace &nbsp;|&nbsp; Day ${daysPassed} of ${daysInMonth}</span>
-    </div>
-    <div class="pacing-bar-wrap">
-      <div class="pacing-bar" style="width:${spentPct}%;background:${paceColor}"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:14px">
-      <span>${Math.round(spent).toLocaleString()} ${cur} spent</span>
-      <span>${spentPct.toFixed(1)}% of budget</span>
-      <span>${budget.toLocaleString()} ${cur} target</span>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">
-      <div class="calc-res-card"><div class="rv" style="color:${paceColor}">${pacePct.toFixed(0)}%</div><div class="rl">Pace vs Expected</div></div>
-      <div class="calc-res-card"><div class="rv" style="color:var(--yellow)">${Math.round(projectedEOM).toLocaleString()}</div><div class="rl">Projected EOM (${cur})</div></div>
-      <div class="calc-res-card"><div class="rv" style="color:var(--c1)">${Math.round(remaining).toLocaleString()}</div><div class="rl">Remaining Budget</div></div>
-      <div class="calc-res-card"><div class="rv" style="color:var(--c0)">${Math.round(dailyNeeded).toLocaleString()}</div><div class="rl">Daily Needed to Hit Target</div></div>
-      <div class="calc-res-card"><div class="rv" style="color:var(--muted)">${daysLeft}</div><div class="rl">Days Left in Month</div></div>
-    </div>
-  `;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1622,11 +2087,28 @@ async function refreshAll() {
     btn.textContent = `⟳ ${acc.name}...`;
   }
 
-  renderOverview(allData);
+  // ── Fetch previous-period summaries in parallel ──────────────
+  const prevTr = prevPeriodRange();
+  if (prevTr) {
+    btn.textContent = '⟳ Prev period...';
+    const prevResults = await Promise.all(
+      ACCOUNTS.map(acc =>
+        loadAccountPrevData(acc, prevTr)
+          .then(d => ({ key: acc.key, data: d }))
+          .catch(() => ({ key: acc.key, data: { summary: null, campaigns: [] } }))
+      )
+    );
+    state.prevCache = {};
+    prevResults.forEach(r => { state.prevCache[r.key] = r.data; });
 
-  // Load Shopify (runs after Meta, doesn't block UI)
-  btn.textContent = '⟳ Shopify...';
-  renderShopify(allData).catch(e => console.warn('Shopify render error:', e));
+    // Re-render account tabs now that prevCache is ready → shows delta badges
+    ACCOUNTS.forEach(acc => {
+      const raw = state.cache[acc.key];
+      if (raw) renderAccountTab(acc.key, raw);
+    });
+  }
+
+  renderOverview(allData);
 
   bar.style.width = '100%';
   setTimeout(()=>{ bar.style.width='0'; }, 600);
@@ -1655,478 +2137,8 @@ function saveSettings() {
   refreshAll();
 }
 
-// ═══════════════════════════════════════════════════════════════
-// SHOPIFY API
-// Mode A: Google Apps Script proxy (preferred — supports headers)
-// Mode B: Direct via allorigins using access_token URL param
-// ═══════════════════════════════════════════════════════════════
-async function shopifyFetch(path, params = {}) {
-  if (!state.shopifyToken) throw new Error('Shopify token not set — open Settings');
 
-  // Mode A: Apps Script proxy
-  if (state.shopifyProxy && state.shopifyProxy.startsWith('http')) {
-    // The proxy has its own endpoint format — callers use this for raw path calls;
-    // loadShopify/loadShopifyProducts bypass this via proxyCall()
-    throw new Error('Use proxyCall() for proxy mode');
-  }
 
-  // Mode B: Direct via allorigins — pass token as URL query param
-  // shpca_ tokens work with access_token param through allorigins
-  const shopifyUrl = new URL(`https://${SHOPIFY_STORE}/admin/api/${SHOPIFY_API_VER}/${path}`);
-  shopifyUrl.searchParams.set('access_token', state.shopifyToken);
-  for (const [k, v] of Object.entries(params)) shopifyUrl.searchParams.set(k, v);
-
-  const proxied = CORS_PROXY + encodeURIComponent(shopifyUrl.toString());
-  const res = await fetch(proxied);
-  if (!res.ok) throw new Error(`Shopify ${res.status}: ${res.statusText}`);
-
-  const text = await res.text();
-  if (text.trim().startsWith('<')) throw new Error('Proxy returned HTML — check token or try Apps Script proxy');
-  return JSON.parse(text);
-}
-
-async function proxyCall(endpoint, extraParams = {}) {
-  const url = new URL(state.shopifyProxy);
-  url.searchParams.set('endpoint', endpoint);
-  url.searchParams.set('since', state.since);
-  url.searchParams.set('until', state.until);
-  for (const [k, v] of Object.entries(extraParams)) url.searchParams.set(k, v);
-  const res  = await fetch(url.toString());
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || 'Apps Script proxy error');
-  return json.data;
-}
-
-async function loadShopify() {
-  try {
-    // Use Apps Script proxy when configured
-    if (state.shopifyProxy && state.shopifyProxy.startsWith('http')) {
-      return await proxyCall('summary');
-    }
-
-    // Direct mode — use exact date range from picker
-    const sinceISO = state.since;
-    const untilISO = state.until + 'T23:59:59';
-
-    // Paid orders
-    const ordersData = await shopifyFetch('orders.json', {
-      status: 'any',
-      financial_status: 'paid,partially_paid',
-      created_at_min: sinceISO,
-      created_at_max: untilISO,
-      limit: 250,
-      fields: 'id,created_at,total_price,financial_status,line_items',
-    });
-    const orders = ordersData.orders || [];
-
-    // Refunded orders
-    let refunds = 0;
-    try {
-      const refData = await shopifyFetch('orders.json', {
-        status: 'any',
-        financial_status: 'refunded',
-        created_at_min: sinceISO,
-        created_at_max: untilISO,
-        limit: 250,
-        fields: 'id,total_price',
-      });
-      refunds = (refData.orders || []).reduce((s, o) => s + parseFloat(o.total_price || 0), 0);
-    } catch(e) { /* refunds optional */ }
-
-    const revenue    = orders.reduce((s, o) => s + parseFloat(o.total_price || 0), 0);
-    const orderCount = orders.length;
-    const aov        = orderCount > 0 ? revenue / orderCount : 0;
-    const totalItems = orders.reduce((s, o) =>
-      s + (o.line_items || []).reduce((a, li) => a + li.quantity, 0), 0);
-
-    const dailyMap = {};
-    orders.forEach(o => {
-      const day = o.created_at.slice(0, 10);
-      if (!dailyMap[day]) dailyMap[day] = { date: day, orders: 0, revenue: 0 };
-      dailyMap[day].orders++;
-      dailyMap[day].revenue += parseFloat(o.total_price || 0);
-    });
-    const daily = Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date));
-
-    const totalDays = daily.length || 1;
-    const half      = Math.floor(totalDays / 2);
-    const midDate   = daily[half]?.date || '';
-    const revFirst  = orders.filter(o => o.created_at.slice(0,10) < midDate)
-                            .reduce((s, o) => s + parseFloat(o.total_price || 0), 0);
-    const revLast   = orders.filter(o => o.created_at.slice(0,10) >= midDate)
-                            .reduce((s, o) => s + parseFloat(o.total_price || 0), 0);
-    const wow = revFirst > 0 ? ((revLast - revFirst) / revFirst * 100) : 0;
-
-    return {
-      daily,
-      revenue:    Math.round(revenue * 100) / 100,
-      orders:     orderCount,
-      aov:        Math.round(aov * 100) / 100,
-      refunds:    Math.round(refunds * 100) / 100,
-      totalItems,
-      wow:        Math.round(wow * 10) / 10,
-    };
-  } catch(e) {
-    console.warn('Shopify loadShopify error:', e.message);
-    return null;
-  }
-}
-
-async function loadShopifyProducts() {
-  try {
-    if (state.shopifyProxy && state.shopifyProxy.startsWith('http')) {
-      return await proxyCall('products');
-    }
-
-    const sinceISO = state.since;
-    const untilISO = state.until + 'T23:59:59';
-    const ordersData = await shopifyFetch('orders.json', {
-      status: 'any',
-      financial_status: 'paid,partially_paid',
-      created_at_min: sinceISO,
-      created_at_max: untilISO,
-      limit: 250,
-      fields: 'id,line_items',
-    });
-    const orders  = ordersData.orders || [];
-    const prodMap = {};
-    orders.forEach(o => {
-      (o.line_items || []).forEach(li => {
-        const id = li.product_id || li.title;
-        if (!prodMap[id]) prodMap[id] = { title: li.title, orders: 0, units: 0, revenue: 0 };
-        prodMap[id].orders++;
-        prodMap[id].units   += li.quantity;
-        prodMap[id].revenue += parseFloat(li.price || 0) * li.quantity;
-      });
-    });
-    return {
-      products: Object.values(prodMap)
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 15)
-        .map(p => ({ ...p, revenue: Math.round(p.revenue * 100) / 100 }))
-    };
-  } catch(e) {
-    console.warn('Shopify products error:', e.message);
-    return null;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// RENDER: SHOPIFY TAB
-// ═══════════════════════════════════════════════════════════════
-async function renderShopify(metaAllData) {
-  const el = document.getElementById('tab-shopify');
-
-  el.innerHTML = `<div class="empty-state"><div class="big" style="animation:pulse 1s infinite">🛍</div><p>Connecting to Shopify…</p></div>`;
-
-  const d1   = new Date(state.since);
-  const d2   = new Date(state.until);
-  const days = Math.max(1, Math.round((d2 - d1) / 86400000)) + 1;
-
-  const [summary, productsData] = await Promise.all([
-    loadShopify(),
-    loadShopifyProducts(),
-  ]);
-
-  if (!summary) {
-    el.innerHTML = `<div class="empty-state"><div class="big">⚠️</div>
-      <p>Could not connect to Shopify.<br>
-      <span style="font-size:11px;color:var(--muted)">Check console for details. Make sure the store is active.</span></p></div>`;
-    return;
-  }
-
-  state.shopifyCache = summary;
-
-  // ── Blended ROAS across all Meta accounts ──────────────────
-  let totalMetaSpend = 0;
-  ACCOUNTS.forEach(acc => {
-    const raw = metaAllData[acc.key];
-    if (raw?.summary) totalMetaSpend += parseFloat(raw.summary.spend || 0);
-  });
-  const shopifyRev  = summary.netSales != null ? summary.netSales : summary.revenue;
-  const blendedROAS = totalMetaSpend > 0 ? (shopifyRev / totalMetaSpend) : 0;
-  const blendedCPA  = summary.orders > 0 ? totalMetaSpend / summary.orders : 0;
-  const profitEst   = shopifyRev - totalMetaSpend; // rough (no COGS)
-
-  // ── Update Overview tab with Shopify blended banner ────────
-  const ovSection = document.getElementById('shopify-overview-section');
-  if (ovSection) {
-    ovSection.innerHTML = `
-    <div class="section">
-      <h2 style="border-bottom-color:#95bf47">🛍 Shopify + Meta — Blended Performance</h2>
-      <div class="blended-row" style="cursor:pointer" onclick="switchTab('shopify')">
-        <div class="blended-metric">
-          <div class="bm-val" style="color:#95bf47">${blendedROAS > 0 ? blendedROAS.toFixed(2)+'x' : '—'}</div>
-          <div class="bm-label">Blended ROAS</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:#95bf47">${shopifyRev.toLocaleString()} EGP</div>
-          <div class="bm-label">Shopify Net Sales</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:var(--yellow)">${Math.round(totalMetaSpend).toLocaleString()} EGP</div>
-          <div class="bm-label">Total Meta Spend</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:var(--c1)">${summary.orders.toLocaleString()}</div>
-          <div class="bm-label">Shopify Orders</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:var(--c1)">${summary.aov.toLocaleString()} EGP</div>
-          <div class="bm-label">Avg Order Value</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:${profitEst>=0?'var(--green)':'var(--red)'}">
-            ${profitEst>=0?'+':''}${Math.round(profitEst).toLocaleString()} EGP</div>
-          <div class="bm-label">Net Sales − Ad Spend</div>
-        </div>
-      </div>
-      <p style="font-size:10px;color:var(--muted)">Click to open full Shopify tab ↗</p>
-    </div>`;
-  }
-
-  // ── Daily chart data ───────────────────────────────────────
-  const dailyLabels  = summary.daily.map(d => d.date.slice(5));
-  const dailyRevenue = summary.daily.map(d => d.revenue);
-  const dailyOrders  = summary.daily.map(d => d.orders);
-
-  // ── Blended daily: Meta spend per day (summed across all accounts) ──
-  const metaDailyMap = {};
-  ACCOUNTS.forEach(acc => {
-    const raw = metaAllData[acc.key];
-    if (!raw?.daily) return;
-    raw.daily.forEach(d => {
-      const day = d.date_start;
-      if (!metaDailyMap[day]) metaDailyMap[day] = 0;
-      metaDailyMap[day] += parseFloat(d.spend || 0);
-    });
-  });
-  const blendedMetaSpend = dailyLabels.map((_, i) => {
-    const date = summary.daily[i]?.date;
-    return date ? Math.round(metaDailyMap[date] || 0) : 0;
-  });
-
-  // ── Product rows ───────────────────────────────────────────
-  const products    = productsData?.products || [];
-  const maxRevProd  = products.length > 0 ? products[0].revenue : 1;
-  const prodRows    = products.map((p,i) => `
-    <div class="prod-row">
-      <div style="width:20px;font-size:10px;color:var(--muted);text-align:right">${i+1}</div>
-      <div style="flex:2;font-size:12px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</div>
-      <div class="prod-bar-wrap"><div class="prod-bar" style="width:${Math.round(p.revenue/maxRevProd*100)}%"></div></div>
-      <div style="min-width:80px;text-align:right;font-size:12px;font-weight:700;color:#95bf47">${Math.round(p.revenue).toLocaleString()}</div>
-      <div style="min-width:50px;text-align:right;font-size:11px;color:var(--muted)">${p.orders} orders</div>
-      <div style="min-width:40px;text-align:right;font-size:11px;color:var(--muted)">${p.units} units</div>
-    </div>`).join('');
-
-  // ── Wow badge ─────────────────────────────────────────────
-  const wowColor  = summary.wow >= 0 ? 'var(--green)' : 'var(--red)';
-  const wowSymbol = summary.wow >= 0 ? '▲' : '▼';
-
-  el.innerHTML = `
-    <div class="section">
-      <h2 style="border-bottom-color:#95bf47">🛍 Shopify — ${SHOPIFY_STORE_NAME}</h2>
-      <div class="shopify-badge">
-        🟢 Live data &nbsp;·&nbsp; Last ${days} days &nbsp;·&nbsp;
-        <span style="color:${wowColor}">${wowSymbol} ${Math.abs(summary.wow)}% vs prior half-period</span>
-      </div>
-
-      <!-- KPIs — matching Shopify Admin Sales report -->
-      <div class="shopify-kpi-grid" style="grid-template-columns:repeat(auto-fill,minmax(155px,1fr))">
-
-        <div class="shopify-kpi">
-          <div class="sk-label">GROSS SALES</div>
-          <div class="sk-val">${(summary.grossSales ?? summary.revenue).toLocaleString()}</div>
-          <div class="sk-sub">EGP before discounts</div>
-        </div>
-
-        <div class="shopify-kpi">
-          <div class="sk-label">DISCOUNTS</div>
-          <div class="sk-val" style="color:var(--yellow)">
-            ${summary.discounts > 0 ? '−' + summary.discounts.toLocaleString() : '—'}
-          </div>
-          <div class="sk-sub">EGP</div>
-        </div>
-
-        <div class="shopify-kpi">
-          <div class="sk-label">RETURNS</div>
-          <div class="sk-val" style="color:var(--red)">
-            ${summary.returns > 0 ? '−' + summary.returns.toLocaleString() : '—'}
-          </div>
-          <div class="sk-sub">EGP refunded</div>
-        </div>
-
-        <div class="shopify-kpi">
-          <div class="sk-label">NET SALES</div>
-          <div class="sk-val" style="color:var(--green)">
-            ${(summary.netSales ?? (summary.revenue - (summary.returns||0))).toLocaleString()}
-          </div>
-          <div class="sk-sub">Gross − Disc − Returns</div>
-        </div>
-
-        <div class="shopify-kpi">
-          <div class="sk-label">SHIPPING</div>
-          <div class="sk-val" style="color:var(--c1)">
-            ${(summary.shipping ?? 0) > 0 ? summary.shipping.toLocaleString() : '—'}
-          </div>
-          <div class="sk-sub">EGP collected</div>
-        </div>
-
-        <div class="shopify-kpi">
-          <div class="sk-label">TOTAL ORDERS</div>
-          <div class="sk-val" style="color:var(--c0)">${summary.orders.toLocaleString()}</div>
-          <div class="sk-sub">all non-cancelled</div>
-        </div>
-
-        <div class="shopify-kpi">
-          <div class="sk-label">AVG ORDER VALUE</div>
-          <div class="sk-val" style="color:var(--yellow)">${summary.aov.toLocaleString()}</div>
-          <div class="sk-sub">EGP / order</div>
-        </div>
-
-        <div class="shopify-kpi">
-          <div class="sk-label">ITEMS SOLD</div>
-          <div class="sk-val" style="color:var(--muted)">${summary.totalItems.toLocaleString()}</div>
-          <div class="sk-sub">units</div>
-        </div>
-
-      </div>
-
-      <!-- Blended Performance -->
-      <h3 style="color:var(--muted);margin-bottom:10px">⚡ Blended Performance (Shopify + Meta)</h3>
-      <div class="blended-row">
-        <div class="blended-metric">
-          <div class="bm-val" style="color:#95bf47">${blendedROAS > 0 ? blendedROAS.toFixed(2)+'x' : '—'}</div>
-          <div class="bm-label">Blended ROAS</div>
-          <div style="font-size:9px;color:var(--muted);margin-top:2px">Shopify Rev ÷ Meta Spend</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:var(--yellow)">${Math.round(totalMetaSpend).toLocaleString()}</div>
-          <div class="bm-label">Total Meta Spend (EGP)</div>
-          <div style="font-size:9px;color:var(--muted);margin-top:2px">all accounts combined</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:var(--green)">${shopifyRev.toLocaleString()}</div>
-          <div class="bm-label">Shopify Net Sales (EGP)</div>
-          <div style="font-size:9px;color:var(--muted);margin-top:2px">after disc &amp; returns</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:${profitEst >= 0 ? 'var(--green)' : 'var(--red)'}">
-            ${profitEst >= 0 ? '+' : ''}${Math.round(profitEst).toLocaleString()}</div>
-          <div class="bm-label">Rev minus Ad Spend</div>
-          <div style="font-size:9px;color:var(--muted);margin-top:2px">excl. COGS & fees</div>
-        </div>
-        <div class="blended-metric">
-          <div class="bm-val" style="color:var(--c1)">${blendedCPA > 0 ? Math.round(blendedCPA).toLocaleString() : '—'}</div>
-          <div class="bm-label">Blended CPA (EGP)</div>
-          <div style="font-size:9px;color:var(--muted);margin-top:2px">Meta Spend ÷ Orders</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Charts -->
-    <div class="section">
-      <!-- Blended daily chart -->
-      <div class="chart-card" style="margin-bottom:14px">
-        <h3>📈 Daily: Shopify Revenue vs Meta Ad Spend (EGP)</h3>
-        <canvas id="sh-blended-chart" height="180"></canvas>
-      </div>
-      <div class="charts-2">
-        <div class="chart-card">
-          <h3>Daily Revenue (EGP)</h3>
-          <canvas id="sh-revenue-chart" height="200"></canvas>
-        </div>
-        <div class="chart-card">
-          <h3>Daily Orders</h3>
-          <canvas id="sh-orders-chart" height="200"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Top Products -->
-    ${products.length > 0 ? `
-    <div class="section">
-      <h2 style="border-bottom-color:#95bf47">🏆 Top Products by Revenue</h2>
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px">
-        <div style="display:flex;gap:10px;font-size:10px;color:var(--muted);font-weight:700;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:4px">
-          <div style="width:20px">#</div>
-          <div style="flex:2">Product</div>
-          <div style="flex:3"></div>
-          <div style="min-width:80px;text-align:right">Revenue</div>
-          <div style="min-width:50px;text-align:right">Orders</div>
-          <div style="min-width:40px;text-align:right">Units</div>
-        </div>
-        ${prodRows}
-      </div>
-    </div>` : ''}
-
-    <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-top:8px">
-      ⚠️ <strong>Blended ROAS</strong> compares Shopify revenue (EGP) against Meta spend (EGP) — only valid when both are in EGP.
-      &nbsp;|&nbsp; <strong>Rev minus Ad Spend</strong> does not include COGS, shipping, or Shopify fees.
-      &nbsp;|&nbsp; Data refreshes with the date range selected above.
-    </p>
-  `;
-
-  setTimeout(() => {
-    // Blended chart — dual axis: revenue (left) + spend (right)
-    if (CHART_INSTANCES['sh-blended-chart']) CHART_INSTANCES['sh-blended-chart'].destroy();
-    const bCtx = document.getElementById('sh-blended-chart');
-    if (bCtx) {
-      CHART_INSTANCES['sh-blended-chart'] = new Chart(bCtx, {
-        type: 'bar',
-        data: {
-          labels: dailyLabels,
-          datasets: [
-            {
-              label: 'Shopify Revenue',
-              data: dailyRevenue,
-              backgroundColor: 'rgba(149,191,71,0.65)',
-              borderColor: '#95bf47',
-              borderWidth: 1,
-              yAxisID: 'y',
-            },
-            {
-              label: 'Meta Ad Spend',
-              data: blendedMetaSpend,
-              type: 'line',
-              borderColor: '#f59e0b',
-              backgroundColor: 'rgba(245,158,11,0.1)',
-              borderWidth: 2,
-              pointRadius: 3,
-              tension: 0.3,
-              fill: false,
-              yAxisID: 'y',
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: true, labels: { color: '#94a3b8', font: { size: 11 } } },
-            tooltip: {
-              callbacks: {
-                label: c => `${c.dataset.label}: ${c.raw.toLocaleString()} EGP`,
-              },
-            },
-          },
-          scales: {
-            x: { ticks: { color: '#64748b', maxRotation: 45, font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.05)' } },
-            y: { ticks: { color: '#64748b', font: { size: 10 }, callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v }, grid: { color: 'rgba(255,255,255,.05)' } },
-          },
-        },
-      });
-    }
-
-    mkChart('sh-revenue-chart', 'bar', dailyLabels, [{
-      label: 'Revenue', data: dailyRevenue,
-      backgroundColor: 'rgba(149,191,71,0.6)', borderColor: '#95bf47', borderWidth: 1
-    }]);
-    mkChart('sh-orders-chart', 'bar', dailyLabels, [{
-      label: 'Orders', data: dailyOrders,
-      backgroundColor: 'rgba(6,182,212,0.6)', borderColor: '#06b6d4', borderWidth: 1
-    }]);
-  }, 50);
-}
 
 </script>
 </body>
