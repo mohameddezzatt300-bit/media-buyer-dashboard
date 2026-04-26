@@ -1201,8 +1201,12 @@ function renderAccountTab(accKey, rawData) {
   const avg90    = calc90dAvg(daily90p);
   const actDays  = daily.filter(d => d.spend > 0).length || 1; // active days in selected period
   // For volume metrics: normalise to daily avg for fair comparison
-  const ka = (curr, avgVal, rev=false) =>
-    avg90 && avgVal ? `<div style="margin-top:1px">${avgBadge(curr, avgVal, rev)}</div>` : '';
+  const ka = (curr, avgVal, rev=false, lbl='') => {
+    if (!avg90 || !avgVal) return '';
+    const badge = avgBadge(curr, avgVal, rev);
+    const sub   = lbl ? `<div style="font-size:9px;color:var(--muted);margin-top:1px;letter-spacing:.01em">${lbl}</div>` : '';
+    return `<div style="margin-top:1px">${badge}${sub}</div>`;
+  };
 
   el.innerHTML = `
     <div class="section">
@@ -1210,20 +1214,20 @@ function renderAccountTab(accKey, rawData) {
         ${prevLabel ? `<span class="period-banner" style="margin-left:10px;vertical-align:middle;font-size:10px">📅 ${state.since} → ${state.until} &nbsp;vs&nbsp; <strong>${prevTrInfo.since} → ${prevTrInfo.until}</strong></span>` : ''}
       </h2>
       <div class="kpi-grid">
-        <div class="kpi kb"><div class="k-label">Total Spend</div><div class="k-val">${fmtK(acc.spend)}</div>${kd(acc.spend,prevSum?.spend,true)}${ka(acc.spend/actDays,avg90?.spend,true)}<div class="k-sub">${cur}</div></div>
-        <div class="kpi ${acc.revenue>0?'kg':''}"><div class="k-label">Revenue</div><div class="k-val">${fmtK(acc.revenue)}</div>${kd(acc.revenue,prevSum?.revenue)}${ka(acc.revenue/actDays,avg90?.revenue)}<div class="k-sub">${cur}</div></div>
-        <div class="kpi kg"><div class="k-label">Purchases</div><div class="k-val">${acc.purchases||'—'}</div>${kd(acc.purchases,prevSum?.purchases)}${ka(acc.purchases/actDays,avg90?.purchases)}<div class="k-sub">orders</div></div>
-        <div class="kpi ${acc.roas>5?'kg':acc.roas>2?'ky':'kr'}"><div class="k-label">ROAS</div><div class="k-val">${acc.roas>0?acc.roas.toFixed(2)+'x':'—'}</div>${kd(acc.roas,prevSum?.roas)}${ka(acc.roas,avg90?.roas)}<div class="k-sub">return on ad spend</div></div>
-        <div class="kpi ${acc.cpp>0&&acc.cpp<300?'kg':acc.cpp>800?'kr':'ky'}"><div class="k-label">CPP</div><div class="k-val">${acc.cpp>0?fmt(acc.cpp,0):'—'}</div>${kd(acc.cpp,prevSum?.cpp,true)}${ka(acc.cpp,avg90?.cpp,true)}<div class="k-sub">${cur} / purchase</div></div>
-        <div class="kpi ${acc.ctr>2?'kg':'ky'}"><div class="k-label">CTR</div><div class="k-val">${acc.ctr.toFixed(2)}%</div>${kd(acc.ctr,prevSum?.ctr)}${ka(acc.ctr,avg90?.ctr)}<div class="k-sub">click-through</div></div>
-        <div class="kpi"><div class="k-label">CPM</div><div class="k-val">${fmt(acc.cpm,0)}</div>${kd(acc.cpm,prevSum?.cpm,true)}${ka(acc.cpm,avg90?.cpm,true)}<div class="k-sub">${cur}</div></div>
-        <div class="kpi"><div class="k-label">CPC</div><div class="k-val">${fmt(acc.cpc,2)}</div>${kd(acc.cpc,prevSum?.cpc,true)}${ka(acc.cpc,avg90?.cpc,true)}<div class="k-sub">${cur}</div></div>
-        <div class="kpi ${acc.freq>3?'ky':''}"><div class="k-label">Frequency</div><div class="k-val">${acc.freq.toFixed(2)}x</div>${kd(acc.freq,prevSum?.freq,true)}${ka(acc.freq,avg90?.freq,true)}<div class="k-sub">avg per person</div></div>
-        <div class="kpi"><div class="k-label">Reach</div><div class="k-val">${fmtK(acc.reach)}</div>${kd(acc.reach,prevSum?.reach)}${ka(acc.reach/actDays,avg90?.reach)}<div class="k-sub">people</div></div>
-        <div class="kpi kc"><div class="k-label">Add to Cart</div><div class="k-val">${fmtK(acc.atc)}</div>${kd(acc.atc,prevSum?.atc)}${ka(acc.atc/actDays,avg90?.atc)}<div class="k-sub">events</div></div>
-        <div class="kpi kc"><div class="k-label">Checkout</div><div class="k-val">${fmtK(acc.checkout)}</div>${kd(acc.checkout,prevSum?.checkout)}${ka(acc.checkout/actDays,avg90?.checkout)}<div class="k-sub">initiated</div></div>
-        <div class="kpi"><div class="k-label">Messages</div><div class="k-val">${fmtK(acc.msgs)||'—'}</div>${kd(acc.msgs,prevSum?.msgs)}${ka(acc.msgs/actDays,avg90?.msgs)}<div class="k-sub">conversations</div></div>
-        <div class="kpi"><div class="k-label">View Content</div><div class="k-val">${fmtK(acc.vc)}</div>${kd(acc.vc,prevSum?.vc)}${ka(acc.vc/actDays,avg90?.vc)}<div class="k-sub">product views</div></div>
+        <div class="kpi kb"><div class="k-label">Total Spend</div><div class="k-val">${fmtK(acc.spend)}</div>${kd(acc.spend,prevSum?.spend,true)}${ka(acc.spend/actDays,avg90?.spend,true,avg90?.spend?`avg/day: ${fmtK(avg90.spend)} ${cur}`:'')}<div class="k-sub">${cur}</div></div>
+        <div class="kpi ${acc.revenue>0?'kg':''}"><div class="k-label">Revenue</div><div class="k-val">${fmtK(acc.revenue)}</div>${kd(acc.revenue,prevSum?.revenue)}${ka(acc.revenue/actDays,avg90?.revenue,false,avg90?.revenue?`avg/day: ${fmtK(avg90.revenue)} ${cur}`:'')}<div class="k-sub">${cur}</div></div>
+        <div class="kpi kg"><div class="k-label">Purchases</div><div class="k-val">${acc.purchases||'—'}</div>${kd(acc.purchases,prevSum?.purchases)}${ka(acc.purchases/actDays,avg90?.purchases,false,avg90?.purchases?`avg/day: ${avg90.purchases.toFixed(1)}`:'')}<div class="k-sub">orders</div></div>
+        <div class="kpi ${acc.roas>5?'kg':acc.roas>2?'ky':'kr'}"><div class="k-label">ROAS</div><div class="k-val">${acc.roas>0?acc.roas.toFixed(2)+'x':'—'}</div>${kd(acc.roas,prevSum?.roas)}${ka(acc.roas,avg90?.roas,false,avg90?.roas?`avg: ${avg90.roas.toFixed(2)}x`:'')}<div class="k-sub">return on ad spend</div></div>
+        <div class="kpi ${acc.cpp>0&&acc.cpp<300?'kg':acc.cpp>800?'kr':'ky'}"><div class="k-label">CPP</div><div class="k-val">${acc.cpp>0?fmt(acc.cpp,0):'—'}</div>${kd(acc.cpp,prevSum?.cpp,true)}${ka(acc.cpp,avg90?.cpp,true,avg90?.cpp?`avg: ${fmt(avg90.cpp,0)} ${cur}`:'')}<div class="k-sub">${cur} / purchase</div></div>
+        <div class="kpi ${acc.ctr>2?'kg':'ky'}"><div class="k-label">CTR</div><div class="k-val">${acc.ctr.toFixed(2)}%</div>${kd(acc.ctr,prevSum?.ctr)}${ka(acc.ctr,avg90?.ctr,false,avg90?.ctr?`avg: ${avg90.ctr.toFixed(2)}%`:'')}<div class="k-sub">click-through</div></div>
+        <div class="kpi"><div class="k-label">CPM</div><div class="k-val">${fmt(acc.cpm,0)}</div>${kd(acc.cpm,prevSum?.cpm,true)}${ka(acc.cpm,avg90?.cpm,true,avg90?.cpm?`avg: ${fmt(avg90.cpm,0)} ${cur}`:'')}<div class="k-sub">${cur}</div></div>
+        <div class="kpi"><div class="k-label">CPC</div><div class="k-val">${fmt(acc.cpc,2)}</div>${kd(acc.cpc,prevSum?.cpc,true)}${ka(acc.cpc,avg90?.cpc,true,avg90?.cpc?`avg: ${fmt(avg90.cpc,2)} ${cur}`:'')}<div class="k-sub">${cur}</div></div>
+        <div class="kpi ${acc.freq>3?'ky':''}"><div class="k-label">Frequency</div><div class="k-val">${acc.freq.toFixed(2)}x</div>${kd(acc.freq,prevSum?.freq,true)}${ka(acc.freq,avg90?.freq,true,avg90?.freq?`avg: ${avg90.freq.toFixed(2)}x`:'')}<div class="k-sub">avg per person</div></div>
+        <div class="kpi"><div class="k-label">Reach</div><div class="k-val">${fmtK(acc.reach)}</div>${kd(acc.reach,prevSum?.reach)}${ka(acc.reach/actDays,avg90?.reach,false,avg90?.reach?`avg/day: ${fmtK(avg90.reach)}`:'')}<div class="k-sub">people</div></div>
+        <div class="kpi kc"><div class="k-label">Add to Cart</div><div class="k-val">${fmtK(acc.atc)}</div>${kd(acc.atc,prevSum?.atc)}${ka(acc.atc/actDays,avg90?.atc,false,avg90?.atc?`avg/day: ${avg90.atc.toFixed(1)}`:'')}<div class="k-sub">events</div></div>
+        <div class="kpi kc"><div class="k-label">Checkout</div><div class="k-val">${fmtK(acc.checkout)}</div>${kd(acc.checkout,prevSum?.checkout)}${ka(acc.checkout/actDays,avg90?.checkout,false,avg90?.checkout?`avg/day: ${avg90.checkout.toFixed(1)}`:'')}<div class="k-sub">initiated</div></div>
+        <div class="kpi"><div class="k-label">Messages</div><div class="k-val">${fmtK(acc.msgs)||'—'}</div>${kd(acc.msgs,prevSum?.msgs)}${ka(acc.msgs/actDays,avg90?.msgs,false,avg90?.msgs?`avg/day: ${avg90.msgs.toFixed(1)}`:'')}<div class="k-sub">conversations</div></div>
+        <div class="kpi"><div class="k-label">View Content</div><div class="k-val">${fmtK(acc.vc)}</div>${kd(acc.vc,prevSum?.vc)}${ka(acc.vc/actDays,avg90?.vc,false,avg90?.vc?`avg/day: ${fmtK(avg90.vc)}`:'')}<div class="k-sub">product views</div></div>
       </div>
     </div>
 
