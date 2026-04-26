@@ -232,12 +232,21 @@ td.ty{color:var(--yellow);font-weight:700}
   <div class="logo">📊 MediaBuyer</div>
   <div class="acc-tabs" id="accTabs">
     <button class="acc-tab active" onclick="switchTab('overview')" data-tab="overview">🌐 Overview</button>
-    <button class="acc-tab" onclick="switchTab('acc0')" data-tab="acc0" style="color:var(--c0)">Coctail Media</button>
-    <button class="acc-tab" onclick="switchTab('acc1')" data-tab="acc1" style="color:var(--c1)">The Mat GCC</button>
-    <button class="acc-tab" onclick="switchTab('acc2')" data-tab="acc2" style="color:var(--c2)">The Mat</button>
-    <button class="acc-tab" onclick="switchTab('acc3')" data-tab="acc3" style="color:var(--c3)">Minibinis</button>
-    <button class="acc-tab" onclick="switchTab('acc4')" data-tab="acc4" style="color:var(--c4)">Padel Lovers</button>
-    <button class="acc-tab" onclick="switchTab('acc5')" data-tab="acc5" style="color:var(--c5)">CHOU</button>
+    <button class="acc-tab" onclick="switchTab('acc0')"  data-tab="acc0"  style="color:var(--c0)">Coctail Media</button>
+    <button class="acc-tab" onclick="switchTab('acc1')"  data-tab="acc1"  style="color:var(--c1)">The Mat GCC</button>
+    <button class="acc-tab" onclick="switchTab('acc2')"  data-tab="acc2"  style="color:var(--c2)">The Mat</button>
+    <button class="acc-tab" onclick="switchTab('acc3')"  data-tab="acc3"  style="color:var(--c3)">Minibinis</button>
+    <button class="acc-tab" onclick="switchTab('acc4')"  data-tab="acc4"  style="color:var(--c4)">Padel Lovers</button>
+    <button class="acc-tab" onclick="switchTab('acc5')"  data-tab="acc5"  style="color:var(--c5)">CHOU</button>
+    <button class="acc-tab" onclick="switchTab('acc6')"  data-tab="acc6"  style="color:#f97316">Brisk Padel</button>
+    <button class="acc-tab" onclick="switchTab('acc7')"  data-tab="acc7"  style="color:#14b8a6">Gant EG</button>
+    <button class="acc-tab" onclick="switchTab('acc8')"  data-tab="acc8"  style="color:#a855f7">Altamra</button>
+    <button class="acc-tab" onclick="switchTab('acc9')"  data-tab="acc9"  style="color:#ef4444">Seven Secrets</button>
+    <button class="acc-tab" onclick="switchTab('acc10')" data-tab="acc10" style="color:#84cc16">nShades</button>
+    <button class="acc-tab" onclick="switchTab('acc11')" data-tab="acc11" style="color:#0ea5e9">PIXI EGP New</button>
+    <button class="acc-tab" onclick="switchTab('acc12')" data-tab="acc12" style="color:#f43f5e">Junior - New</button>
+    <button class="acc-tab" onclick="switchTab('acc13')" data-tab="acc13" style="color:#fb923c">Junior - Old</button>
+    <button class="acc-tab" onclick="switchTab('acc14')" data-tab="acc14" style="color:#10b981">Dr. Baby 2</button>
   </div>
   <div class="controls">
     <div class="quick-dates">
@@ -336,26 +345,24 @@ td.ty{color:var(--yellow);font-weight:700}
       </div>
     </div>
 
-    <div class="section" id="alertsSection" style="display:none">
-      <h2>🚨 Alerts & Thresholds</h2>
-      <div class="thr-row">
-        <span style="font-size:12px;font-weight:700;color:var(--text)">Thresholds:</span>
-        <div class="thr-group"><span class="thr-label">ROAS min</span><input class="thr-input" type="number" id="thr-roas" step="0.1" oninput="saveThr()"> <span class="thr-label">x</span></div>
-        <div class="thr-group"><span class="thr-label">CPP max</span><input class="thr-input" type="number" id="thr-cpp" step="10" oninput="saveThr()"></div>
-        <div class="thr-group"><span class="thr-label">CTR min</span><input class="thr-input" type="number" id="thr-ctr" step="0.1" oninput="saveThr()"> <span class="thr-label">%</span></div>
-        <div class="thr-group"><span class="thr-label">Freq max</span><input class="thr-input" type="number" id="thr-freq" step="0.1" oninput="saveThr()"> <span class="thr-label">x</span></div>
-      </div>
-      <div class="alerts-grid" id="alertsGrid"></div>
-    </div>
   </div>
 
-  <!-- ═══ INDIVIDUAL ACCOUNT TABS (x6) ═══ -->
+  <!-- ═══ INDIVIDUAL ACCOUNT TABS (x15) ═══ -->
   <div class="tab-content" id="tab-acc0"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
   <div class="tab-content" id="tab-acc1"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
   <div class="tab-content" id="tab-acc2"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
   <div class="tab-content" id="tab-acc3"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
   <div class="tab-content" id="tab-acc4"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
   <div class="tab-content" id="tab-acc5"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc6"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc7"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc8"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc9"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc10"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc11"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc12"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc13"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
+  <div class="tab-content" id="tab-acc14"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
 
 
 </div><!-- /page -->
@@ -365,12 +372,21 @@ td.ty{color:var(--yellow);font-weight:700}
 // CONFIG
 // ═══════════════════════════════════════════════════════════════
 const ACCOUNTS = [
-  { key:'acc0', name:'Coctail Media',      id:'act_1149171159569221', currency:'EGP', color:'#6c63ff' },
-  { key:'acc1', name:'The Mat GCC',        id:'act_1548007903197582', currency:'AED', color:'#06b6d4' },
-  { key:'acc2', name:'The Mat',            id:'act_2294987800786358', currency:'EGP', color:'#22c55e' },
-  { key:'acc3', name:'Minibinis',          id:'act_403326348515695',  currency:'EGP', color:'#f59e0b' },
-  { key:'acc4', name:'Padel Lovers Egypt', id:'act_3379856628908690', currency:'EGP', color:'#ec4899' },
-  { key:'acc5', name:'CHOU',               id:'act_295161357941522',  currency:'EGP', color:'#a78bfa' },
+  { key:'acc0',  name:'Coctail Media',      id:'act_1149171159569221',   currency:'EGP', color:'#6c63ff' },
+  { key:'acc1',  name:'The Mat GCC',        id:'act_1548007903197582',   currency:'AED', color:'#06b6d4' },
+  { key:'acc2',  name:'The Mat',            id:'act_2294987800786358',   currency:'EGP', color:'#22c55e' },
+  { key:'acc3',  name:'Minibinis',          id:'act_403326348515695',    currency:'EGP', color:'#f59e0b' },
+  { key:'acc4',  name:'Padel Lovers Egypt', id:'act_3379856628908690',   currency:'EGP', color:'#ec4899' },
+  { key:'acc5',  name:'CHOU',               id:'act_295161357941522',    currency:'EGP', color:'#a78bfa' },
+  { key:'acc6',  name:'Brisk Padel',        id:'act_2249215978922506',   currency:'EGP', color:'#f97316' },
+  { key:'acc7',  name:'Gant EG',            id:'act_954964246206785',    currency:'EGP', color:'#14b8a6' },
+  { key:'acc8',  name:'Altamra',            id:'act_599023763095510',    currency:'EGP', color:'#a855f7' },
+  { key:'acc9',  name:'Seven Secrets',      id:'act_2756208384609907',   currency:'EGP', color:'#ef4444' },
+  { key:'acc10', name:'nShades',            id:'act_296080994981476',    currency:'EGP', color:'#84cc16' },
+  { key:'acc11', name:'PIXI EGP New',       id:'act_537839628807557',    currency:'EGP', color:'#0ea5e9' },
+  { key:'acc12', name:'Junior - New',       id:'act_1194462875300018',   currency:'EGP', color:'#f43f5e' },
+  { key:'acc13', name:'Junior - Old',       id:'act_1672376679865023',   currency:'EGP', color:'#fb923c' },
+  { key:'acc14', name:'Dr. Baby 2',         id:'act_365417869449239',    currency:'EGP', color:'#10b981' },
 ];
 const GV = 'v21.0';
 const CHART_INSTANCES = {};
@@ -1151,6 +1167,18 @@ function renderAccountTab(accKey, rawData) {
       </div>
     </div>
 
+    <div class="section" id="alerts-section-${accKey}">
+      <h2 style="border-bottom-color:${acc_cfg.color}">🚨 Alerts & Thresholds</h2>
+      <div class="thr-row">
+        <span style="font-size:12px;font-weight:700;color:var(--text)">Thresholds:</span>
+        <div class="thr-group"><span class="thr-label">ROAS min</span><input class="thr-input" id="thr-roas-${accKey}" type="number" step="0.1" value="${state.thresholds.roas}" oninput="saveThr('${accKey}')"><span class="thr-label">x</span></div>
+        <div class="thr-group"><span class="thr-label">CPP max</span><input class="thr-input" id="thr-cpp-${accKey}" type="number" step="10" value="${state.thresholds.cpp}" oninput="saveThr('${accKey}')"></div>
+        <div class="thr-group"><span class="thr-label">CTR min</span><input class="thr-input" id="thr-ctr-${accKey}" type="number" step="0.1" value="${state.thresholds.ctr}" oninput="saveThr('${accKey}')"><span class="thr-label">%</span></div>
+        <div class="thr-group"><span class="thr-label">Freq max</span><input class="thr-input" id="thr-freq-${accKey}" type="number" step="0.1" value="${state.thresholds.freq}" oninput="saveThr('${accKey}')"><span class="thr-label">x</span></div>
+      </div>
+      <div class="alerts-grid" id="alerts-grid-${accKey}"></div>
+    </div>
+
     <div class="section">
       <h2 style="border-bottom-color:${acc_cfg.color}">📅 Daily Performance</h2>
       <div class="charts-2">
@@ -1370,76 +1398,65 @@ function renderAccountTab(accKey, rawData) {
 // ═══════════════════════════════════════════════════════════════
 // ALERTS & THRESHOLDS
 // ═══════════════════════════════════════════════════════════════
-function saveThr() {
+function saveThr(accKey) {
   const t = {
-    roas: parseFloat(document.getElementById('thr-roas')?.value) || 2,
-    cpp:  parseFloat(document.getElementById('thr-cpp')?.value)  || 500,
-    ctr:  parseFloat(document.getElementById('thr-ctr')?.value)  || 1,
-    freq: parseFloat(document.getElementById('thr-freq')?.value)  || 4,
+    roas: parseFloat(document.getElementById(`thr-roas-${accKey}`)?.value) || 2,
+    cpp:  parseFloat(document.getElementById(`thr-cpp-${accKey}`)?.value)  || 500,
+    ctr:  parseFloat(document.getElementById(`thr-ctr-${accKey}`)?.value)  || 1,
+    freq: parseFloat(document.getElementById(`thr-freq-${accKey}`)?.value) || 4,
   };
   state.thresholds = t;
   localStorage.setItem('thresholds', JSON.stringify(t));
-  if (Object.keys(state.cache).length) checkAlerts(state.cache);
-}
-
-function initThrInputs() {
-  const t = state.thresholds;
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-  set('thr-roas', t.roas); set('thr-cpp', t.cpp); set('thr-ctr', t.ctr); set('thr-freq', t.freq);
-}
-
-function checkAlerts(allData) {
-  const t    = state.thresholds;
-  const sect = document.getElementById('alertsSection');
-  const grid = document.getElementById('alertsGrid');
-  if (!sect || !grid) return;
-
-  initThrInputs();
-
-  const alerts = [];
+  // Sync all visible threshold inputs and re-check all accounts
   ACCOUNTS.forEach(acc => {
-    const raw = allData[acc.key];
-    if (!raw) return;
-    const d = processSum(raw.summary, acc.currency);
-    if (!d || d.spend <= 0) return;
-
-    if (t.roas > 0 && d.roas > 0 && d.roas < t.roas) {
-      const lvl = d.roas < t.roas * 0.6 ? 'critical' : 'warn';
-      alerts.push({ lvl, icon: lvl==='critical'?'🔴':'⚠️',
-        title: `${acc.name} — Low ROAS`,
-        desc:  `ROAS ${d.roas.toFixed(2)}x is below threshold ${t.roas}x`,
-        val:   `${d.roas.toFixed(2)}x` });
-    }
-    if (t.cpp > 0 && d.cpp > 0 && d.cpp > t.cpp) {
-      const lvl = d.cpp > t.cpp * 1.5 ? 'critical' : 'warn';
-      alerts.push({ lvl, icon: lvl==='critical'?'🔴':'⚠️',
-        title: `${acc.name} — High CPP`,
-        desc:  `CPP ${Math.round(d.cpp).toLocaleString()} ${acc.currency} exceeds threshold ${t.cpp.toLocaleString()}`,
-        val:   `${Math.round(d.cpp).toLocaleString()}` });
-    }
-    if (t.ctr > 0 && d.ctr > 0 && d.ctr < t.ctr) {
-      const lvl = d.ctr < t.ctr * 0.5 ? 'critical' : 'warn';
-      alerts.push({ lvl, icon: lvl==='critical'?'🔴':'⚠️',
-        title: `${acc.name} — Low CTR`,
-        desc:  `CTR ${d.ctr.toFixed(2)}% is below threshold ${t.ctr}%`,
-        val:   `${d.ctr.toFixed(2)}%` });
-    }
-    if (t.freq > 0 && d.freq > 0 && d.freq > t.freq) {
-      const lvl = d.freq > t.freq * 1.3 ? 'critical' : 'warn';
-      alerts.push({ lvl, icon: lvl==='critical'?'🔴':'⚠️',
-        title: `${acc.name} — High Frequency`,
-        desc:  `Frequency ${d.freq.toFixed(2)}x exceeds threshold ${t.freq}x (audience fatigue risk)`,
-        val:   `${d.freq.toFixed(2)}x` });
-    }
+    ['roas','cpp','ctr','freq'].forEach(k => {
+      const el = document.getElementById(`thr-${k}-${acc.key}`);
+      if (el) el.value = t[k];
+    });
+    const raw = state.cache[acc.key];
+    if (raw) checkAccountAlerts(acc.key, processSum(raw.summary, acc.currency), acc.currency);
   });
+}
 
-  sect.style.display = 'block';
-  if (alerts.length === 0) {
-    grid.innerHTML = `<div class="no-alerts">✅ All accounts within thresholds — looking good!</div>`;
-    return;
+function checkAccountAlerts(accKey, d, cur) {
+  const grid = document.getElementById(`alerts-grid-${accKey}`);
+  if (!grid || !d || d.spend <= 0) return;
+  const t = state.thresholds;
+  const alerts = [];
+
+  if (t.roas > 0 && d.roas > 0 && d.roas < t.roas) {
+    const lvl = d.roas < t.roas * 0.6 ? 'critical' : 'warn';
+    alerts.push({ lvl, icon: lvl==='critical'?'🔴':'⚠️',
+      title: 'Low ROAS',
+      desc:  `${d.roas.toFixed(2)}x — threshold ${t.roas}x`,
+      val:   `${d.roas.toFixed(2)}x` });
+  }
+  if (t.cpp > 0 && d.cpp > 0 && d.cpp > t.cpp) {
+    const lvl = d.cpp > t.cpp * 1.5 ? 'critical' : 'warn';
+    alerts.push({ lvl, icon: lvl==='critical'?'🔴':'⚠️',
+      title: 'High CPP',
+      desc:  `${Math.round(d.cpp).toLocaleString()} ${cur} — threshold ${t.cpp.toLocaleString()}`,
+      val:   Math.round(d.cpp).toLocaleString() });
+  }
+  if (t.ctr > 0 && d.ctr > 0 && d.ctr < t.ctr) {
+    const lvl = d.ctr < t.ctr * 0.5 ? 'critical' : 'warn';
+    alerts.push({ lvl, icon: lvl==='critical'?'🔴':'⚠️',
+      title: 'Low CTR',
+      desc:  `${d.ctr.toFixed(2)}% — threshold ${t.ctr}%`,
+      val:   `${d.ctr.toFixed(2)}%` });
+  }
+  if (t.freq > 0 && d.freq > 0 && d.freq > t.freq) {
+    const lvl = d.freq > t.freq * 1.3 ? 'critical' : 'warn';
+    alerts.push({ lvl, icon: lvl==='critical'?'🔴':'⚠️',
+      title: 'High Frequency',
+      desc:  `${d.freq.toFixed(2)}x — audience fatigue risk (threshold ${t.freq}x)`,
+      val:   `${d.freq.toFixed(2)}x` });
   }
 
-  // Sort: critical first
+  if (alerts.length === 0) {
+    grid.innerHTML = `<div class="no-alerts">✅ All metrics within thresholds</div>`;
+    return;
+  }
   alerts.sort((a,b) => a.lvl==='critical' && b.lvl!=='critical' ? -1 : 1);
   grid.innerHTML = alerts.map(a => `
     <div class="alert-card alert-${a.lvl}">
@@ -1596,8 +1613,6 @@ function renderOverview(allData) {
 
   // Day-of-Week Heatmap
   renderHeatmap(allData);
-
-  checkAlerts(allData);
 }
 
 // ═══════════════════════════════════════════════════════════════
