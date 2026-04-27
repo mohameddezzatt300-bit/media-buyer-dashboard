@@ -21,11 +21,19 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
         display:flex;align-items:center;gap:10px;padding:0 18px;height:52px;overflow-x:auto}
 .logo{font-weight:800;font-size:15px;white-space:nowrap;margin-right:6px;
       background:linear-gradient(90deg,var(--c0),var(--c1));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.acc-tabs{display:flex;gap:2px;flex:1;overflow-x:auto}
+.acc-tabs{display:flex;align-items:center;gap:8px}
 .acc-tab{padding:6px 13px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;
          white-space:nowrap;border:none;background:transparent;color:var(--muted);transition:.2s}
 .acc-tab:hover{background:var(--card2);color:var(--text)}
-.acc-tab.active{color:#fff}
+.acc-tab.active{color:#fff;background:rgba(108,99,255,.2)}
+/* ── ACCOUNT DROPDOWN ── */
+.acc-dropdown-wrap{position:relative;display:flex;align-items:center}
+.acc-dropdown-wrap::after{content:'▾';position:absolute;right:10px;color:var(--muted);font-size:11px;pointer-events:none}
+#accSelect{appearance:none;-webkit-appearance:none;background:var(--card2);border:1px solid var(--border);
+           color:var(--text);border-radius:7px;padding:5px 28px 5px 12px;font-size:12px;font-weight:600;
+           cursor:pointer;min-width:160px;transition:.2s;outline:none}
+#accSelect:hover{border-color:var(--c0)}
+#accSelect option{background:#1d2135;color:var(--text)}
 .controls{display:flex;align-items:center;gap:8px;margin-left:auto;white-space:nowrap}
 .date-inp{background:var(--card2);border:1px solid var(--border);color:var(--text);
           border-radius:7px;padding:5px 9px;font-size:12px;cursor:pointer}
@@ -236,22 +244,27 @@ td.ty{color:var(--yellow);font-weight:700}
   <div class="logo">📊 MediaBuyer</div>
   <div class="acc-tabs" id="accTabs">
     <button class="acc-tab active" onclick="switchTab('overview')" data-tab="overview">🌐 Overview</button>
-    <button class="acc-tab" onclick="switchTab('acc0')"  data-tab="acc0"  style="color:var(--c0)">Coctail Media</button>
-    <button class="acc-tab" onclick="switchTab('acc1')"  data-tab="acc1"  style="color:var(--c1)">The Mat GCC</button>
-    <button class="acc-tab" onclick="switchTab('acc2')"  data-tab="acc2"  style="color:var(--c2)">The Mat</button>
-    <button class="acc-tab" onclick="switchTab('acc3')"  data-tab="acc3"  style="color:var(--c3)">Minibinis</button>
-    <button class="acc-tab" onclick="switchTab('acc4')"  data-tab="acc4"  style="color:var(--c4)">Padel Lovers</button>
-    <button class="acc-tab" onclick="switchTab('acc5')"  data-tab="acc5"  style="color:var(--c5)">CHOU</button>
-    <button class="acc-tab" onclick="switchTab('acc6')"  data-tab="acc6"  style="color:#f97316">Brisk Padel</button>
-    <button class="acc-tab" onclick="switchTab('acc7')"  data-tab="acc7"  style="color:#14b8a6">Gant EG</button>
-    <button class="acc-tab" onclick="switchTab('acc8')"  data-tab="acc8"  style="color:#a855f7">Altamra</button>
-    <button class="acc-tab" onclick="switchTab('acc9')"  data-tab="acc9"  style="color:#ef4444">Seven Secrets</button>
-    <button class="acc-tab" onclick="switchTab('acc10')" data-tab="acc10" style="color:#84cc16">nShades</button>
-    <button class="acc-tab" onclick="switchTab('acc11')" data-tab="acc11" style="color:#0ea5e9">PIXI EGP New</button>
-    <button class="acc-tab" onclick="switchTab('acc12')" data-tab="acc12" style="color:#f43f5e">Junior - New</button>
-    <button class="acc-tab" onclick="switchTab('acc13')" data-tab="acc13" style="color:#fb923c">Junior - Old</button>
-    <button class="acc-tab" onclick="switchTab('acc14')" data-tab="acc14" style="color:#10b981">Dr. Baby 2</button>
-    <button class="acc-tab" onclick="switchTab('acc15')" data-tab="acc15" style="color:#e879f9">Usigna</button>
+    <div class="acc-dropdown-wrap">
+      <select id="accSelect" onchange="switchTab(this.value)">
+        <option value="" disabled>— Select Account —</option>
+        <option value="acc0"  style="color:#6c63ff">Coctail Media</option>
+        <option value="acc1"  style="color:#06b6d4">The Mat GCC</option>
+        <option value="acc2"  style="color:#22c55e">The Mat</option>
+        <option value="acc3"  style="color:#f59e0b">Minibinis</option>
+        <option value="acc4"  style="color:#ec4899">Padel Lovers</option>
+        <option value="acc5"  style="color:#a78bfa">CHOU</option>
+        <option value="acc6"  style="color:#f97316">Brisk Padel</option>
+        <option value="acc7"  style="color:#14b8a6">Gant EG</option>
+        <option value="acc8"  style="color:#a855f7">Altamra</option>
+        <option value="acc9"  style="color:#ef4444">Seven Secrets</option>
+        <option value="acc10" style="color:#84cc16">nShades</option>
+        <option value="acc11" style="color:#0ea5e9">PIXI EGP New</option>
+        <option value="acc12" style="color:#f43f5e">Junior - New</option>
+        <option value="acc13" style="color:#fb923c">Junior - Old</option>
+        <option value="acc14" style="color:#10b981">Dr. Baby 2</option>
+        <option value="acc15" style="color:#e879f9">Usigna</option>
+      </select>
+    </div>
   </div>
   <div class="controls">
     <div class="quick-dates">
@@ -2079,12 +2092,23 @@ function exportCSV() {
 // TAB SWITCHING
 // ═══════════════════════════════════════════════════════════════
 function switchTab(tabId) {
+  if (!tabId) return;
   state.activeTab = tabId;
+  // Overview button active state
   document.querySelectorAll('.acc-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.tab===tabId);
-    if (t.dataset.tab===tabId) t.style.background='rgba(108,99,255,.2)';
-    else t.style.background='';
   });
+  // Sync dropdown
+  const sel = document.getElementById('accSelect');
+  if (sel) {
+    if (tabId === 'overview') sel.value = '';
+    else sel.value = tabId;
+    // Update dropdown border color to match account color
+    const acc = ACCOUNTS.find(a => a.key === tabId);
+    sel.style.borderColor = acc ? acc.color : 'var(--border)';
+    sel.style.color = acc ? acc.color : 'var(--text)';
+  }
+  // Show correct content
   document.querySelectorAll('.tab-content').forEach(c => {
     c.classList.toggle('active', c.id===`tab-${tabId}`);
   });
