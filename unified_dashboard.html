@@ -2122,7 +2122,7 @@ function switchTab(tabId) {
   // Lazy-load fatigue iframe on first open
   if (tabId === 'fatigue') {
     const fr = document.getElementById('fatigueFrame');
-    if (fr && !fr.src) fr.src = fr.dataset.src;
+    if (fr && !fr.getAttribute('src')) fr.setAttribute('src', fr.dataset.src);
   }
 }
 
