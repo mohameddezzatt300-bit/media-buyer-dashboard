@@ -26,6 +26,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
          white-space:nowrap;border:none;background:transparent;color:var(--muted);transition:.2s}
 .acc-tab:hover{background:var(--card2);color:var(--text)}
 .acc-tab.active{color:#fff;background:rgba(108,99,255,.2)}
+/* ── FATIGUE IFRAME TAB ── */
+#tab-fatigue{padding:0;overflow:hidden}
+#fatigueFrame{width:100%;height:calc(100vh - 52px);border:none;display:block;background:#050d22}
 /* ── ACCOUNT DROPDOWN ── */
 .acc-dropdown-wrap{position:relative;display:flex;align-items:center}
 .acc-dropdown-wrap::after{content:'▾';position:absolute;right:10px;color:var(--muted);font-size:11px;pointer-events:none}
@@ -244,6 +247,7 @@ td.ty{color:var(--yellow);font-weight:700}
   <div class="logo">📊 MediaBuyer</div>
   <div class="acc-tabs" id="accTabs">
     <button class="acc-tab active" onclick="switchTab('overview')" data-tab="overview">🌐 Overview</button>
+    <button class="acc-tab" onclick="switchTab('fatigue')" data-tab="fatigue" style="color:#f9a51a">🎯 Creative Fatigue</button>
     <div class="acc-dropdown-wrap">
       <select id="accSelect" onchange="switchTab(this.value)">
         <option value="" disabled>— Select Account —</option>
@@ -366,6 +370,9 @@ td.ty{color:var(--yellow);font-weight:700}
   </div>
 
   <!-- ═══ INDIVIDUAL ACCOUNT TABS (x15) ═══ -->
+  <div class="tab-content" id="tab-fatigue">
+    <iframe id="fatigueFrame" src="" data-src="creative_fatigue.html" title="Creative Fatigue Radar"></iframe>
+  </div>
   <div class="tab-content" id="tab-acc0"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
   <div class="tab-content" id="tab-acc1"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
   <div class="tab-content" id="tab-acc2"><div class="empty-state"><div class="big">📡</div><p>Click <strong>Refresh</strong></p></div></div>
@@ -2112,6 +2119,11 @@ function switchTab(tabId) {
   document.querySelectorAll('.tab-content').forEach(c => {
     c.classList.toggle('active', c.id===`tab-${tabId}`);
   });
+  // Lazy-load fatigue iframe on first open
+  if (tabId === 'fatigue') {
+    const fr = document.getElementById('fatigueFrame');
+    if (fr && !fr.src) fr.src = fr.dataset.src;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
