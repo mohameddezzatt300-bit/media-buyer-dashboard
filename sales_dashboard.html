@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sales Team Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f1f5f9;--card:#ffffff;--card2:#f8fafc;--card3:#f1f5f9;
+  --text:#0f172a;--muted:#64748b;--border:#e2e8f0;
+  --font:'Segoe UI',Tahoma,Arial,sans-serif;
+  --green:#16a34a;--red:#dc2626;--yellow:#d97706;--blue:#2563eb;
+  --c0:#6c63ff;--c1:#0891b2;--c2:#16a34a;--c3:#d97706;--c4:#db2777;--c5:#7c3aed;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh}
+
+/* ── TOP BAR ── */
+.topbar{position:sticky;top:0;z-index:100;background:#fff;
+        border-bottom:1px solid var(--border);box-shadow:var(--shadow);
+        display:flex;align-items:center;gap:12px;padding:0 24px;height:56px}
+.logo{font-weight:800;font-size:17px;white-space:nowrap;
+      background:linear-gradient(90deg,var(--c0),var(--c1));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar-sub{font-size:11px;color:var(--muted);margin-left:4px}
+.topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn{padding:7px 16px;border-radius:8px;font-size:12px;font-weight:700;
+     cursor:pointer;border:none;transition:.2s}
+.btn-primary{background:var(--c0);color:#fff;box-shadow:0 2px 4px rgba(108,99,255,.3)}
+.btn-primary:hover{background:#5a52d5}
+.btn-ghost{background:#fff;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:#cbd5e1}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-danger{background:#fef2f2;color:var(--red);border:1px solid #fecaca}
+.btn-danger:hover{background:#fee2e2}
+
+/* ── LAYOUT ── */
+.page{max-width:1400px;margin:0 auto;padding:24px}
+.section-title{font-size:11px;font-weight:700;color:var(--muted);
+               text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:2px;margin-bottom:24px;background:#fff;
+      border-radius:12px;padding:5px;width:fit-content;
+      border:1px solid var(--border);box-shadow:var(--shadow)}
+.tab{padding:7px 18px;border-radius:8px;font-size:12px;font-weight:700;
+     cursor:pointer;border:none;background:transparent;color:var(--muted);
+     transition:.15s;white-space:nowrap}
+.tab:hover{background:var(--card2);color:var(--text)}
+.tab.active{background:var(--c0);color:#fff;box-shadow:0 2px 4px rgba(108,99,255,.3)}
+
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ── KPI CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));
+          gap:12px;margin-bottom:22px}
+.kpi-card{background:#fff;border:1px solid var(--border);border-radius:14px;
+          padding:16px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;width:4px;
+                  height:100%;background:var(--accent,var(--c0));border-radius:0 0 0 0}
+.kpi-label{font-size:10px;color:var(--muted);margin-bottom:6px;
+           font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.kpi-val{font-size:26px;font-weight:800;line-height:1;color:var(--text)}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:5px}
+.kpi-delta{display:inline-block;font-size:10px;font-weight:700;
+           padding:2px 7px;border-radius:20px;margin-top:5px}
+.delta-up{background:#dcfce7;color:#15803d}
+.delta-down{background:#fee2e2;color:#dc2626}
+.delta-flat{background:#f1f5f9;color:#64748b}
+
+/* ── LEADERBOARD ── */
+.lb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+         gap:12px;margin-bottom:24px}
+.lb-card{background:#fff;border:1px solid var(--border);border-radius:14px;
+         padding:18px;position:relative;overflow:hidden;
+         transition:.2s;box-shadow:var(--shadow)}
+.lb-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.lb-card.rank-1{border-top:3px solid #f59e0b;border-color:#f59e0b}
+.lb-card.rank-2{border-top:3px solid #94a3b8;border-color:#94a3b8}
+.lb-card.rank-3{border-top:3px solid #b45309;border-color:#b45309}
+.lb-rank{position:absolute;top:12px;right:14px;font-size:20px}
+.lb-name{font-size:15px;font-weight:800;margin-bottom:12px;
+         display:flex;align-items:center;gap:8px;padding-right:36px}
+.lb-avatar{width:34px;height:34px;border-radius:50%;display:inline-flex;
+           align-items:center;justify-content:center;font-weight:800;
+           font-size:13px;flex-shrink:0}
+.lb-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lb-metric{background:var(--card2);border-radius:9px;padding:9px;
+           border:1px solid var(--border)}
+.lb-metric-label{font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:700}
+.lb-metric-val{font-size:17px;font-weight:800;margin-top:2px;color:var(--text)}
+.lb-bar{height:4px;border-radius:2px;background:var(--border);margin-top:12px;overflow:hidden}
+.lb-bar-fill{height:100%;border-radius:2px;transition:.5s}
+.lb-footer{display:flex;justify-content:space-between;align-items:center;
+           margin-top:8px;font-size:10px;color:var(--muted)}
+
+/* ── REP TABLE ── */
+.rep-table{width:100%;border-collapse:collapse;font-size:12px}
+.rep-table th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;
+              color:var(--muted);text-transform:uppercase;letter-spacing:.04em;
+              border-bottom:2px solid var(--border);background:var(--card2)}
+.rep-table td{padding:11px 14px;border-bottom:1px solid var(--border)}
+.rep-table tbody tr:hover td{background:var(--card2)}
+.rep-table tbody tr:last-child td{border-bottom:none}
+.rate-good{color:var(--green);font-weight:700}
+.rate-mid{color:var(--yellow);font-weight:700}
+.rate-bad{color:var(--red);font-weight:700}
+.rep-badge{display:inline-flex;align-items:center;gap:7px;font-weight:600}
+.rep-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+/* ── FORM ── */
+.form-card{background:#fff;border:1px solid var(--border);border-radius:14px;
+           padding:24px;margin-bottom:24px;box-shadow:var(--shadow)}
+.form-card h2{font-size:16px;font-weight:800;margin-bottom:20px;
+              display:flex;align-items:center;gap:8px;color:var(--text)}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group label{font-size:10px;font-weight:700;color:var(--muted);
+                  text-transform:uppercase;letter-spacing:.05em}
+.form-group input,.form-group select,.form-group textarea{
+  background:#fff;border:1px solid var(--border);color:var(--text);
+  border-radius:9px;padding:9px 12px;font-size:13px;font-family:var(--font);
+  transition:.15s;outline:none;box-shadow:inset 0 1px 2px rgba(0,0,0,.04)}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  border-color:var(--c0);box-shadow:0 0 0 3px rgba(108,99,255,.12)}
+.form-group textarea{resize:vertical;min-height:70px}
+.hint{font-size:10px;color:var(--muted);margin-top:2px}
+.form-sep{height:1px;background:var(--border);margin:16px 0}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+
+/* ── FUNNEL ── */
+.funnel-wrap{background:#fff;border:1px solid var(--border);border-radius:14px;
+             padding:22px;margin-bottom:20px;box-shadow:var(--shadow)}
+.funnel{display:flex;flex-direction:column;gap:8px;max-width:520px;margin:0 auto}
+.funnel-step{display:flex;align-items:center;gap:10px}
+.funnel-bar-wrap{flex:1}
+.funnel-bar{height:38px;border-radius:9px;display:flex;align-items:center;
+            justify-content:center;font-weight:700;font-size:13px;
+            color:#fff;transition:.4s;min-width:38px}
+.funnel-label{font-size:12px;color:var(--muted);white-space:nowrap;
+              width:130px;text-align:left}
+.funnel-pct{font-size:11px;color:var(--muted);white-space:nowrap;
+            width:55px;text-align:center}
+
+/* ── CHARTS ── */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.chart-card{background:#fff;border:1px solid var(--border);border-radius:14px;
+            padding:20px;box-shadow:var(--shadow)}
+.chart-card h3{font-size:12px;font-weight:700;margin-bottom:14px;color:var(--muted)}
+.chart-wrap{position:relative;height:200px}
+@media(max-width:800px){.charts-row{grid-template-columns:1fr}}
+
+/* ── COMPARE ── */
+.compare-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));
+              gap:10px;margin-bottom:20px}
+.compare-card{background:#fff;border:1px solid var(--border);border-radius:12px;
+              padding:14px;box-shadow:var(--shadow)}
+.compare-label{font-size:10px;color:var(--muted);font-weight:700;
+               text-transform:uppercase;margin-bottom:9px}
+.compare-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.compare-month{font-size:11px;color:var(--muted)}
+.compare-val{font-size:16px;font-weight:800}
+.compare-bar{height:4px;border-radius:2px;background:var(--border);
+             margin-top:9px;overflow:hidden}
+.compare-bar-fill{height:100%;border-radius:2px;transition:.4s}
+
+/* ── HISTORY ── */
+.history-card{background:#fff;border:1px solid var(--border);border-radius:14px;
+              overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow)}
+.history-header{padding:16px 20px;border-bottom:1px solid var(--border);
+                display:flex;align-items:center;justify-content:space-between;
+                gap:10px;flex-wrap:wrap;background:var(--card2)}
+.history-header h3{font-size:13px;font-weight:700;color:var(--text)}
+.filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter-select{background:#fff;border:1px solid var(--border);color:var(--text);
+               border-radius:8px;padding:5px 10px;font-size:12px;
+               cursor:pointer;outline:none}
+.filter-select:focus{border-color:var(--c0)}
+.week-row{display:grid;
+          grid-template-columns:105px 100px 65px 65px 65px 65px 65px 80px 80px 80px 1fr 36px;
+          align-items:center;border-bottom:1px solid var(--border);
+          padding:10px 16px;font-size:12px;transition:.15s}
+.week-row:hover{background:var(--card2)}
+.week-row.header{background:var(--card3);font-weight:700;color:var(--muted);
+                 font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+.week-row.header:hover{background:var(--card3)}
+.notes-cell{color:var(--muted);font-size:11px;overflow:hidden;
+            text-overflow:ellipsis;white-space:nowrap}
+.del-btn{background:none;border:none;color:var(--muted);cursor:pointer;
+         font-size:14px;padding:3px 6px;border-radius:5px;transition:.15s}
+.del-btn:hover{color:var(--red);background:#fee2e2}
+
+/* ── SETTINGS ── */
+.reps-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.rep-row{display:flex;align-items:center;gap:10px;background:var(--card2);
+         border:1px solid var(--border);border-radius:10px;padding:10px 14px}
+.rep-color-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.rep-name-text{flex:1;font-weight:700;font-size:13px}
+.rep-sub{font-size:11px;color:var(--muted)}
+.add-rep-row{display:flex;gap:8px;align-items:center}
+
+/* ── EMPTY ── */
+.empty-state{padding:40px;text-align:center;color:var(--muted)}
+.empty-state .icon{font-size:36px;margin-bottom:10px}
+.empty-state p{font-size:13px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;
+       transform:translateX(-50%) translateY(80px);
+       background:var(--c0);color:#fff;padding:10px 24px;
+       border-radius:10px;font-weight:700;font-size:13px;
+       transition:.3s;z-index:9999;opacity:0;pointer-events:none;
+       box-shadow:0 4px 12px rgba(108,99,255,.4)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+@media(max-width:700px){
+  .week-row{display:flex;flex-wrap:wrap;gap:5px;padding:10px}
+  .week-row.header{display:none}
+  .lb-grid{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="logo">📊 Sales Dashboard</div>
+    <div class="topbar-sub">Track your team's weekly performance</div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn btn-primary" onclick="switchTab('entry')">+ Log Week</button>
+    <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export CSV</button>
+    <button class="btn btn-ghost" onclick="switchTab('settings')">⚙ Settings</button>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('overview')">🏠 Overview</button>
+    <button class="tab" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
+    <button class="tab" onclick="switchTab('entry')">📝 Log Week</button>
+    <button class="tab" onclick="switchTab('history')">📋 History</button>
+    <button class="tab" onclick="switchTab('compare')">📆 Monthly</button>
+    <button class="tab" onclick="switchTab('settings')">⚙ Settings</button>
+  </div>
+
+  <!-- ══════════════ OVERVIEW ══════════════ -->
+  <div id="tab-overview" class="tab-content active">
+    <div class="section-title" id="ov-week-label">Team Total — Latest Week</div>
+    <div class="kpi-grid" id="kpi-team"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+      <div class="funnel-wrap" style="margin-bottom:0">
+        <div class="section-title">Conversion Funnel — Full Team</div>
+        <div class="funnel" id="funnel-team">
+          <div class="empty-state"><p>Log data to see the funnel</p></div>
+        </div>
+      </div>
+      <div class="chart-card" style="display:flex;flex-direction:column">
+        <h3>Closed Deals by Sales</h3>
+        <div class="chart-wrap" style="flex:1;height:auto"><canvas id="chart-pie"></canvas></div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3>📈 Weekly Leads — Last 8 Weeks (Team)</h3>
+        <div class="chart-wrap"><canvas id="chart-weekly-leads"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>🎯 Close Rate by Sales — Latest Week</h3>
+        <div class="chart-wrap"><canvas id="chart-close-bar"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ LEADERBOARD ══════════════ -->
+  <div id="tab-leaderboard" class="tab-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div class="section-title" style="margin-bottom:0">🏆 Leaderboard</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <label style="font-size:11px;color:var(--muted)">Period:</label>
+        <select class="filter-select" id="lb-period" onchange="renderLeaderboard()">
+          <option value="week">Latest Week</option>
+          <option value="month">This Month</option>
+          <option value="all">All Time</option>
+        </select>
+        <label style="font-size:11px;color:var(--muted)">Rank by:</label>
+        <select class="filter-select" id="lb-sort" onchange="renderLeaderboard()">
+          <option value="closed">Deals Closed</option>
+          <option value="closeRate">Close Rate</option>
+          <option value="revenue">Revenue</option>
+          <option value="received">Leads Received</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="lb-grid" id="lb-grid">
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="icon">🏆</div><p>No data yet — log your first week!</p>
+      </div>
+    </div>
+
+    <div class="history-card">
+      <div class="history-header"><h3>Detailed Comparison</h3></div>
+      <div style="overflow-x:auto">
+        <table class="rep-table">
+          <thead>
+            <tr>
+              <th>Sales</th><th>Received</th><th>Contacted</th><th>Answered</th>
+              <th>Qualified</th><th>Closed</th>
+              <th>Contact %</th><th>Answer %</th><th>Close %</th><th>Revenue</th>
+            </tr>
+          </thead>
+          <tbody id="rep-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ ENTRY ══════════════ -->
+  <div id="tab-entry" class="tab-content">
+    <div class="form-card">
+      <h2>📝 Log Weekly Performance</h2>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Week Ending Date</label>
+          <input type="date" id="f-date">
+        </div>
+        <div class="form-group">
+          <label>👤 Sales Name</label>
+          <select id="f-rep">
+            <option value="">— Select Sales —</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-sep"></div>
+      <div class="section-title">Lead Pipeline</div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>🔵 Leads Received</label>
+          <input type="number" id="f-received" min="0" placeholder="0">
+          <div class="hint">Total leads assigned to you</div>
+        </div>
+        <div class="form-group">
+          <label>📞 Contacted</label>
+          <input type="number" id="f-contacted" min="0" placeholder="0">
+          <div class="hint">Leads you called or messaged</div>
+        </div>
+        <div class="form-group">
+          <label>✅ Answered / Reached</label>
+          <input type="number" id="f-answered" min="0" placeholder="0">
+          <div class="hint">Leads who actually responded</div>
+        </div>
+        <div class="form-group">
+          <label>🌟 Qualified</label>
+          <input type="number" id="f-qualified" min="0" placeholder="0">
+          <div class="hint">Real buying intent confirmed</div>
+        </div>
+        <div class="form-group">
+          <label>💰 Deals Closed</label>
+          <input type="number" id="f-closed" min="0" placeholder="0">
+          <div class="hint">Leads who actually purchased</div>
+        </div>
+        <div class="form-group">
+          <label>🔄 Follow-ups Done</label>
+          <input type="number" id="f-followups" min="0" placeholder="0">
+        </div>
+      </div>
+
+      <div class="form-sep"></div>
+      <div class="section-title">Revenue & Quality</div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>💵 Total Revenue</label>
+          <input type="number" id="f-revenue" min="0" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Currency</label>
+          <select id="f-currency">
+            <option value="EGP">EGP</option>
+            <option value="USD">USD</option>
+            <option value="SAR">SAR</option>
+            <option value="AED">AED</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>⏱ Avg Response Time (hrs)</label>
+          <input type="number" id="f-response-time" min="0" step="0.5" placeholder="e.g. 2.5">
+          <div class="hint">From lead arrival to first contact</div>
+        </div>
+        <div class="form-group">
+          <label>❌ Junk / Invalid Leads</label>
+          <input type="number" id="f-junk" min="0" placeholder="0">
+        </div>
+      </div>
+
+      <div class="form-sep"></div>
+      <div class="form-group">
+        <label>📝 Notes</label>
+        <textarea id="f-notes" placeholder="Any observations, blockers, opportunities this week..."></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+        <button class="btn btn-primary" onclick="saveWeek()">💾 Save Week</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ HISTORY ══════════════ -->
+  <div id="tab-history" class="tab-content">
+    <div class="history-card">
+      <div class="history-header">
+        <h3>📋 All Weeks</h3>
+        <div class="filter-row">
+          <label style="font-size:11px;color:var(--muted)">Filter by sales:</label>
+          <select class="filter-select" id="hist-filter-rep" onchange="renderHistory()">
+            <option value="all">All Sales</option>
+          </select>
+          <span id="history-count" style="font-size:11px;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div class="week-row header">
+        <span>Week</span><span>Sales</span>
+        <span>Received</span><span>Contacted</span><span>Answered</span>
+        <span>Qualified</span><span>Closed</span>
+        <span>Contact %</span><span>Answer %</span><span>Close %</span>
+        <span>Notes</span><span></span>
+      </div>
+      <div id="week-list">
+        <div class="empty-state"><div class="icon">📭</div><p>No records yet</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ COMPARE ══════════════ -->
+  <div id="tab-compare" class="tab-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div class="section-title" style="margin-bottom:0">Month-over-Month Comparison</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="font-size:11px;color:var(--muted)">View:</label>
+        <select class="filter-select" id="cmp-rep" onchange="renderCompare()">
+          <option value="all">Whole Team</option>
+        </select>
+      </div>
+    </div>
+    <div class="compare-grid" id="compare-grid"></div>
+    <div class="chart-card">
+      <h3>📊 Monthly Closed Deals</h3>
+      <div class="chart-wrap" style="height:230px"><canvas id="chart-monthly"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SETTINGS ══════════════ -->
+  <div id="tab-settings" class="tab-content">
+    <div class="form-card">
+      <h2>⚙ Manage Sales Team</h2>
+      <div class="section-title">Team Members</div>
+      <div class="reps-list" id="reps-list"></div>
+      <div class="add-rep-row">
+        <input type="text" id="new-rep-name" placeholder="New rep name..."
+               style="flex:1;background:#fff;border:1px solid var(--border);color:var(--text);
+                      border-radius:9px;padding:9px 12px;font-size:13px;outline:none;
+                      font-family:var(--font);box-shadow:inset 0 1px 2px rgba(0,0,0,.04)"
+               onkeydown="if(event.key==='Enter')addRep()">
+        <button class="btn btn-primary" onclick="addRep()">+ Add Rep</button>
+      </div>
+      <div class="form-sep"></div>
+      <div class="section-title">Actions</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export CSV</button>
+        <button class="btn btn-danger" onclick="clearAllData()">🗑 Clear All Data</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const REP_COLORS = ['#6c63ff','#0891b2','#16a34a','#d97706','#db2777',
+                    '#7c3aed','#2563eb','#ea580c','#0d9488','#be185d'];
+const WEEKS_KEY  = 'sales_weeks_v3';
+const REPS_KEY   = 'sales_reps_v1';
+
+function loadWeeks() { try{return JSON.parse(localStorage.getItem(WEEKS_KEY))||[];}catch{return[];} }
+function saveWeeks(d){ localStorage.setItem(WEEKS_KEY,JSON.stringify(d)); }
+function loadReps()  { try{const r=JSON.parse(localStorage.getItem(REPS_KEY));return r&&r.length?r:[];}catch{return[];} }
+function saveReps(r) { localStorage.setItem(REPS_KEY,JSON.stringify(r)); }
+
+const pct  = (a,b) => b>0?Math.round((a/b)*100):0;
+const sum  = (arr,f) => arr.reduce((s,w)=>s+(+w[f]||0),0);
+const fmtN = n => (n||0).toLocaleString('en-US');
+
+function repColor(name){
+  const reps=loadReps(); const idx=reps.findIndex(r=>r.name===name);
+  return idx>=0?REP_COLORS[idx%REP_COLORS.length]:'#94a3b8';
+}
+function repInitials(name){
+  return name?name.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase():'??';
+}
+function rateClass(v){ return v>=70?'rate-good':v>=40?'rate-mid':'rate-bad'; }
+function monthKey(d) { return d?d.slice(0,7):null; }
+function monthLabel(k){
+  if(!k)return'—';
+  const[y,m]=k.split('-');
+  return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+' '+y;
+}
+function weekLabel(d){
+  if(!d)return'—';
+  return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'});
+}
+function showToast(msg,ms=2500){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),ms);
+}
+
+function latestWeekData(){
+  const weeks=loadWeeks(); if(!weeks.length)return null;
+  const latest=weeks[0].date;
+  return{date:latest,entries:weeks.filter(w=>w.date===latest)};
+}
+function aggregate(entries){
+  const keys=['received','contacted','answered','qualified','closed','followups','revenue','junk'];
+  const out={};keys.forEach(k=>out[k]=sum(entries,k));return out;
+}
+
+// ── TABS ─────────────────────────────────────────────────────
+const TAB_RENDERS={overview:renderOverview,leaderboard:renderLeaderboard,
+  history:renderHistory,compare:renderCompare,settings:renderSettings,entry:renderEntryForm};
+
+function switchTab(name){
+  const tabs=['overview','leaderboard','entry','history','compare','settings'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
+  document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.toggle('active',tc.id==='tab-'+name));
+  if(TAB_RENDERS[name])TAB_RENDERS[name]();
+}
+
+// ── OVERVIEW ─────────────────────────────────────────────────
+function renderOverview(){
+  const lw=latestWeekData();
+  const kpiEl=document.getElementById('kpi-team');
+  if(!lw){
+    kpiEl.innerHTML='<div class="kpi-card" style="grid-column:1/-1"><div class="empty-state"><div class="icon">📊</div><p>Log your first week to see metrics</p></div></div>';
+    document.getElementById('funnel-team').innerHTML='<div class="empty-state"><p>No data yet</p></div>';
+    return;
+  }
+  document.getElementById('ov-week-label').textContent=
+    `Team Total — Week of ${weekLabel(lw.date)} (${lw.entries.length} sales logged)`;
+
+  const t=aggregate(lw.entries);
+  const weeks=loadWeeks();
+  const dates=[...new Set(weeks.map(w=>w.date))].sort().reverse();
+  let prev=null;
+  if(dates[1]){prev=aggregate(weeks.filter(w=>w.date===dates[1]));}
+
+  function dEl(cur,p){
+    if(p===null||p===undefined)return'';const d=cur-p;
+    if(d===0)return'<span class="kpi-delta delta-flat">= Same</span>';
+    return`<span class="kpi-delta ${d>0?'delta-up':'delta-down'}">${d>0?'+':''}${fmtN(Math.abs(d))} ${d>0?'↑':'↓'}</span>`;
+  }
+  function pdEl(cur,p){
+    if(p===null||p===undefined)return'';const d=cur-p;
+    if(d===0)return'<span class="kpi-delta delta-flat">= Same</span>';
+    return`<span class="kpi-delta ${d>0?'delta-up':'delta-down'}">${d>0?'+':''}${d}pp ${d>0?'↑':'↓'}</span>`;
+  }
+
+  const cr=pct(t.contacted,t.received),ar=pct(t.answered,t.contacted);
+  const qr=pct(t.qualified,t.answered),clr=pct(t.closed,t.qualified);
+  const ov=pct(t.closed,t.received);
+  const pcr=prev?pct(prev.contacted,prev.received):null;
+  const par=prev?pct(prev.answered,prev.contacted):null;
+  const pclr=prev?pct(prev.closed,prev.qualified):null;
+  const pov=prev?pct(prev.closed,prev.received):null;
+
+  const cards=[
+    {label:'Leads Received',  val:t.received,  accent:'#2563eb',sub:`Prev week: ${prev?fmtN(prev.received):'—'}`,delta:dEl(t.received,prev?.received??null)},
+    {label:'Contacted',       val:t.contacted, accent:'#6c63ff',sub:`Contact Rate: ${cr}%`,delta:pdEl(cr,pcr)},
+    {label:'Answered',        val:t.answered,  accent:'#0891b2',sub:`Answer Rate: ${ar}%`,delta:pdEl(ar,par)},
+    {label:'Qualified',       val:t.qualified, accent:'#d97706',sub:`Qual Rate: ${qr}%`,delta:dEl(t.qualified,prev?.qualified??null)},
+    {label:'Closed',          val:t.closed,    accent:'#16a34a',sub:`Close Rate: ${clr}%`,delta:pdEl(clr,pclr)},
+    {label:'Overall Conv.',   val:ov+'%',      accent:'#db2777',sub:`${t.closed} of ${t.received} leads`,delta:pdEl(ov,pov)},
+  ];
+  kpiEl.innerHTML=cards.map(c=>`
+    <div class="kpi-card" style="--accent:${c.accent}">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-val">${c.val}</div>
+      <div class="kpi-sub">${c.sub}</div>
+      ${c.delta}
+    </div>`).join('');
+
+  const fSteps=[
+    {label:'Leads Received',val:t.received, color:'#2563eb'},
+    {label:'Contacted',     val:t.contacted,color:'#6c63ff'},
+    {label:'Answered',      val:t.answered, color:'#0891b2'},
+    {label:'Qualified',     val:t.qualified,color:'#d97706'},
+    {label:'Closed 🎉',     val:t.closed,   color:'#16a34a'},
+  ];
+  const maxF=fSteps[0].val||1;
+  document.getElementById('funnel-team').innerHTML=fSteps.map((s,i)=>{
+    const w=Math.max(12,Math.round((s.val/maxF)*100));
+    const fp=i>0&&fSteps[i-1].val>0?Math.round((s.val/fSteps[i-1].val)*100)+'%':'100%';
+    return`<div class="funnel-step">
+      <div class="funnel-label">${s.label}</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${w}%;background:${s.color}">${s.val}</div></div>
+      <div class="funnel-pct">${fp}</div>
+    </div>`;
+  }).join('');
+
+  renderPieChart(lw.entries);
+  renderWeeklyLeadsChart();
+  renderCloseBarChart(lw.entries);
+}
+
+function renderPieChart(entries){
+  const c='chart-pie';const ex=Chart.getChart(c);if(ex)ex.destroy();
+  if(!entries.length)return;
+  new Chart(c,{type:'doughnut',data:{
+    labels:entries.map(e=>e.rep||'Unknown'),
+    datasets:[{data:entries.map(e=>e.closed||0),
+      backgroundColor:entries.map(e=>repColor(e.rep)),
+      borderColor:'#ffffff',borderWidth:3}]
+  },options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'right',labels:{color:'#475569',font:{size:11},padding:12}}}}});
+}
+
+function renderWeeklyLeadsChart(){
+  const c='chart-weekly-leads';const ex=Chart.getChart(c);if(ex)ex.destroy();
+  const weeks=loadWeeks();if(!weeks.length)return;
+  const dates=[...new Set(weeks.map(w=>w.date))].sort().slice(-8);
+  const reps=loadReps();
+  if(!reps.length){
+    new Chart(c,{type:'bar',data:{labels:dates.map(weekLabel),datasets:[
+      {label:'Received',data:dates.map(d=>sum(weeks.filter(w=>w.date===d),'received')),backgroundColor:'rgba(37,99,235,.5)',borderRadius:4},
+      {label:'Closed',  data:dates.map(d=>sum(weeks.filter(w=>w.date===d),'closed')),  backgroundColor:'rgba(22,163,74,.6)', borderRadius:4},
+    ]},options:chartOpts()});return;
+  }
+  new Chart(c,{type:'bar',data:{labels:dates.map(weekLabel),
+    datasets:reps.map((r,i)=>({label:r.name,
+      data:dates.map(d=>{const e=weeks.find(w=>w.date===d&&w.rep===r.name);return e?e.closed||0:0;}),
+      backgroundColor:REP_COLORS[i%REP_COLORS.length]+'99',borderRadius:4}))
+  },options:{...chartOpts(),scales:{...chartOpts().scales,x:{...chartOpts().scales.x,stacked:true},y:{...chartOpts().scales.y,stacked:true}}}});
+}
+
+function renderCloseBarChart(entries){
+  const c='chart-close-bar';const ex=Chart.getChart(c);if(ex)ex.destroy();
+  if(!entries.length)return;
+  new Chart(c,{type:'bar',data:{
+    labels:entries.map(e=>e.rep||'Unknown'),
+    datasets:[{label:'Close %',data:entries.map(e=>pct(e.closed,e.qualified)),
+      backgroundColor:entries.map(e=>repColor(e.rep)+'cc'),borderRadius:8}]
+  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{min:0,max:100,ticks:{color:'#94a3b8',font:{size:10},callback:v=>v+'%'},grid:{color:'#f1f5f9'}},
+      y:{ticks:{color:'#334155',font:{size:12,weight:'bold'}},grid:{color:'#f1f5f9'}},
+    }}});
+}
+
+function chartOpts(){return{responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{labels:{color:'#64748b',font:{size:11}}}},
+  scales:{
+    x:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#f1f5f9'}},
+    y:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#f1f5f9'}},
+  }};}
+
+// ── LEADERBOARD ───────────────────────────────────────────────
+function renderLeaderboard(){
+  const period=document.getElementById('lb-period').value;
+  const sortBy=document.getElementById('lb-sort').value;
+  const weeks=loadWeeks(),reps=loadReps();
+  let filtered=weeks;
+  if(period==='week'){const l=weeks[0]?.date;filtered=l?weeks.filter(w=>w.date===l):[];}
+  else if(period==='month'){const cm=new Date().toISOString().slice(0,7);filtered=weeks.filter(w=>monthKey(w.date)===cm);}
+
+  const repNames=[...new Set(filtered.map(w=>w.rep).filter(Boolean))];
+  if(!repNames.length&&reps.length)repNames.push(...reps.map(r=>r.name).filter(n=>!repNames.includes(n)));
+
+  const repStats=repNames.map(name=>{
+    const entries=filtered.filter(w=>w.rep===name);
+    const t=aggregate(entries);
+    return{name,...t,contactRate:pct(t.contacted,t.received),answerRate:pct(t.answered,t.contacted),
+      qualRate:pct(t.qualified,t.answered),closeRate:pct(t.closed,t.qualified),
+      overallConv:pct(t.closed,t.received),weeks:entries.length};
+  });
+  repStats.sort((a,b)=>{
+    if(sortBy==='closed')return b.closed-a.closed;
+    if(sortBy==='closeRate')return b.closeRate-a.closeRate;
+    if(sortBy==='revenue')return b.revenue-a.revenue;
+    return b.received-a.received;
+  });
+
+  const medals=['🥇','🥈','🥉'];
+  const maxClosed=repStats[0]?.closed||1;
+  const grid=document.getElementById('lb-grid');
+
+  if(!repStats.length){
+    grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="icon">🏆</div><p>No data for this period</p></div>';
+  }else{
+    grid.innerHTML=repStats.map((r,i)=>{
+      const color=repColor(r.name);
+      const barPct=Math.round((r.closed/maxClosed)*100);
+      return`<div class="lb-card ${i<3?'rank-'+(i+1):''}">
+        <div class="lb-rank">${medals[i]||'#'+(i+1)}</div>
+        <div class="lb-name">
+          <span class="lb-avatar" style="background:${color}20;color:${color}">${repInitials(r.name)}</span>
+          ${r.name}
+        </div>
+        <div class="lb-metrics">
+          <div class="lb-metric">
+            <div class="lb-metric-label">Closed</div>
+            <div class="lb-metric-val" style="color:${color}">${r.closed}</div>
+          </div>
+          <div class="lb-metric">
+            <div class="lb-metric-label">Close %</div>
+            <div class="lb-metric-val">${r.closeRate}%</div>
+          </div>
+          <div class="lb-metric">
+            <div class="lb-metric-label">Revenue</div>
+            <div class="lb-metric-val">${fmtN(r.revenue)}</div>
+          </div>
+          <div class="lb-metric">
+            <div class="lb-metric-label">Received</div>
+            <div class="lb-metric-val">${r.received}</div>
+          </div>
+        </div>
+        <div class="lb-bar"><div class="lb-bar-fill" style="width:${barPct}%;background:${color}"></div></div>
+        <div class="lb-footer">
+          <span>Overall Conv: ${r.overallConv}%</span>
+          <span>${r.weeks} week${r.weeks!==1?'s':''} logged</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const tbody=document.getElementById('rep-table-body');
+  if(!repStats.length){
+    tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:20px">No data</td></tr>';
+  }else{
+    const totals=repStats.reduce((acc,r)=>{
+      ['received','contacted','answered','qualified','closed','revenue'].forEach(k=>acc[k]=(acc[k]||0)+r[k]);return acc;},{});
+    tbody.innerHTML=[
+      ...repStats.map(r=>`<tr>
+        <td><span class="rep-badge"><span class="rep-dot" style="background:${repColor(r.name)}"></span>${r.name}</span></td>
+        <td>${r.received}</td><td>${r.contacted}</td><td>${r.answered}</td>
+        <td>${r.qualified}</td><td><strong>${r.closed}</strong></td>
+        <td class="${rateClass(r.contactRate)}">${r.contactRate}%</td>
+        <td class="${rateClass(r.answerRate)}">${r.answerRate}%</td>
+        <td class="${rateClass(r.closeRate)}">${r.closeRate}%</td>
+        <td>${fmtN(r.revenue)}</td>
+      </tr>`),
+      `<tr style="background:var(--card3);font-weight:700;border-top:2px solid var(--border)">
+        <td>🔢 Total</td>
+        <td>${totals.received||0}</td><td>${totals.contacted||0}</td><td>${totals.answered||0}</td>
+        <td>${totals.qualified||0}</td><td>${totals.closed||0}</td>
+        <td class="${rateClass(pct(totals.contacted,totals.received))}">${pct(totals.contacted,totals.received)}%</td>
+        <td class="${rateClass(pct(totals.answered,totals.contacted))}">${pct(totals.answered,totals.contacted)}%</td>
+        <td class="${rateClass(pct(totals.closed,totals.qualified))}">${pct(totals.closed,totals.qualified)}%</td>
+        <td>${fmtN(totals.revenue||0)}</td>
+      </tr>`
+    ].join('');
+  }
+}
+
+// ── ENTRY FORM ────────────────────────────────────────────────
+function renderEntryForm(){
+  const reps=loadReps(),sel=document.getElementById('f-rep'),cur=sel.value;
+  sel.innerHTML='<option value="">— Select Sales —</option>'+
+    reps.map(r=>`<option value="${r.name}" ${r.name===cur?'selected':''}>${r.name}</option>`).join('');
+}
+
+function clearForm(){
+  ['f-received','f-contacted','f-answered','f-qualified','f-closed',
+   'f-followups','f-revenue','f-response-time','f-junk','f-notes']
+    .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-rep').value='';
+  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+}
+
+function saveWeek(){
+  const date=document.getElementById('f-date').value;
+  const rep=document.getElementById('f-rep').value;
+  if(!date){showToast('❌ Please select a week date');return;}
+  if(!rep){showToast('❌ Please select your name');return;}
+  const entry={date,rep,
+    received: +document.getElementById('f-received').value||0,
+    contacted:+document.getElementById('f-contacted').value||0,
+    answered: +document.getElementById('f-answered').value||0,
+    qualified:+document.getElementById('f-qualified').value||0,
+    closed:   +document.getElementById('f-closed').value||0,
+    followups:+document.getElementById('f-followups').value||0,
+    revenue:  +document.getElementById('f-revenue').value||0,
+    respTime: +document.getElementById('f-response-time').value||0,
+    junk:     +document.getElementById('f-junk').value||0,
+    notes:    document.getElementById('f-notes').value.trim(),
+    currency: document.getElementById('f-currency').value,
+    savedAt:  Date.now(),
+  };
+  const data=loadWeeks();
+  const idx=data.findIndex(w=>w.date===date&&w.rep===rep);
+  if(idx>=0){
+    if(!confirm(`${rep} already has data for this week. Replace it?`))return;
+    data.splice(idx,1);
+  }
+  data.push(entry);
+  data.sort((a,b)=>b.date.localeCompare(a.date)||a.rep.localeCompare(b.rep));
+  saveWeeks(data);
+  showToast(`✅ ${rep}'s week saved!`);
+  clearForm();
+  switchTab('overview');
+}
+
+// ── HISTORY ───────────────────────────────────────────────────
+function renderHistory(){
+  const data=loadWeeks(),reps=loadReps();
+  const fSel=document.getElementById('hist-filter-rep'),curF=fSel.value;
+  fSel.innerHTML='<option value="all">All Sales</option>'+
+    reps.map(r=>`<option value="${r.name}" ${r.name===curF?'selected':''}>${r.name}</option>`).join('');
+  const filtered=curF==='all'?data:data.filter(w=>w.rep===curF);
+  document.getElementById('history-count').textContent=`${filtered.length} record${filtered.length!==1?'s':''}`;
+  const list=document.getElementById('week-list');
+  if(!filtered.length){list.innerHTML='<div class="empty-state"><div class="icon">📭</div><p>No records yet</p></div>';return;}
+  list.innerHTML=filtered.map(w=>{
+    const cr=pct(w.contacted,w.received),ar=pct(w.answered,w.contacted),clr=pct(w.closed,w.qualified);
+    const col=repColor(w.rep);
+    return`<div class="week-row">
+      <span>${weekLabel(w.date)}</span>
+      <span><span class="rep-badge"><span class="rep-dot" style="background:${col}"></span>${w.rep||'—'}</span></span>
+      <span>${w.received}</span><span>${w.contacted}</span><span>${w.answered}</span>
+      <span>${w.qualified}</span><span>${w.closed}</span>
+      <span class="${rateClass(cr)}">${cr}%</span>
+      <span class="${rateClass(ar)}">${ar}%</span>
+      <span class="${rateClass(clr)}">${clr}%</span>
+      <span class="notes-cell" title="${w.notes||''}">${w.notes||'—'}</span>
+      <span><button class="del-btn" onclick="deleteEntry('${w.date}','${w.rep}')">🗑</button></span>
+    </div>`;
+  }).join('');
+}
+
+function deleteEntry(date,rep){
+  if(!confirm(`Delete ${rep}'s data for week of ${weekLabel(date)}?`))return;
+  saveWeeks(loadWeeks().filter(w=>!(w.date===date&&w.rep===rep)));
+  renderHistory();showToast('🗑 Deleted');
+}
+
+// ── COMPARE ───────────────────────────────────────────────────
+function renderCompare(){
+  const reps=loadReps(),repSel=document.getElementById('cmp-rep'),curR=repSel.value;
+  repSel.innerHTML='<option value="all">Whole Team</option>'+
+    reps.map(r=>`<option value="${r.name}" ${r.name===curR?'selected':''}>${r.name}</option>`).join('');
+  const weeks=loadWeeks();
+  const filtered=curR==='all'?weeks:weeks.filter(w=>w.rep===curR);
+  const byMonth={};
+  filtered.forEach(w=>{const mk=monthKey(w.date);if(!byMonth[mk])byMonth[mk]=[];byMonth[mk].push(w);});
+  const monthKeys=Object.keys(byMonth).sort().reverse();
+  const grid=document.getElementById('compare-grid');
+  if(!monthKeys.length){grid.innerHTML='<div class="kpi-card" style="grid-column:1/-1"><div class="empty-state"><p>No data yet</p></div></div>';return;}
+  const cur=monthKeys[0],prv=monthKeys[1];
+  const metrics=[
+    {key:'received', label:'Leads Received',color:'#2563eb'},
+    {key:'contacted',label:'Contacted',     color:'#6c63ff'},
+    {key:'answered', label:'Answered',      color:'#0891b2'},
+    {key:'qualified',label:'Qualified',     color:'#d97706'},
+    {key:'closed',   label:'Closed',        color:'#16a34a'},
+    {key:'revenue',  label:'Revenue',       color:'#db2777'},
+  ];
+  grid.innerHTML=metrics.map(m=>{
+    const cv=sum(byMonth[cur]||[],m.key);
+    const pv=prv?sum(byMonth[prv]||[],m.key):null;
+    const maxB=Math.max(cv,pv||0,1);
+    const d=pv!==null?cv-pv:null;
+    const dc=d===null?'':d>0?'delta-up':d<0?'delta-down':'delta-flat';
+    const dt=d===null?'':(d>0?'+':'')+fmtN(Math.abs(d));
+    return`<div class="compare-card">
+      <div class="compare-label" style="color:${m.color}">${m.label}</div>
+      <div class="compare-row"><span class="compare-month">${monthLabel(cur)}</span><span class="compare-val">${fmtN(cv)}</span></div>
+      ${pv!==null?`<div class="compare-row"><span class="compare-month">${monthLabel(prv)}</span><span class="compare-val" style="color:var(--muted)">${fmtN(pv)}</span></div>`:''}
+      ${d!==null?`<span class="kpi-delta ${dc}">${dt} ${d>0?'↑':d<0?'↓':'='}</span>`:''}
+      <div class="compare-bar"><div class="compare-bar-fill" style="width:${Math.round((cv/maxB)*100)}%;background:${m.color}"></div></div>
+    </div>`;
+  }).join('');
+  const allMonths=[...monthKeys].reverse();
+  const ex=Chart.getChart('chart-monthly');if(ex)ex.destroy();
+  new Chart('chart-monthly',{type:'bar',data:{
+    labels:allMonths.map(monthLabel),
+    datasets:[
+      {label:'Closed',   data:allMonths.map(mk=>sum(byMonth[mk],'closed')),   backgroundColor:'rgba(22,163,74,.65)', borderRadius:5},
+      {label:'Qualified',data:allMonths.map(mk=>sum(byMonth[mk],'qualified')),backgroundColor:'rgba(217,119,6,.5)',  borderRadius:5},
+      {label:'Received', data:allMonths.map(mk=>sum(byMonth[mk],'received')), backgroundColor:'rgba(37,99,235,.35)',  borderRadius:5},
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,...chartOpts()}});
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────
+function renderSettings(){
+  const reps=loadReps(),list=document.getElementById('reps-list');
+  if(!reps.length){
+    list.innerHTML='<div style="color:var(--muted);font-size:13px;padding:12px 0">No team members yet — add your first sales member below</div>';return;
+  }
+  list.innerHTML=reps.map((r,i)=>`
+    <div class="rep-row">
+      <span class="rep-color-dot" style="background:${REP_COLORS[i%REP_COLORS.length]}"></span>
+      <span class="rep-name-text">${r.name}</span>
+      <span class="rep-sub">${loadWeeks().filter(w=>w.rep===r.name).length} week(s) logged</span>
+      <button class="btn btn-danger btn-sm" onclick="removeRep('${r.name}')">Remove</button>
+    </div>`).join('');
+}
+
+function addRep(){
+  const inp=document.getElementById('new-rep-name'),name=inp.value.trim();
+  if(!name){showToast('❌ Enter a sales name first');return;}
+  const reps=loadReps();
+  if(reps.find(r=>r.name===name)){showToast('⚠️ That rep already exists');return;}
+  reps.push({name,addedAt:Date.now()});saveReps(reps);
+  inp.value='';renderSettings();renderEntryForm();
+  showToast(`✅ ${name} added to the team`);
+}
+
+function removeRep(name){
+  const weeks=loadWeeks().filter(w=>w.rep===name).length;
+  const msg=weeks>0
+    ?`Remove "${name}"? This will also delete ${weeks} week(s) of their data!`
+    :`Remove "${name}" from the team?`;
+  if(!confirm(msg))return;
+  saveReps(loadReps().filter(r=>r.name!==name));
+  saveWeeks(loadWeeks().filter(w=>w.rep!==name));
+  renderSettings();renderEntryForm();showToast(`🗑 ${name} removed`);
+}
+
+function clearAllData(){
+  if(!confirm('Delete ALL data permanently? This cannot be undone!'))return;
+  if(!confirm('Final confirmation: all logged weeks will be erased!'))return;
+  localStorage.removeItem(WEEKS_KEY);renderSettings();showToast('🗑 All data cleared');
+}
+
+function exportCSV(){
+  const data=loadWeeks();if(!data.length){showToast('No data to export');return;}
+  const hdrs=['Week','Sales','Received','Contacted','Answered','Qualified','Closed',
+              'Follow-ups','Revenue','Currency','Response Time (hrs)','Junk','Notes'];
+  const rows=data.map(w=>[w.date,w.rep||'',w.received,w.contacted,w.answered,w.qualified,
+    w.closed,w.followups,w.revenue,w.currency||'EGP',w.respTime,w.junk,
+    `"${(w.notes||'').replace(/"/g,'""')}"`]);
+  const csv=[hdrs,...rows].map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`sales_report_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();showToast('✅ Exported successfully');
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+renderEntryForm();
+renderOverview();
+</script>
+</body>
+</html>
