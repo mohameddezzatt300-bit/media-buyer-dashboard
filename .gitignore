@@ -1,0 +1,8 @@
+# Sensitive — contains FB access token
+audit_data/
+*.token
+*.rtf
+
+# Local config
+.claude/
+.DS_Store
