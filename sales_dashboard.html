@@ -212,6 +212,20 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .empty-state .icon{font-size:36px;margin-bottom:10px}
 .empty-state p{font-size:13px}
 
+/* ── ANNOUNCEMENTS ── */
+.ann-card{background:#fff;border:1px solid var(--border);border-radius:12px;
+          padding:16px 18px;margin-bottom:10px;box-shadow:var(--shadow);
+          border-left:4px solid var(--c0);position:relative}
+.ann-card.pinned{border-left-color:var(--yellow)}
+.ann-title{font-size:14px;font-weight:800;margin-bottom:4px}
+.ann-body{font-size:13px;color:#334155;line-height:1.5}
+.ann-meta{font-size:10px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:8px}
+.ann-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;
+         padding:2px 6px;border-radius:4px;position:absolute;top:10px;right:10px}
+.ann-del:hover{color:var(--red);background:#fee2e2}
+.ann-new-badge{display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:9px;
+               font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px}
+
 /* ── MANAGER BADGE ── */
 .manager-badge{display:inline-flex;align-items:center;gap:5px;background:#fef3c7;color:#d97706;
                padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid #fde68a}
@@ -472,6 +486,28 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
           </div>
         </div>
         <div class="form-sep"></div>
+        <div class="section-title">📍 Lead Source Breakdown <span style="font-weight:400;text-transform:none;font-size:10px">(how many leads from each)</span></div>
+        <div class="form-grid">
+          <div class="form-group"><label>📘 Facebook</label><input type="number" id="f-src-fb" min="0" placeholder="0"></div>
+          <div class="form-group"><label>📸 Instagram</label><input type="number" id="f-src-ig" min="0" placeholder="0"></div>
+          <div class="form-group"><label>🎵 TikTok</label><input type="number" id="f-src-tt" min="0" placeholder="0"></div>
+          <div class="form-group"><label>🔍 Google</label><input type="number" id="f-src-gg" min="0" placeholder="0"></div>
+          <div class="form-group"><label>💬 WhatsApp / Direct</label><input type="number" id="f-src-wa" min="0" placeholder="0"></div>
+          <div class="form-group"><label>🔗 Referral</label><input type="number" id="f-src-ref" min="0" placeholder="0"></div>
+        </div>
+
+        <div class="form-sep"></div>
+        <div class="section-title">❌ Lost Deals — Why? <span style="font-weight:400;text-transform:none;font-size:10px">(number of leads per reason)</span></div>
+        <div class="form-grid">
+          <div class="form-group"><label>💸 Price too high</label><input type="number" id="f-loss-price" min="0" placeholder="0"></div>
+          <div class="form-group"><label>😐 Not interested</label><input type="number" id="f-loss-ni" min="0" placeholder="0"></div>
+          <div class="form-group"><label>🏁 Went to competitor</label><input type="number" id="f-loss-comp" min="0" placeholder="0"></div>
+          <div class="form-group"><label>⏳ Bad timing / postponed</label><input type="number" id="f-loss-time" min="0" placeholder="0"></div>
+          <div class="form-group"><label>📵 No answer / unreachable</label><input type="number" id="f-loss-na" min="0" placeholder="0"></div>
+          <div class="form-group"><label>❓ Other reason</label><input type="number" id="f-loss-other" min="0" placeholder="0"></div>
+        </div>
+
+        <div class="form-sep"></div>
         <div class="form-group">
           <label>📝 Notes</label>
           <textarea id="f-notes" placeholder="Any observations, blockers, opportunities..."></textarea>
@@ -533,6 +569,48 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
       <div class="chart-card">
         <h3>📊 Monthly Closed Deals</h3>
         <div class="chart-wrap" style="height:230px"><canvas id="chart-monthly"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ══ ANNOUNCEMENTS ══ -->
+    <div id="tab-announce" class="tab-content">
+      <!-- Manager: write announcement -->
+      <div class="form-card" id="announce-write" style="display:none">
+        <h2>📢 Post Announcement</h2>
+        <div class="form-group" style="margin-bottom:12px">
+          <label>Title</label>
+          <input type="text" id="ann-title" placeholder="e.g. This week's target is 15 deals!">
+        </div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label>Message</label>
+          <textarea id="ann-body" style="min-height:90px" placeholder="Write your message to the team..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="postAnnouncement()">📢 Post to Team</button>
+        </div>
+      </div>
+      <!-- All: see announcements -->
+      <div class="section-title">📌 Team Announcements</div>
+      <div id="ann-list"><div class="empty-state"><div class="icon">📭</div><p>No announcements yet</p></div></div>
+    </div>
+
+    <!-- ══ INSIGHTS (manager) ══ -->
+    <div id="tab-insights" class="tab-content">
+      <div class="section-title">Why Are We Losing Deals?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+        <div class="chart-card">
+          <h3>❌ Lost Deal Reasons — Team (All Time)</h3>
+          <div class="chart-wrap" style="height:220px"><canvas id="chart-loss"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>📍 Lead Sources — Team (All Time)</h3>
+          <div class="chart-wrap" style="height:220px"><canvas id="chart-sources"></canvas></div>
+        </div>
+      </div>
+      <div class="section-title">Lead Source vs Close Rate</div>
+      <div class="chart-card" style="margin-bottom:20px">
+        <h3>Which source brings the most leads?</h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="chart-src-bar"></canvas></div>
       </div>
     </div>
 
@@ -718,24 +796,31 @@ function startApp(){
     cmpSel.innerHTML=`<option value="__me__">My Data</option>`;
   }
 
+  // show/hide announcement write panel
+  const aw=document.getElementById('announce-write');
+  if(aw)aw.style.display=s.role==='manager'?'block':'none';
+
   switchTab(s.role==='manager'?'team':'overview');
 }
 
 function buildTabs(role){
   const mgr=role==='manager';
   const tabs=mgr?[
-    {id:'team',     label:'🏠 Team Overview'},
+    {id:'team',       label:'🏠 Team Overview'},
     {id:'leaderboard',label:'🏆 Leaderboard'},
-    {id:'entry',    label:'📝 Log Week'},
+    {id:'insights',   label:'📊 Insights'},
+    {id:'entry',      label:'📝 Log Week'},
     {id:'all-history',label:'📋 All Records'},
-    {id:'compare',  label:'📆 Monthly'},
-    {id:'settings', label:'⚙ Settings'},
+    {id:'compare',    label:'📆 Monthly'},
+    {id:'announce',   label:'📢 Announcements'},
+    {id:'settings',   label:'⚙ Settings'},
   ]:[
-    {id:'overview', label:'🏠 My Overview'},
-    {id:'entry',    label:'📝 Log Week'},
-    {id:'history',  label:'📋 My History'},
-    {id:'compare',  label:'📆 Monthly'},
-    {id:'settings', label:'⚙ Settings'},
+    {id:'overview',  label:'🏠 My Overview'},
+    {id:'entry',     label:'📝 Log Week'},
+    {id:'history',   label:'📋 My History'},
+    {id:'compare',   label:'📆 Monthly'},
+    {id:'announce',  label:'📢 Announcements'},
+    {id:'settings',  label:'⚙ Settings'},
   ];
   document.getElementById('main-tabs').innerHTML=
     tabs.map(t=>`<button class="tab" onclick="switchTab('${t.id}')">${t.label}</button>`).join('');
@@ -746,7 +831,8 @@ const TAB_RENDERS={
   overview:renderMyOverview, team:renderTeamOverview,
   leaderboard:renderLeaderboard, history:renderMyHistory,
   'all-history':renderAllHistory, compare:renderCompare,
-  settings:renderSettings, entry:()=>{}
+  settings:renderSettings, announce:renderAnnouncements,
+  insights:renderInsights, entry:()=>{}
 };
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>{
@@ -994,7 +1080,10 @@ function renderLeaderboard(){
 
 // ── SAVE WEEK ─────────────────────────────────────────────────
 function clearForm(){
-  ['f-received','f-contacted','f-answered','f-qualified','f-closed','f-followups','f-revenue','f-response-time','f-junk','f-notes']
+  ['f-received','f-contacted','f-answered','f-qualified','f-closed','f-followups',
+   'f-revenue','f-response-time','f-junk','f-notes',
+   'f-src-fb','f-src-ig','f-src-tt','f-src-gg','f-src-wa','f-src-ref',
+   'f-loss-price','f-loss-ni','f-loss-comp','f-loss-time','f-loss-na','f-loss-other']
     .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
 }
@@ -1015,7 +1104,23 @@ function saveWeek(){
     junk:     +document.getElementById('f-junk').value||0,
     notes:    document.getElementById('f-notes').value.trim(),
     currency: document.getElementById('f-currency').value,
-    savedAt:  Date.now(),
+    sources:{
+      fb: +document.getElementById('f-src-fb').value||0,
+      ig: +document.getElementById('f-src-ig').value||0,
+      tt: +document.getElementById('f-src-tt').value||0,
+      gg: +document.getElementById('f-src-gg').value||0,
+      wa: +document.getElementById('f-src-wa').value||0,
+      ref:+document.getElementById('f-src-ref').value||0,
+    },
+    lossReasons:{
+      price:+document.getElementById('f-loss-price').value||0,
+      ni:   +document.getElementById('f-loss-ni').value||0,
+      comp: +document.getElementById('f-loss-comp').value||0,
+      time: +document.getElementById('f-loss-time').value||0,
+      na:   +document.getElementById('f-loss-na').value||0,
+      other:+document.getElementById('f-loss-other').value||0,
+    },
+    savedAt:Date.now(),
   };
   const data=loadWeeks();
   const idx=data.findIndex(w=>w.date===date&&w.rep===s.name);
@@ -1242,6 +1347,109 @@ function exportMyCSV(){
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   a.download=`my_sales_${new Date().toISOString().split('T')[0]}.csv`;a.click();showToast('✅ Exported');
+}
+
+// ── ANNOUNCEMENTS ─────────────────────────────────────────────
+const ANN_KEY='sales_announcements_v1';
+function loadAnns(){try{return JSON.parse(localStorage.getItem(ANN_KEY))||[];}catch{return[];}}
+function saveAnns(a){localStorage.setItem(ANN_KEY,JSON.stringify(a));}
+
+function postAnnouncement(){
+  const title=document.getElementById('ann-title').value.trim();
+  const body=document.getElementById('ann-body').value.trim();
+  if(!title&&!body){showToast('❌ Write something first');return;}
+  const anns=loadAnns();
+  anns.unshift({id:Date.now(),title,body,postedAt:Date.now()});
+  saveAnns(anns);
+  document.getElementById('ann-title').value='';
+  document.getElementById('ann-body').value='';
+  renderAnnouncements();
+  showToast('📢 Announcement posted!');
+}
+
+function deleteAnn(id){
+  if(!confirm('Delete this announcement?'))return;
+  saveAnns(loadAnns().filter(a=>a.id!==id));
+  renderAnnouncements();showToast('🗑 Deleted');
+}
+
+function renderAnnouncements(){
+  const s=getSession();
+  const anns=loadAnns();
+  const list=document.getElementById('ann-list');
+  if(!anns.length){
+    list.innerHTML='<div class="empty-state"><div class="icon">📭</div><p>No announcements yet</p></div>';return;
+  }
+  // mark as seen
+  const seenKey='sales_seen_anns_'+s.name;
+  const seen=new Set(JSON.parse(sessionStorage.getItem(seenKey)||'[]'));
+  list.innerHTML=anns.map(a=>{
+    const isNew=!seen.has(a.id);
+    const d=new Date(a.postedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    return`<div class="ann-card">
+      ${s.role==='manager'?`<button class="ann-del" onclick="deleteAnn(${a.id})">✕</button>`:''}
+      <div class="ann-title">${a.title||'Announcement'}${isNew?'<span class="ann-new-badge">NEW</span>':''}</div>
+      ${a.body?`<div class="ann-body">${a.body.replace(/\n/g,'<br>')}</div>`:''}
+      <div class="ann-meta">📌 Posted ${d}</div>
+    </div>`;
+  }).join('');
+  // mark all as seen
+  anns.forEach(a=>seen.add(a.id));
+  sessionStorage.setItem(seenKey,JSON.stringify([...seen]));
+}
+
+// ── INSIGHTS ──────────────────────────────────────────────────
+function renderInsights(){
+  const weeks=loadWeeks();
+
+  // aggregate loss reasons across all weeks
+  const lossKeys=['price','ni','comp','time','na','other'];
+  const lossLabels=['Price too high','Not interested','Went to competitor','Bad timing','No answer','Other'];
+  const lossTotals=lossKeys.map(k=>weeks.reduce((s,w)=>s+(w.lossReasons?+w.lossReasons[k]||0:0),0));
+
+  const srcKeys=['fb','ig','tt','gg','wa','ref'];
+  const srcLabels=['Facebook','Instagram','TikTok','Google','WhatsApp/Direct','Referral'];
+  const srcColors=['#1877f2','#e1306c','#010101','#34a853','#25d366','#6c63ff'];
+  const srcTotals=srcKeys.map(k=>weeks.reduce((s,w)=>s+(w.sources?+w.sources[k]||0:0),0));
+
+  // Loss Reasons doughnut
+  const el=Chart.getChart('chart-loss');if(el)el.destroy();
+  if(lossTotals.some(v=>v>0)){
+    new Chart('chart-loss',{type:'doughnut',data:{
+      labels:lossLabels,
+      datasets:[{data:lossTotals,
+        backgroundColor:['#ef4444','#f97316','#a855f7','#f59e0b','#64748b','#06b6d4'],
+        borderColor:'#fff',borderWidth:3}]
+    },options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'right',labels:{color:'#475569',font:{size:11},padding:10}}}}});
+  }else{
+    const ctx=document.getElementById('chart-loss').getContext('2d');
+    ctx.font='13px Segoe UI';ctx.fillStyle='#94a3b8';ctx.textAlign='center';
+    ctx.fillText('No loss reason data yet',ctx.canvas.width/2,ctx.canvas.height/2);
+  }
+
+  // Source doughnut
+  const es=Chart.getChart('chart-sources');if(es)es.destroy();
+  if(srcTotals.some(v=>v>0)){
+    new Chart('chart-sources',{type:'doughnut',data:{
+      labels:srcLabels,
+      datasets:[{data:srcTotals,backgroundColor:srcColors,borderColor:'#fff',borderWidth:3}]
+    },options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'right',labels:{color:'#475569',font:{size:11},padding:10}}}}});
+  }
+
+  // Source bar
+  const eb=Chart.getChart('chart-src-bar');if(eb)eb.destroy();
+  new Chart('chart-src-bar',{type:'bar',data:{
+    labels:srcLabels,
+    datasets:[{label:'Leads from source',data:srcTotals,
+      backgroundColor:srcColors.map(c=>c+'bb'),borderRadius:8}]
+  },options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#64748b',font:{size:11}},grid:{color:'#f1f5f9'}},
+      y:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'#f1f5f9'}},
+    }}});
 }
 
 // ── INIT ─────────────────────────────────────────────────────
