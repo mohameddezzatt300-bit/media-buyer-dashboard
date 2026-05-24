@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing Strategy Builder — Meta Campaigns</title>
+<style>
+  :root, :root[data-theme="dark"] {
+    --bg: #0a0a10; --surface: #14141c; --surface2: #1c1c28; --surface3: #25253a;
+    --border: #2a2a3a; --border2: #3a3a52;
+    --p1: #a855f7; --p2: #3b82f6; --p3: #10b981; --p4: #f59e0b;
+    --green: #22c55e; --yellow: #eab308; --red: #ef4444;
+    --text: #e8e8f0; --muted: #8888a8; --muted2: #6a6a85;
+    --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f7fb; --surface: #ffffff; --surface2: #f1f3f9; --surface3: #e6e9f2;
+    --border: #e2e5ee; --border2: #c8cdda;
+    --p1: #8b5cf6; --p2: #2563eb; --p3: #059669; --p4: #d97706;
+    --green: #16a34a; --yellow: #ca8a04; --red: #dc2626;
+    --text: #1a1a2e; --muted: #5a6275; --muted2: #8089a0;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+  :root[data-theme="light"] .qcard, :root[data-theme="light"] .reco,
+  :root[data-theme="light"] .phase-banner, :root[data-theme="light"] .step { box-shadow: var(--shadow); }
+  :root[data-theme="light"] textarea.txt, :root[data-theme="light"] input.txt,
+  :root[data-theme="light"] .input-row input { background: #fff; }
+  :root[data-theme="light"] .formula-box { background: var(--surface2); }
+  :root[data-theme="light"] .opt { background: #fff; }
+  :root[data-theme="light"] .opt:hover { background: var(--surface2); }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', 'Segoe UI', 'Cairo', system-ui, sans-serif; min-height: 100vh; padding: 24px 16px; line-height: 1.5; }
+  html[dir="ltr"] body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+
+  .header { max-width: 1000px; margin: 0 auto 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .header h1 { font-size: 1.5rem; background: linear-gradient(135deg, var(--p1), var(--p2), var(--p3), var(--p4)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; }
+  .header p { color: var(--muted); font-size: .8rem; margin-top: 4px; }
+  .input-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .input-row input { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 14px; font-size: .85rem; font-family: inherit; width: 200px; outline: none; }
+  .input-row input:focus { border-color: var(--p1); }
+  .btn { background: var(--p1); color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: .8rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity .2s; }
+  .btn:hover { opacity: .85; }
+  .btn-out { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-out:hover { color: var(--text); border-color: var(--border2); }
+  .lang-btn { font-weight: 700; min-width: 38px; }
+
+  .stepper { max-width: 1000px; margin: 0 auto 28px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .step { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; cursor: pointer; transition: all .2s; position: relative; }
+  .step:hover { background: var(--surface2); }
+  .step .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--surface3); color: var(--muted); display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 6px; font-size: .85rem; transition: all .3s; }
+  .step .step-title { font-size: .8rem; font-weight: 600; color: var(--muted); }
+  .step .step-sub { font-size: .65rem; color: var(--muted2); margin-top: 2px; }
+  .step.active .step-num { background: var(--p1); color: #fff; }
+  .step.active .step-title { color: var(--text); }
+  .step.done .step-num { background: var(--green); color: #fff; }
+  .step.done .step-num::before { content: '✓'; }
+  .step.done .step-num span { display: none; }
+  .step[data-step="1"].active .step-num { background: var(--p1); }
+  .step[data-step="2"].active .step-num { background: var(--p2); }
+  .step[data-step="3"].active .step-num { background: var(--p3); }
+  .step[data-step="4"].active .step-num { background: var(--p4); }
+
+  .phase { max-width: 1000px; margin: 0 auto 28px; display: none; }
+  .phase.active { display: block; }
+  .phase-banner { border-radius: var(--radius); padding: 18px 22px; margin-bottom: 18px; display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); }
+  .phase-banner .pb-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+  .phase-banner h2 { font-size: 1.1rem; font-weight: 700; }
+  .phase-banner p { color: var(--muted); font-size: .82rem; margin-top: 2px; }
+  #phase1 .phase-banner { background: linear-gradient(135deg, rgba(168,85,247,.08), rgba(168,85,247,.02)); border-color: rgba(168,85,247,.25); }
+  #phase1 .pb-icon { background: rgba(168,85,247,.15); color: var(--p1); }
+  #phase2 .phase-banner { background: linear-gradient(135deg, rgba(59,130,246,.08), rgba(59,130,246,.02)); border-color: rgba(59,130,246,.25); }
+  #phase2 .pb-icon { background: rgba(59,130,246,.15); color: var(--p2); }
+  #phase3 .phase-banner { background: linear-gradient(135deg, rgba(16,185,129,.08), rgba(16,185,129,.02)); border-color: rgba(16,185,129,.25); }
+  #phase3 .pb-icon { background: rgba(16,185,129,.15); color: var(--p3); }
+  #phase4 .phase-banner { background: linear-gradient(135deg, rgba(245,158,11,.08), rgba(245,158,11,.02)); border-color: rgba(245,158,11,.25); }
+  #phase4 .pb-icon { background: rgba(245,158,11,.15); color: var(--p4); }
+
+  .qcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; overflow: hidden; }
+  .qcard-head { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .qcard-head .qtag { display: inline-block; font-size: .65rem; padding: 2px 8px; border-radius: 999px; background: rgba(168,85,247,.15); color: var(--p1); font-weight: 700; letter-spacing: .03em; margin-bottom: 6px; }
+  #phase2 .qtag { background: rgba(59,130,246,.15); color: var(--p2); }
+  #phase3 .qtag { background: rgba(16,185,129,.15); color: var(--p3); }
+  #phase4 .qtag { background: rgba(245,158,11,.15); color: var(--p4); }
+  .qtitle { font-size: .95rem; font-weight: 600; }
+  .qhint { font-size: .78rem; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+  .qframework { font-size: .68rem; color: var(--muted2); margin-top: 6px; font-style: italic; }
+  .qcard-body { padding: 14px 18px; }
+
+  .opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+  .opts.opts-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .opt { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: all .15s; display: flex; align-items: flex-start; gap: 10px; }
+  .opt:hover { background: var(--surface3); border-color: var(--border2); }
+  .opt.selected { background: rgba(168,85,247,.08); border-color: var(--p1); box-shadow: 0 0 0 1px var(--p1); }
+  #phase2 .opt.selected { background: rgba(59,130,246,.08); border-color: var(--p2); box-shadow: 0 0 0 1px var(--p2); }
+  #phase3 .opt.selected { background: rgba(16,185,129,.08); border-color: var(--p3); box-shadow: 0 0 0 1px var(--p3); }
+  #phase4 .opt.selected { background: rgba(245,158,11,.08); border-color: var(--p4); box-shadow: 0 0 0 1px var(--p4); }
+  .opt-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+  .opt-body { flex: 1; }
+  .opt-title { font-size: .85rem; font-weight: 600; margin-bottom: 2px; }
+  .opt-desc { font-size: .72rem; color: var(--muted); line-height: 1.4; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: .78rem; transition: all .15s; user-select: none; }
+  .chip:hover { border-color: var(--border2); }
+  .chip.active { background: rgba(168,85,247,.15); border-color: var(--p1); color: var(--p1); }
+
+  .field { margin-bottom: 10px; }
+  .field-label { font-size: .75rem; color: var(--muted); margin-bottom: 4px; display: block; }
+  textarea.txt, input.txt { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: .85rem; font-family: inherit; outline: none; line-height: 1.5; }
+  textarea.txt { min-height: 70px; resize: vertical; }
+  textarea.txt:focus, input.txt:focus { border-color: var(--p1); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } .stepper { grid-template-columns: 1fr 1fr; } }
+
+  .nav-btns { display: flex; justify-content: space-between; margin-top: 22px; gap: 10px; }
+  .btn-next { background: var(--p1); color: #fff; border: none; padding: 12px 24px; border-radius: 10px; font-size: .9rem; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; transition: opacity .2s, transform .15s; }
+  #phase2 .btn-next { background: var(--p2); }
+  #phase3 .btn-next { background: var(--p3); }
+  #phase4 .btn-next { background: var(--p4); }
+  .btn-prev { background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 12px 22px; border-radius: 10px; font-size: .9rem; cursor: pointer; font-family: inherit; }
+  .btn-prev:hover { background: var(--surface2); }
+
+  .reco { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; overflow: hidden; }
+  html[dir="rtl"] .reco { border-right: 4px solid var(--p2); }
+  html[dir="ltr"] .reco { border-left: 4px solid var(--p2); }
+  html[dir="rtl"] #phase3 .reco { border-right-color: var(--p3); }
+  html[dir="ltr"] #phase3 .reco { border-left-color: var(--p3); }
+  html[dir="rtl"] #phase4 .reco { border-right-color: var(--p4); }
+  html[dir="ltr"] #phase4 .reco { border-left-color: var(--p4); }
+  .reco-head { padding: 14px 18px; background: var(--surface2); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .reco-head h3 { font-size: .92rem; font-weight: 700; }
+  .reco-head .reco-icon { font-size: 1.2rem; }
+  .reco-body { padding: 14px 18px; font-size: .85rem; line-height: 1.6; }
+  .reco-body p { margin-bottom: 8px; }
+  .reco-body strong { color: var(--text); }
+  .reco-body em { color: var(--muted); font-style: normal; font-size: .78rem; display: block; margin-top: 6px; }
+
+  .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .pill { background: var(--surface2); border-radius: 999px; padding: 4px 12px; font-size: .75rem; border: 1px solid var(--border); }
+  .pill.success { background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.3); color: var(--green); }
+  .pill.warn { background: rgba(234,179,8,.12); border-color: rgba(234,179,8,.3); color: var(--yellow); }
+  .pill.info { background: rgba(59,130,246,.12); border-color: rgba(59,130,246,.3); color: var(--p2); }
+
+  .formula-box { background: var(--bg); border: 1px dashed var(--border2); border-radius: 8px; padding: 12px 14px; margin: 10px 0; font-size: .82rem; line-height: 1.6; }
+  .formula-box .ftitle { font-size: .72rem; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(120px); background: var(--surface3); color: var(--text); padding: 10px 20px; border-radius: 8px; font-size: .85rem; transition: transform .3s ease; z-index: 999; border: 1px solid var(--border2); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty-state .es-icon { font-size: 2rem; margin-bottom: 10px; }
+  .empty-state .es-text { font-size: .88rem; }
+
+  table.budget-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .82rem; }
+  html[dir="rtl"] table.budget-table th, html[dir="rtl"] table.budget-table td { text-align: right; }
+  html[dir="ltr"] table.budget-table th, html[dir="ltr"] table.budget-table td { text-align: left; }
+  table.budget-table th, table.budget-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  table.budget-table th { color: var(--muted); font-weight: 600; font-size: .75rem; }
+  table.budget-table td.num { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .section-divider { margin: 28px 0 14px; }
+  .section-divider .sd-tag { font-size:.7rem; color:var(--p1); font-weight:700; letter-spacing:.05em; margin-bottom:4px; }
+  .section-divider .sd-title { font-size:1rem; font-weight:700; }
+  .section-divider .sd-sub { font-size:.78rem; color:var(--muted); margin-top:4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1 data-t="ui.title">🎯 Marketing Strategy Builder</h1>
+    <p data-t="ui.subtitle">من فهم البراند والعميل → الكريتيف → التوزيع → تنفيذ Meta Ads</p>
+  </div>
+  <div class="input-row">
+    <input type="text" id="campaignName" data-t-ph="ui.cam_ph" placeholder="اسم البراند / الكامبين..." />
+    <button class="btn btn-out lang-btn" id="langToggle" onclick="toggleLang()" title="Language / اللغة"><span id="langText">EN</span></button>
+    <button class="btn btn-out" id="themeToggle" onclick="toggleTheme()" title="Theme"><span id="themeIcon">🌙</span></button>
+    <button class="btn" onclick="saveAll()"><span data-t="ui.save">💾 حفظ</span></button>
+    <button class="btn btn-out" onclick="resetAll()"><span data-t="ui.new">🔄 جديد</span></button>
+  </div>
+</div>
+
+<div class="stepper">
+  <div class="step active" data-step="1" onclick="goToPhase(1)">
+    <div class="step-num"><span>1</span></div>
+    <div class="step-title" data-t="step.1.t">الاكتشاف</div>
+    <div class="step-sub" data-t="step.1.s">البراند + العميل</div>
+  </div>
+  <div class="step" data-step="2" onclick="goToPhase(2)">
+    <div class="step-num"><span>2</span></div>
+    <div class="step-title" data-t="step.2.t">الكريتيف</div>
+    <div class="step-sub" data-t="step.2.s">المحتوى المناسب</div>
+  </div>
+  <div class="step" data-step="3" onclick="goToPhase(3)">
+    <div class="step-num"><span>3</span></div>
+    <div class="step-title" data-t="step.3.t">التوزيع</div>
+    <div class="step-sub" data-t="step.3.s">الوصول للجمهور</div>
+  </div>
+  <div class="step" data-step="4" onclick="goToPhase(4)">
+    <div class="step-num"><span>4</span></div>
+    <div class="step-title" data-t="step.4.t">Meta Ads</div>
+    <div class="step-sub" data-t="step.4.s">التنفيذ</div>
+  </div>
+</div>
+
+<!-- PHASE 1 -->
+<div class="phase active" id="phase1">
+  <div class="phase-banner">
+    <div class="pb-icon">🔍</div>
+    <div>
+      <h2 data-t="phase.1.h2">المرحلة الأولى: الاكتشاف الاستراتيجي</h2>
+      <p data-t="phase.1.p">أسئلة عميقة عن البراند والعميل — كل إجابة بتغذي توصيات المراحل اللي بعدها</p>
+    </div>
+  </div>
+
+  <div class="section-divider">
+    <div class="sd-tag" data-t="div.profile.tag">━━━ PRODUCT PROFILE — الأهم ━━━</div>
+    <div class="sd-title" data-t="div.profile.title">عرّفنا على المنتج بالتفصيل</div>
+    <div class="sd-sub" data-t="div.profile.sub">كل التوصيات والـ Copy هتُبنى على المعلومات دي — كل ما تفصّل أكتر، التوصيات تطلع أدق</div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag" data-t="pp.basics.tag">PROFILE / الأساسيات</span>
+      <div class="qtitle" data-t="pp.basics.title">معلومات المنتج الأساسية</div>
+      <div class="qhint" data-t="pp.basics.hint">اكتب باللي بتتكلم بيه عن المنتج — مش لازم رسمي</div>
+    </div>
+    <div class="qcard-body">
+      <div class="grid-2">
+        <div class="field"><label class="field-label" data-t="pp.name.label">اسم المنتج / البراند</label>
+          <input type="text" class="txt" id="prod_name" data-t-ph="pp.name.ph" placeholder="مثال: Junior, The Mat, Padel Lovers">
+        </div>
+        <div class="field"><label class="field-label" data-t="pp.cat.label">فئة المنتج</label>
+          <input type="text" class="txt" id="prod_category" data-t-ph="pp.cat.ph" placeholder="مثال: لبس أطفال قطن، مفروشات، مضارب بادل">
+        </div>
+      </div>
+      <div class="field"><label class="field-label" data-t="pp.oneliner.label">جملة واحدة تشرح المنتج</label>
+        <input type="text" class="txt" id="prod_oneliner" data-t-ph="pp.oneliner.ph" placeholder="مثال: لبس أطفال قطن مصري 100% يفضّل سنة كاملة">
+      </div>
+      <div class="grid-2">
+        <div class="field"><label class="field-label" data-t="pp.price.label">السعر (نطاق)</label>
+          <input type="text" class="txt" id="prod_price" data-t-ph="pp.price.ph" placeholder="مثال: 250 - 600 جنيه">
+        </div>
+        <div class="field"><label class="field-label" data-t="pp.channel.label">قناة البيع الرئيسية</label>
+          <input type="text" class="txt" id="prod_channel" data-t-ph="pp.channel.ph" placeholder="مثال: Shopify + WhatsApp">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag" data-t="pp.feat.tag">PROFILE / المنتج</span>
+      <div class="qtitle" data-t="pp.feat.title">الـ 3 Features الأهم</div>
+      <div class="qhint" data-t="pp.feat.hint">اللي بتقوله للعميل لما يسألك "ليه أشتري منكم؟"</div>
+    </div>
+    <div class="qcard-body">
+      <div class="field"><label class="field-label" data-t="pp.f1.label">Feature 1 — الأقوى</label>
+        <input type="text" class="txt" id="prod_f1" data-t-ph="pp.f1.ph" placeholder="مثال: قماش قطن مصري 100%">
+      </div>
+      <div class="field"><label class="field-label">Feature 2</label>
+        <input type="text" class="txt" id="prod_f2" data-t-ph="pp.f2.ph" placeholder="مثال: تصميمات حصرية">
+      </div>
+      <div class="field"><label class="field-label">Feature 3</label>
+        <input type="text" class="txt" id="prod_f3" data-t-ph="pp.f3.ph" placeholder="مثال: شحن خلال 48 ساعة">
+      </div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag" data-t="pp.ben.tag">PROFILE / النتيجة</span>
+      <div class="qtitle" data-t="pp.ben.title">الـ 3 Benefits الحقيقية</div>
+      <div class="qhint" data-t="pp.ben.hint">Feature = "قطن مصري" — Benefit = "بنتك مش هتعرق"</div>
+    </div>
+    <div class="qcard-body">
+      <div class="field"><label class="field-label" data-t="pp.b1.label">Benefit 1 — الأهم</label>
+        <input type="text" class="txt" id="prod_b1" data-t-ph="pp.b1.ph" placeholder="مثال: بنتك مرتاحة ومش بتشتكي">
+      </div>
+      <div class="field"><label class="field-label">Benefit 2</label>
+        <input type="text" class="txt" id="prod_b2" data-t-ph="pp.b2.ph" placeholder="مثال: يفضّل سنة كاملة من غير ما يتعب">
+      </div>
+      <div class="field"><label class="field-label">Benefit 3</label>
+        <input type="text" class="txt" id="prod_b3" data-t-ph="pp.b3.ph" placeholder="مثال: مش هتلاقيه عند حد تاني">
+      </div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag" data-t="pp.voc.tag">PROFILE / صوت العميل</span>
+      <div class="qtitle" data-t="pp.voc.title">صوت العميل الحقيقي (VoC)</div>
+      <div class="qhint" data-t="pp.voc.hint">دي أهم خانة — انسخ كلام عملاء فعلي من ريفيوهات / واتساب</div>
+      <div class="qframework" data-t="pp.voc.fw">📚 Voice of Customer (VoC) — أساس الـ Copy الناجح</div>
+    </div>
+    <div class="qcard-body">
+      <div class="field"><label class="field-label" data-t="pp.voc.pain">عبارات شكوى/ألم حقيقية (قبل الشراء)</label>
+        <textarea class="txt" id="prod_voc_pain" data-t-ph="pp.voc.pain_ph" placeholder="- بنتي بتعيط كل مرة تلبس اللبس ده&#10;- كل اللي بشتريه ينكمش بعد غسلة"></textarea>
+      </div>
+      <div class="field"><label class="field-label" data-t="pp.voc.love">عبارات إعجاب / Reviews (بعد الشراء)</label>
+        <textarea class="txt" id="prod_voc_love" data-t-ph="pp.voc.love_ph" placeholder="- والله أحسن لبس اشتريته&#10;- لبسته 4 شهور وما حصلوش حاجة"></textarea>
+      </div>
+      <div class="field"><label class="field-label" data-t="pp.voc.obj">اعتراضات سمعتها (Objections)</label>
+        <textarea class="txt" id="prod_voc_obj" data-t-ph="pp.voc.obj_ph" placeholder="- غالي شوية&#10;- مش متأكدة من المقاس"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag" data-t="pp.comp.tag">PROFILE / المنافسين</span>
+      <div class="qtitle" data-t="pp.comp.title">المنافسين الحقيقيين</div>
+      <div class="qhint" data-t="pp.comp.hint">أسماء براندات حقيقية بيقارنك بيها العميل</div>
+    </div>
+    <div class="qcard-body">
+      <div class="field"><label class="field-label" data-t="pp.comp.names">أكبر 3 منافسين (بالاسم)</label>
+        <input type="text" class="txt" id="prod_comp" data-t-ph="pp.comp.names_ph" placeholder="مثال: H&M Kids, Mothercare">
+      </div>
+      <div class="field"><label class="field-label" data-t="pp.comp.better">إيه اللي عندهم وعندك مفيش؟</label>
+        <textarea class="txt" id="prod_comp_better" data-t-ph="pp.comp.better_ph" placeholder="مثال: تنوع موديلات أكبر، فروع كتيرة"></textarea>
+      </div>
+      <div class="field"><label class="field-label" data-t="pp.comp.unique">إيه اللي عندك وعندهم مفيش؟ (الميزة الفريدة)</label>
+        <textarea class="txt" id="prod_comp_unique" data-t-ph="pp.comp.unique_ph" placeholder="مثال: خامة أرفع، أسعار أحسن"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag" data-t="pp.bestad.tag">PROFILE / Best Ad</span>
+      <div class="qtitle" data-t="pp.bestad.title">أفضل إعلان شغل معاك (Optional)</div>
+      <div class="qhint" data-t="pp.bestad.hint">انسخ نص إعلان حقق مبيعات حلوة كمرجع للأسلوب</div>
+    </div>
+    <div class="qcard-body">
+      <div class="field"><label class="field-label" data-t="pp.bestad.label">نص الإعلان الناجح</label>
+        <textarea class="txt" id="prod_best_ad" data-t-ph="pp.bestad.ph" placeholder="انسخ Caption الإعلان الأفضل"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider">
+    <div class="sd-tag" data-t="div.brand.tag">━━━ BRAND POSITIONING ━━━</div>
+    <div class="sd-title" data-t="div.brand.title">تموقع البراند</div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag">Q1 / BRAND</span>
+      <div class="qtitle" data-t="q1.title">نوع البيزنس بتاعك إيه؟</div>
+      <div class="qhint" data-t="q1.hint">ده بيحدد طبيعة الـ funnel والـ KPIs المناسبة</div>
+    </div>
+    <div class="qcard-body">
+      <div class="opts" data-q="biz_type">
+        <div class="opt" data-v="ecom"><span class="opt-icon">🛍️</span><div class="opt-body"><div class="opt-title" data-t="biz.ecom.t">E-commerce / متجر إلكتروني</div><div class="opt-desc" data-t="biz.ecom.d">بيع منتجات أونلاين مباشر للمستهلك</div></div></div>
+        <div class="opt" data-v="service"><span class="opt-icon">🔧</span><div class="opt-body"><div class="opt-title" data-t="biz.service.t">خدمة / Service</div><div class="opt-desc" data-t="biz.service.d">عيادة، صالون، استشارات، تدريب</div></div></div>
+        <div class="opt" data-v="leadgen"><span class="opt-icon">📋</span><div class="opt-body"><div class="opt-title" data-t="biz.leadgen.t">Lead Generation</div><div class="opt-desc" data-t="biz.leadgen.d">عقارات، تأمين، B2B، تعليم</div></div></div>
+        <div class="opt" data-v="local"><span class="opt-icon">📍</span><div class="opt-body"><div class="opt-title" data-t="biz.local.t">بيزنس محلي</div><div class="opt-desc" data-t="biz.local.d">مطعم، كافيه، جيم، فرع تجاري</div></div></div>
+        <div class="opt" data-v="info"><span class="opt-icon">📚</span><div class="opt-body"><div class="opt-title" data-t="biz.info.t">Info Product / كورس</div><div class="opt-desc" data-t="biz.info.d">كورسات، كتب، اشتراكات معرفية</div></div></div>
+        <div class="opt" data-v="saas"><span class="opt-icon">💻</span><div class="opt-body"><div class="opt-title" data-t="biz.saas.t">SaaS / منتج رقمي</div><div class="opt-desc" data-t="biz.saas.d">برامج، تطبيقات، أدوات اشتراك</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag">Q2 / BRAND</span>
+      <div class="qtitle" data-t="q2.title">البراند في أنهي مرحلة من دورة الحياة؟</div>
+      <div class="qhint" data-t="q2.hint">المرحلة بتحدد هدف الكامبين (Awareness vs Conversion vs Retention)</div>
+      <div class="qframework">📚 Product Lifecycle — Theodore Levitt</div>
+    </div>
+    <div class="qcard-body">
+      <div class="opts" data-q="lifecycle">
+        <div class="opt" data-v="launch"><span class="opt-icon">🚀</span><div class="opt-body"><div class="opt-title" data-t="lc.launch.t">إطلاق (Launch)</div><div class="opt-desc" data-t="lc.launch.d">براند جديد — الهدف Awareness</div></div></div>
+        <div class="opt" data-v="growth"><span class="opt-icon">📈</span><div class="opt-body"><div class="opt-title" data-t="lc.growth.t">نمو (Growth)</div><div class="opt-desc" data-t="lc.growth.d">في السوق وبيكبر — Acquisition</div></div></div>
+        <div class="opt" data-v="mature"><span class="opt-icon">🏛️</span><div class="opt-body"><div class="opt-title" data-t="lc.mature.t">راسخ (Mature)</div><div class="opt-desc" data-t="lc.mature.d">حصة سوقية ثابتة — Retention</div></div></div>
+        <div class="opt" data-v="pivot"><span class="opt-icon">🔄</span><div class="opt-body"><div class="opt-title" data-t="lc.pivot.t">إعادة تموقع (Pivot)</div><div class="opt-desc" data-t="lc.pivot.d">تغيير الجمهور أو الـ Positioning</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag">Q3 / BRAND</span>
+      <div class="qtitle" data-t="q3.title">إيه نموذج الشخصية الأقرب لبراندك؟ (Archetype)</div>
+      <div class="qhint" data-t="q3.hint">12 نموذج عالمي بيحدد نبرة الصوت والقصص</div>
+      <div class="qframework">📚 The Hero & The Outlaw — Mark & Pearson (Carl Jung)</div>
+    </div>
+    <div class="qcard-body">
+      <div class="opts" data-q="archetype">
+        <div class="opt" data-v="innocent"><span class="opt-icon">🌼</span><div class="opt-body"><div class="opt-title" data-t="ar.innocent.t">البراءة (Innocent)</div><div class="opt-desc" data-t="ar.innocent.d">صفاء، أمان — Dove, Coca-Cola</div></div></div>
+        <div class="opt" data-v="sage"><span class="opt-icon">🦉</span><div class="opt-body"><div class="opt-title" data-t="ar.sage.t">الحكيم (Sage)</div><div class="opt-desc" data-t="ar.sage.d">معرفة، خبرة — Google, BBC</div></div></div>
+        <div class="opt" data-v="explorer"><span class="opt-icon">🧭</span><div class="opt-body"><div class="opt-title" data-t="ar.explorer.t">المستكشف (Explorer)</div><div class="opt-desc" data-t="ar.explorer.d">حرية، مغامرة — Jeep, Patagonia</div></div></div>
+        <div class="opt" data-v="outlaw"><span class="opt-icon">⚡</span><div class="opt-body"><div class="opt-title" data-t="ar.outlaw.t">المتمرد (Outlaw)</div><div class="opt-desc" data-t="ar.outlaw.d">تمرد، تغيير — Harley, Diesel</div></div></div>
+        <div class="opt" data-v="magician"><span class="opt-icon">✨</span><div class="opt-body"><div class="opt-title" data-t="ar.magician.t">الساحر (Magician)</div><div class="opt-desc" data-t="ar.magician.d">تحول، رؤية — Apple, Disney</div></div></div>
+        <div class="opt" data-v="hero"><span class="opt-icon">🦸</span><div class="opt-body"><div class="opt-title" data-t="ar.hero.t">البطل (Hero)</div><div class="opt-desc" data-t="ar.hero.d">شجاعة، إنجاز — Nike, FedEx</div></div></div>
+        <div class="opt" data-v="lover"><span class="opt-icon">💖</span><div class="opt-body"><div class="opt-title" data-t="ar.lover.t">المحب (Lover)</div><div class="opt-desc" data-t="ar.lover.d">شغف، حسية — Chanel, Godiva</div></div></div>
+        <div class="opt" data-v="jester"><span class="opt-icon">🎭</span><div class="opt-body"><div class="opt-title" data-t="ar.jester.t">المهرج (Jester)</div><div class="opt-desc" data-t="ar.jester.d">مرح، خفة دم — Old Spice, M&M's</div></div></div>
+        <div class="opt" data-v="everyman"><span class="opt-icon">🤝</span><div class="opt-body"><div class="opt-title" data-t="ar.everyman.t">الإنسان العادي</div><div class="opt-desc" data-t="ar.everyman.d">انتماء، بساطة — IKEA, Target</div></div></div>
+        <div class="opt" data-v="caregiver"><span class="opt-icon">🤲</span><div class="opt-body"><div class="opt-title" data-t="ar.caregiver.t">المعتني (Caregiver)</div><div class="opt-desc" data-t="ar.caregiver.d">رعاية، حماية — Johnson's, UNICEF</div></div></div>
+        <div class="opt" data-v="ruler"><span class="opt-icon">👑</span><div class="opt-body"><div class="opt-title" data-t="ar.ruler.t">الحاكم (Ruler)</div><div class="opt-desc" data-t="ar.ruler.d">سلطة، نخبوية — Mercedes, Rolex</div></div></div>
+        <div class="opt" data-v="creator"><span class="opt-icon">🎨</span><div class="opt-body"><div class="opt-title" data-t="ar.creator.t">المبدع (Creator)</div><div class="opt-desc" data-t="ar.creator.d">إبداع، تخيل — LEGO, Adobe</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag">Q4 / BRAND</span>
+      <div class="qtitle" data-t="q4.title">شخصية البراند الأساسية إيه؟</div>
+      <div class="qhint" data-t="q4.hint">أحد البعدين الخمسة لشخصية البراند</div>
+      <div class="qframework">📚 Brand Personality Dimensions — Jennifer Aaker (1997)</div>
+    </div>
+    <div class="qcard-body">
+      <div class="opts" data-q="personality">
+        <div class="opt" data-v="sincerity"><span class="opt-icon">💚</span><div class="opt-body"><div class="opt-title" data-t="pers.sincerity.t">الصدق (Sincerity)</div><div class="opt-desc" data-t="pers.sincerity.d">عائلي، أصيل، صحي</div></div></div>
+        <div class="opt" data-v="excitement"><span class="opt-icon">🔥</span><div class="opt-body"><div class="opt-title" data-t="pers.excitement.t">الحماس (Excitement)</div><div class="opt-desc" data-t="pers.excitement.d">شبابي، جريء، مبتكر</div></div></div>
+        <div class="opt" data-v="competence"><span class="opt-icon">🎯</span><div class="opt-body"><div class="opt-title" data-t="pers.competence.t">الكفاءة (Competence)</div><div class="opt-desc" data-t="pers.competence.d">احترافي، موثوق، خبير</div></div></div>
+        <div class="opt" data-v="sophistication"><span class="opt-icon">💎</span><div class="opt-body"><div class="opt-title" data-t="pers.sophistication.t">الرقي (Sophistication)</div><div class="opt-desc" data-t="pers.sophistication.d">ساحر، نخبوي، أنيق</div></div></div>
+        <div class="opt" data-v="ruggedness"><span class="opt-icon">🏔️</span><div class="opt-body"><div class="opt-title" data-t="pers.ruggedness.t">الجسارة (Ruggedness)</div><div class="opt-desc" data-t="pers.ruggedness.d">قوي، خشن، رياضي</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag">Q5 / BRAND</span>
+      <div class="qtitle" data-t="q5.title">تموقع السعر؟</div>
+      <div class="qhint" data-t="q5.hint">السعر مش رقم — رسالة ضمنية للعميل عن قيمتك</div>
+      <div class="qframework">📚 Generic Strategies — Michael Porter</div>
+    </div>
+    <div class="qcard-body">
+      <div class="opts" data-q="price_pos">
+        <div class="opt" data-v="luxury"><span class="opt-icon">👑</span><div class="opt-body"><div class="opt-title" data-t="pp.luxury.t">فاخر (Premium / Luxury)</div><div class="opt-desc" data-t="pp.luxury.d">أعلى من السوق 50%+ — يبيع المكانة</div></div></div>
+        <div class="opt" data-v="mid"><span class="opt-icon">⚖️</span><div class="opt-body"><div class="opt-title" data-t="pp.mid.t">متوسط (Mid-market)</div><div class="opt-desc" data-t="pp.mid.d">قيمة مقابل سعر معقول</div></div></div>
+        <div class="opt" data-v="value"><span class="opt-icon">💰</span><div class="opt-body"><div class="opt-title" data-t="pp.value.t">اقتصادي (Value)</div><div class="opt-desc" data-t="pp.value.d">أرخص من السوق — يبيع التوفير</div></div></div>
+        <div class="opt" data-v="disruptive"><span class="opt-icon">🚀</span><div class="opt-body"><div class="opt-title" data-t="pp.disruptive.t">معطل للسوق (Disruptive)</div><div class="opt-desc" data-t="pp.disruptive.d">جودة عالية بسعر متوسط</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider">
+    <div class="sd-tag" data-t="div.cust.tag">━━━ CUSTOMER DISCOVERY ━━━</div>
+    <div class="sd-title" data-t="div.cust.title">شخصية العميل المستهدف</div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag">Q6 / CUSTOMER</span>
+      <div class="qtitle" data-t="q6.title">الديموغرافيات الأساسية</div>
+      <div class="qhint" data-t="q6.hint">دي بتحدد الـ targeting في Meta</div>
+    </div>
+    <div class="qcard-body">
+      <div class="grid-2">
+        <div class="field"><label class="field-label" data-t="q6.age">الفئة العمرية</label>
+          <div class="chips" data-q="age" data-multi="1">
+            <div class="chip" data-v="13-17">13-17</div>
+            <div class="chip" data-v="18-24">18-24</div>
+            <div class="chip" data-v="25-34">25-34</div>
+            <div class="chip" data-v="35-44">35-44</div>
+            <div class="chip" data-v="45-54">45-54</div>
+            <div class="chip" data-v="55+">55+</div>
+          </div>
+        </div>
+        <div class="field"><label class="field-label" data-t="q6.gender">النوع</label>
+          <div class="chips" data-q="gender" data-multi="1">
+            <div class="chip" data-v="female" data-t="g.f">إناث</div>
+            <div class="chip" data-v="male" data-t="g.m">ذكور</div>
+            <div class="chip" data-v="all" data-t="g.a">الاثنين</div>
+          </div>
+        </div>
+        <div class="field"><label class="field-label" data-t="q6.income">الفئة الاقتصادية</label>
+          <div class="chips" data-q="income" data-multi="1">
+            <div class="chip" data-v="A" data-t="inc.a">A (طبقة عليا)</div>
+            <div class="chip" data-v="B" data-t="inc.b">B (متوسطة عليا)</div>
+            <div class="chip" data-v="C" data-t="inc.c">C (متوسطة)</div>
+            <div class="chip" data-v="D" data-t="inc.d">D (محدود)</div>
+          </div>
+        </div>
+        <div class="field"><label class="field-label" data-t="q6.geo">الموقع الجغرافي</label>
+          <input type="text" class="txt" id="geo" data-t-ph="q6.geo_ph" placeholder="مثال: القاهرة + الجيزة">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag">Q7 / CUSTOMER</span>
+      <div class="qtitle" data-t="q7.title">المنتج بيلبي أنهي حاجة عند العميل؟</div>
+      <div class="qhint" data-t="q7.hint">المستوى الأعمق = مستوى التواصل العاطفي</div>
+      <div class="qframework">📚 Hierarchy of Needs — Abraham Maslow (1943)</div>
+    </div>
+    <div class="qcard-body">
+      <div class="opts" data-q="maslow">
+        <div class="opt" data-v="physio"><span class="opt-icon">🍞</span><div class="opt-body"><div class="opt-title" data-t="m.physio.t">احتياجات أساسية</div><div class="opt-desc" data-t="m.physio.d">طعام، نوم، صحة</div></div></div>
+        <div class="opt" data-v="safety"><span class="opt-icon">🛡️</span><div class="opt-body"><div class="opt-title" data-t="m.safety.t">أمان واستقرار</div><div class="opt-desc" data-t="m.safety.d">تأمين، مدخرات، حماية</div></div></div>
+        <div class="opt" data-v="belonging"><span class="opt-icon">👥</span><div class="opt-body"><div class="opt-title" data-t="m.belonging.t">انتماء وحب</div><div class="opt-desc" data-t="m.belonging.d">عائلة، أصدقاء، علاقات</div></div></div>
+        <div class="opt" data-v="esteem"><span class="opt-icon">🏆</span><div class="opt-body"><div class="opt-title" data-t="m.esteem.t">مكانة وتقدير</div><div class="opt-desc" data-t="m.esteem.d">إنجاز، نجاح، نخبوية</div></div></div>
+        <div class="opt" data-v="actualization"><span class="opt-icon">🌟</span><div class="opt-body"><div class="opt-title" data-t="m.actualization.t">تحقيق الذات</div><div class="opt-desc" data-t="m.actualization.d">نمو، إبداع، معرفة</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag">Q8 / CUSTOMER</span>
+      <div class="qtitle" data-t="q8.title">العميل في أنهي مستوى وعي بمنتجك؟</div>
+      <div class="qhint" data-t="q8.hint">أهم سؤال على الإطلاق — بيحدد Hook و Copy و Offer</div>
+      <div class="qframework">📚 5 Stages of Awareness — Eugene Schwartz (1966)</div>
+    </div>
+    <div class="qcard-body">
+      <div class="opts opts-2" data-q="awareness">
+        <div class="opt" data-v="unaware"><span class="opt-icon">😶</span><div class="opt-body"><div class="opt-title" data-t="aw.unaware.t">1. غير واعي</div><div class="opt-desc" data-t="aw.unaware.d">مش عارف عنده مشكلة أصلاً</div></div></div>
+        <div class="opt" data-v="problem"><span class="opt-icon">😣</span><div class="opt-body"><div class="opt-title" data-t="aw.problem.t">2. واعي بالمشكلة</div><div class="opt-desc" data-t="aw.problem.d">حاسس بالمشكلة، مش عارف الحل</div></div></div>
+        <div class="opt" data-v="solution"><span class="opt-icon">💡</span><div class="opt-body"><div class="opt-title" data-t="aw.solution.t">3. واعي بالحل</div><div class="opt-desc" data-t="aw.solution.d">عارف الحل، مش عارف المنتجات</div></div></div>
+        <div class="opt" data-v="product"><span class="opt-icon">🔍</span><div class="opt-body"><div class="opt-title" data-t="aw.product.t">4. واعي بالمنتج</div><div class="opt-desc" data-t="aw.product.d">بيقارن بين المنتجات</div></div></div>
+        <div class="opt" data-v="most"><span class="opt-icon">🛒</span><div class="opt-body"><div class="opt-title" data-t="aw.most.t">5. الأكثر وعياً</div><div class="opt-desc" data-t="aw.most.d">عارف منتجك، محتاج push</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag">Q9 / CUSTOMER</span>
+      <div class="qtitle" data-t="q9.title">الـ 3 مهام اللي العميل بيوظف منتجك ليها (JTBD)</div>
+      <div class="qhint" data-t="q9.hint">العميل مش بيشتري منتج — بيوظفه لينجز شغل معين</div>
+      <div class="qframework">📚 Jobs-to-be-Done Theory — Clayton Christensen</div>
+    </div>
+    <div class="qcard-body">
+      <div class="field"><label class="field-label" data-t="q9.func">الوظيفية (Functional)</label>
+        <textarea class="txt" id="jtbd_func" data-t-ph="q9.func_ph" placeholder="مثال: محتاج ألبس بنتي للمدرسة بدون تعب"></textarea>
+      </div>
+      <div class="field"><label class="field-label" data-t="q9.emo">العاطفية (Emotional)</label>
+        <textarea class="txt" id="jtbd_emo" data-t-ph="q9.emo_ph" placeholder="مثال: أحس إني أم حنونة وذوقي حلو"></textarea>
+      </div>
+      <div class="field"><label class="field-label" data-t="q9.soc">الاجتماعية (Social)</label>
+        <textarea class="txt" id="jtbd_soc" data-t-ph="q9.soc_ph" placeholder="مثال: بنتي تبان أنيقة قدام صحابها"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag">Q10 / CUSTOMER</span>
+      <div class="qtitle" data-t="q10.title">نقاط الألم (Pain Points)</div>
+      <div class="qhint" data-t="q10.hint">دي اللي بتدخل في الـ Hooks والـ Headlines</div>
+    </div>
+    <div class="qcard-body">
+      <div class="chips" data-q="pains" data-multi="1">
+        <div class="chip" data-v="time" data-t="pain.time">قلة الوقت</div>
+        <div class="chip" data-v="money" data-t="pain.money">قلة الفلوس</div>
+        <div class="chip" data-v="info" data-t="pain.info">قلة المعلومات</div>
+        <div class="chip" data-v="trust" data-t="pain.trust">عدم الثقة</div>
+        <div class="chip" data-v="quality" data-t="pain.quality">جودة وحشة في السوق</div>
+        <div class="chip" data-v="effort" data-t="pain.effort">المجهود/الإرهاق</div>
+        <div class="chip" data-v="confusion" data-t="pain.confusion">تشتت الاختيارات</div>
+        <div class="chip" data-v="stigma" data-t="pain.stigma">حرج اجتماعي</div>
+        <div class="chip" data-v="risk" data-t="pain.risk">خوف من الخسارة</div>
+        <div class="chip" data-v="comparison" data-t="pain.comparison">المقارنة بالناس</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag">Q11 / CUSTOMER</span>
+      <div class="qtitle" data-t="q11.title">الاعتراضات (Objections)</div>
+      <div class="qhint" data-t="q11.hint">كل اعتراض = سطر copy لازم يعالجه</div>
+      <div class="qframework">📚 Objection Handling — Sales Psychology</div>
+    </div>
+    <div class="qcard-body">
+      <div class="chips" data-q="objections" data-multi="1">
+        <div class="chip" data-v="price" data-t="obj.price">"غالي قوي"</div>
+        <div class="chip" data-v="trust" data-t="obj.trust">"مش متأكد من الجودة"</div>
+        <div class="chip" data-v="time" data-t="obj.time">"مش وقتي دلوقتي"</div>
+        <div class="chip" data-v="need" data-t="obj.need">"مش محتاجه فعلاً"</div>
+        <div class="chip" data-v="alternative" data-t="obj.alternative">"عندي بديل أرخص"</div>
+        <div class="chip" data-v="fit" data-t="obj.fit">"مش هيناسبني"</div>
+        <div class="chip" data-v="ship" data-t="obj.ship">"الشحن طويل"</div>
+        <div class="chip" data-v="return" data-t="obj.return">"كيف هرجعه"</div>
+        <div class="chip" data-v="brand" data-t="obj.brand">"مسمعتش عن البراند"</div>
+        <div class="chip" data-v="risk" data-t="obj.risk">"خايف يبقى نصب"</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-btns">
+    <span></span>
+    <button class="btn-next" onclick="goToPhase(2)"><span data-t="nav.next2">المرحلة الجاية: الكريتيف ←</span></button>
+  </div>
+</div>
+
+<!-- PHASE 2 -->
+<div class="phase" id="phase2">
+  <div class="phase-banner">
+    <div class="pb-icon">🎨</div>
+    <div>
+      <h2 data-t="phase.2.h2">المرحلة الثانية: استراتيجية المحتوى</h2>
+      <p data-t="phase.2.p">توصيات الكريتيف بناءً على الـ Archetype والـ Awareness</p>
+    </div>
+  </div>
+  <div id="phase2Body"></div>
+  <div class="nav-btns">
+    <button class="btn-prev" onclick="goToPhase(1)"><span data-t="nav.back">→ رجوع</span></button>
+    <button class="btn-next" onclick="goToPhase(3)"><span data-t="nav.next3">المرحلة الجاية: التوزيع ←</span></button>
+  </div>
+</div>
+
+<!-- PHASE 3 -->
+<div class="phase" id="phase3">
+  <div class="phase-banner">
+    <div class="pb-icon">📡</div>
+    <div>
+      <h2 data-t="phase.3.h2">المرحلة الثالثة: التوزيع — الوصول للجمهور</h2>
+      <p data-t="phase.3.p">إزاي توصّل المحتوى للناس الصح</p>
+    </div>
+  </div>
+  <div id="phase3Body"></div>
+  <div class="nav-btns">
+    <button class="btn-prev" onclick="goToPhase(2)"><span data-t="nav.back">→ رجوع</span></button>
+    <button class="btn-next" onclick="goToPhase(4)"><span data-t="nav.next4">المرحلة الجاية: Meta Ads ←</span></button>
+  </div>
+</div>
+
+<!-- PHASE 4 -->
+<div class="phase" id="phase4">
+  <div class="phase-banner">
+    <div class="pb-icon">⚙️</div>
+    <div>
+      <h2 data-t="phase.4.h2">المرحلة الرابعة: تنفيذ Meta Ads</h2>
+      <p data-t="phase.4.p">هيكل الكامبين، الميزانية، الـ Targeting</p>
+    </div>
+  </div>
+  <div class="qcard">
+    <div class="qcard-head">
+      <span class="qtag">BUDGET INPUT</span>
+      <div class="qtitle" data-t="bud.title">الأرقام المالية</div>
+    </div>
+    <div class="qcard-body">
+      <div class="grid-2">
+        <div class="field"><label class="field-label" data-t="bud.monthly">الميزانية الشهرية</label>
+          <input type="number" class="txt" id="m_monthly" placeholder="50000" oninput="renderPhase4()">
+        </div>
+        <div class="field"><label class="field-label" data-t="bud.aov">متوسط قيمة الطلب AOV</label>
+          <input type="number" class="txt" id="m_aov" placeholder="800" oninput="renderPhase4()">
+        </div>
+        <div class="field"><label class="field-label" data-t="bud.margin">هامش الربح %</label>
+          <input type="number" class="txt" id="m_margin" placeholder="40" oninput="renderPhase4()">
+        </div>
+        <div class="field"><label class="field-label" data-t="bud.repeat">معدل تكرار الشراء (سنوي)</label>
+          <input type="number" class="txt" id="m_repeat" placeholder="2.5" step="0.1" oninput="renderPhase4()">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="phase4Body"></div>
+  <div class="nav-btns">
+    <button class="btn-prev" onclick="goToPhase(3)"><span data-t="nav.back">→ رجوع</span></button>
+    <button class="btn-next" onclick="exportPlan()"><span data-t="nav.export">📄 صدّر الخطة</span></button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═════════════════ i18n DICTIONARY ═════════════════
+const I18N = {
+  ar: {
+    'ui.title':'🎯 Marketing Strategy Builder','ui.subtitle':'من فهم البراند والعميل → الكريتيف → التوزيع → تنفيذ Meta Ads',
+    'ui.cam_ph':'اسم البراند / الكامبين...','ui.save':'💾 حفظ','ui.new':'🔄 جديد',
+    'step.1.t':'الاكتشاف','step.1.s':'البراند + العميل','step.2.t':'الكريتيف','step.2.s':'المحتوى المناسب',
+    'step.3.t':'التوزيع','step.3.s':'الوصول للجمهور','step.4.t':'Meta Ads','step.4.s':'التنفيذ',
+    'phase.1.h2':'المرحلة الأولى: الاكتشاف الاستراتيجي','phase.1.p':'أسئلة عميقة عن البراند والعميل — كل إجابة بتغذي توصيات المراحل اللي بعدها',
+    'phase.2.h2':'المرحلة الثانية: استراتيجية المحتوى','phase.2.p':'توصيات الكريتيف بناءً على الـ Archetype والـ Awareness',
+    'phase.3.h2':'المرحلة الثالثة: التوزيع — الوصول للجمهور','phase.3.p':'إزاي توصّل المحتوى للناس الصح',
+    'phase.4.h2':'المرحلة الرابعة: تنفيذ Meta Ads','phase.4.p':'هيكل الكامبين، الميزانية، الـ Targeting',
+    'div.profile.tag':'━━━ PRODUCT PROFILE — الأهم ━━━','div.profile.title':'عرّفنا على المنتج بالتفصيل',
+    'div.profile.sub':'كل التوصيات والـ Copy هتُبنى على المعلومات دي — كل ما تفصّل أكتر، التوصيات تطلع أدق',
+    'div.brand.tag':'━━━ BRAND POSITIONING ━━━','div.brand.title':'تموقع البراند',
+    'div.cust.tag':'━━━ CUSTOMER DISCOVERY ━━━','div.cust.title':'شخصية العميل المستهدف',
+    'pp.basics.tag':'PROFILE / الأساسيات','pp.basics.title':'معلومات المنتج الأساسية','pp.basics.hint':'اكتب باللي بتتكلم بيه عن المنتج — مش لازم رسمي',
+    'pp.name.label':'اسم المنتج / البراند','pp.name.ph':'مثال: Junior, The Mat, Padel Lovers',
+    'pp.cat.label':'فئة المنتج','pp.cat.ph':'مثال: لبس أطفال قطن، مفروشات، مضارب بادل',
+    'pp.oneliner.label':'جملة واحدة تشرح المنتج','pp.oneliner.ph':'مثال: لبس أطفال قطن مصري 100% يفضّل سنة كاملة',
+    'pp.price.label':'السعر (نطاق)','pp.price.ph':'مثال: 250 - 600 جنيه',
+    'pp.channel.label':'قناة البيع الرئيسية','pp.channel.ph':'مثال: Shopify + WhatsApp',
+    'pp.feat.tag':'PROFILE / المنتج','pp.feat.title':'الـ 3 Features الأهم','pp.feat.hint':'اللي بتقوله للعميل لما يسألك "ليه أشتري منكم؟"',
+    'pp.f1.label':'Feature 1 — الأقوى','pp.f1.ph':'مثال: قماش قطن مصري 100%',
+    'pp.f2.ph':'مثال: تصميمات حصرية','pp.f3.ph':'مثال: شحن خلال 48 ساعة',
+    'pp.ben.tag':'PROFILE / النتيجة','pp.ben.title':'الـ 3 Benefits الحقيقية','pp.ben.hint':'Feature = "قطن مصري" — Benefit = "بنتك مش هتعرق"',
+    'pp.b1.label':'Benefit 1 — الأهم','pp.b1.ph':'مثال: بنتك مرتاحة ومش بتشتكي',
+    'pp.b2.ph':'مثال: يفضّل سنة كاملة','pp.b3.ph':'مثال: مش هتلاقيه عند حد تاني',
+    'pp.voc.tag':'PROFILE / صوت العميل','pp.voc.title':'صوت العميل الحقيقي (VoC)','pp.voc.hint':'دي أهم خانة — انسخ كلام عملاء فعلي من ريفيوهات / واتساب',
+    'pp.voc.fw':'📚 Voice of Customer (VoC) — أساس الـ Copy الناجح',
+    'pp.voc.pain':'عبارات شكوى/ألم حقيقية (قبل الشراء)','pp.voc.pain_ph':'- بنتي بتعيط كل مرة تلبس اللبس ده\n- كل اللي بشتريه ينكمش بعد غسلة',
+    'pp.voc.love':'عبارات إعجاب / Reviews (بعد الشراء)','pp.voc.love_ph':'- والله أحسن لبس اشتريته\n- لبسته 4 شهور وما حصلوش حاجة',
+    'pp.voc.obj':'اعتراضات سمعتها (Objections)','pp.voc.obj_ph':'- غالي شوية\n- مش متأكدة من المقاس',
+    'pp.comp.tag':'PROFILE / المنافسين','pp.comp.title':'المنافسين الحقيقيين','pp.comp.hint':'أسماء براندات حقيقية بيقارنك بيها العميل',
+    'pp.comp.names':'أكبر 3 منافسين (بالاسم)','pp.comp.names_ph':'مثال: H&M Kids, Mothercare',
+    'pp.comp.better':'إيه اللي عندهم وعندك مفيش؟','pp.comp.better_ph':'مثال: تنوع موديلات أكبر، فروع كتيرة',
+    'pp.comp.unique':'إيه اللي عندك وعندهم مفيش؟ (الميزة الفريدة)','pp.comp.unique_ph':'مثال: خامة أرفع، أسعار أحسن',
+    'pp.bestad.tag':'PROFILE / Best Ad','pp.bestad.title':'أفضل إعلان شغل معاك (Optional)','pp.bestad.hint':'انسخ نص إعلان حقق مبيعات حلوة كمرجع للأسلوب',
+    'pp.bestad.label':'نص الإعلان الناجح','pp.bestad.ph':'انسخ Caption الإعلان الأفضل',
+    'q1.title':'نوع البيزنس بتاعك إيه؟','q1.hint':'ده بيحدد طبيعة الـ funnel والـ KPIs المناسبة',
+    'q2.title':'البراند في أنهي مرحلة من دورة الحياة؟','q2.hint':'المرحلة بتحدد هدف الكامبين (Awareness vs Conversion vs Retention)',
+    'q3.title':'إيه نموذج الشخصية الأقرب لبراندك؟ (Archetype)','q3.hint':'12 نموذج عالمي بيحدد نبرة الصوت والقصص',
+    'q4.title':'شخصية البراند الأساسية إيه؟','q4.hint':'أحد البعدين الخمسة لشخصية البراند',
+    'q5.title':'تموقع السعر؟','q5.hint':'السعر مش رقم — رسالة ضمنية للعميل عن قيمتك',
+    'q6.title':'الديموغرافيات الأساسية','q6.hint':'دي بتحدد الـ targeting في Meta',
+    'q6.age':'الفئة العمرية','q6.gender':'النوع','q6.income':'الفئة الاقتصادية','q6.geo':'الموقع الجغرافي','q6.geo_ph':'مثال: القاهرة + الجيزة',
+    'q7.title':'المنتج بيلبي أنهي حاجة عند العميل؟','q7.hint':'المستوى الأعمق = مستوى التواصل العاطفي',
+    'q8.title':'العميل في أنهي مستوى وعي بمنتجك؟','q8.hint':'أهم سؤال على الإطلاق — بيحدد Hook و Copy و Offer',
+    'q9.title':'الـ 3 مهام اللي العميل بيوظف منتجك ليها (JTBD)','q9.hint':'العميل مش بيشتري منتج — بيوظفه لينجز شغل معين',
+    'q9.func':'الوظيفية (Functional)','q9.func_ph':'مثال: محتاج ألبس بنتي للمدرسة بدون تعب',
+    'q9.emo':'العاطفية (Emotional)','q9.emo_ph':'مثال: أحس إني أم حنونة وذوقي حلو',
+    'q9.soc':'الاجتماعية (Social)','q9.soc_ph':'مثال: بنتي تبان أنيقة قدام صحابها',
+    'q10.title':'نقاط الألم (Pain Points)','q10.hint':'دي اللي بتدخل في الـ Hooks والـ Headlines',
+    'q11.title':'الاعتراضات (Objections)','q11.hint':'كل اعتراض = سطر copy لازم يعالجه',
+    'biz.ecom.t':'E-commerce','biz.ecom.d':'بيع منتجات أونلاين مباشر للمستهلك',
+    'biz.service.t':'خدمة (Service)','biz.service.d':'عيادة، صالون، استشارات، تدريب',
+    'biz.leadgen.t':'Lead Generation','biz.leadgen.d':'عقارات، تأمين، B2B، تعليم',
+    'biz.local.t':'بيزنس محلي','biz.local.d':'مطعم، كافيه، جيم، فرع تجاري',
+    'biz.info.t':'Info Product / كورس','biz.info.d':'كورسات، كتب، اشتراكات معرفية',
+    'biz.saas.t':'SaaS / منتج رقمي','biz.saas.d':'برامج، تطبيقات، أدوات اشتراك',
+    'lc.launch.t':'إطلاق','lc.launch.d':'براند جديد — الهدف Awareness',
+    'lc.growth.t':'نمو','lc.growth.d':'في السوق وبيكبر — Acquisition',
+    'lc.mature.t':'راسخ','lc.mature.d':'حصة سوقية ثابتة — Retention',
+    'lc.pivot.t':'إعادة تموقع','lc.pivot.d':'تغيير الجمهور أو الـ Positioning',
+    'ar.innocent.t':'البراءة (Innocent)','ar.innocent.d':'صفاء، أمان — Dove, Coca-Cola',
+    'ar.sage.t':'الحكيم (Sage)','ar.sage.d':'معرفة، خبرة — Google, BBC',
+    'ar.explorer.t':'المستكشف (Explorer)','ar.explorer.d':'حرية، مغامرة — Jeep, Patagonia',
+    'ar.outlaw.t':'المتمرد (Outlaw)','ar.outlaw.d':'تمرد، تغيير — Harley, Diesel',
+    'ar.magician.t':'الساحر (Magician)','ar.magician.d':'تحول، رؤية — Apple, Disney',
+    'ar.hero.t':'البطل (Hero)','ar.hero.d':'شجاعة، إنجاز — Nike, FedEx',
+    'ar.lover.t':'المحب (Lover)','ar.lover.d':'شغف، حسية — Chanel, Godiva',
+    'ar.jester.t':'المهرج (Jester)','ar.jester.d':"مرح، خفة دم — Old Spice, M&M's",
+    'ar.everyman.t':'الإنسان العادي','ar.everyman.d':'انتماء، بساطة — IKEA, Target',
+    'ar.caregiver.t':'المعتني (Caregiver)','ar.caregiver.d':"رعاية، حماية — Johnson's, UNICEF",
+    'ar.ruler.t':'الحاكم (Ruler)','ar.ruler.d':'سلطة، نخبوية — Mercedes, Rolex',
+    'ar.creator.t':'المبدع (Creator)','ar.creator.d':'إبداع، تخيل — LEGO, Adobe',
+    'pers.sincerity.t':'الصدق','pers.sincerity.d':'عائلي، أصيل، صحي',
+    'pers.excitement.t':'الحماس','pers.excitement.d':'شبابي، جريء، مبتكر',
+    'pers.competence.t':'الكفاءة','pers.competence.d':'احترافي، موثوق، خبير',
+    'pers.sophistication.t':'الرقي','pers.sophistication.d':'ساحر، نخبوي، أنيق',
+    'pers.ruggedness.t':'الجسارة','pers.ruggedness.d':'قوي، خشن، رياضي',
+    'pp.luxury.t':'فاخر (Luxury)','pp.luxury.d':'أعلى من السوق 50%+ — يبيع المكانة',
+    'pp.mid.t':'متوسط (Mid-market)','pp.mid.d':'قيمة مقابل سعر معقول',
+    'pp.value.t':'اقتصادي (Value)','pp.value.d':'أرخص من السوق — يبيع التوفير',
+    'pp.disruptive.t':'معطل للسوق (Disruptive)','pp.disruptive.d':'جودة عالية بسعر متوسط',
+    'm.physio.t':'احتياجات أساسية','m.physio.d':'طعام، نوم، صحة',
+    'm.safety.t':'أمان واستقرار','m.safety.d':'تأمين، مدخرات، حماية',
+    'm.belonging.t':'انتماء وحب','m.belonging.d':'عائلة، أصدقاء، علاقات',
+    'm.esteem.t':'مكانة وتقدير','m.esteem.d':'إنجاز، نجاح، نخبوية',
+    'm.actualization.t':'تحقيق الذات','m.actualization.d':'نمو، إبداع، معرفة',
+    'aw.unaware.t':'1. غير واعي','aw.unaware.d':'مش عارف عنده مشكلة أصلاً',
+    'aw.problem.t':'2. واعي بالمشكلة','aw.problem.d':'حاسس بالمشكلة، مش عارف الحل',
+    'aw.solution.t':'3. واعي بالحل','aw.solution.d':'عارف الحل، مش عارف المنتجات',
+    'aw.product.t':'4. واعي بالمنتج','aw.product.d':'بيقارن بين المنتجات',
+    'aw.most.t':'5. الأكثر وعياً','aw.most.d':'عارف منتجك، محتاج push',
+    'g.f':'إناث','g.m':'ذكور','g.a':'الاثنين',
+    'inc.a':'A (طبقة عليا)','inc.b':'B (متوسطة عليا)','inc.c':'C (متوسطة)','inc.d':'D (محدود)',
+    'pain.time':'قلة الوقت','pain.money':'قلة الفلوس','pain.info':'قلة المعلومات','pain.trust':'عدم الثقة',
+    'pain.quality':'جودة وحشة في السوق','pain.effort':'المجهود/الإرهاق','pain.confusion':'تشتت الاختيارات',
+    'pain.stigma':'حرج اجتماعي','pain.risk':'خوف من الخسارة','pain.comparison':'المقارنة بالناس',
+    'obj.price':'"غالي قوي"','obj.trust':'"مش متأكد من الجودة"','obj.time':'"مش وقتي دلوقتي"',
+    'obj.need':'"مش محتاجه فعلاً"','obj.alternative':'"عندي بديل أرخص"','obj.fit':'"مش هيناسبني"',
+    'obj.ship':'"الشحن طويل"','obj.return':'"كيف هرجعه"','obj.brand':'"مسمعتش عن البراند"','obj.risk':'"خايف يبقى نصب"',
+    'bud.title':'الأرقام المالية','bud.monthly':'الميزانية الشهرية (جنيه)','bud.aov':'متوسط قيمة الطلب AOV (جنيه)',
+    'bud.margin':'هامش الربح %','bud.repeat':'معدل تكرار الشراء (سنوي)',
+    'nav.back':'→ رجوع','nav.next2':'المرحلة الجاية: الكريتيف ←','nav.next3':'المرحلة الجاية: التوزيع ←',
+    'nav.next4':'المرحلة الجاية: Meta Ads ←','nav.export':'📄 صدّر الخطة',
+    'rec.tone':'نبرة الصوت','rec.hook':'استراتيجية الـ Hook','rec.copy':'نُسخ إعلانات كاملة','rec.emo':'المحرك العاطفي',
+    'rec.visual':'الستايل البصري','rec.pillars':'محاور المحتوى','rec.format':'مزيج التنسيقات','rec.cta':'الـ CTA المناسب',
+    'rec.platform':'أولوية المنصات','rec.funnel':'هيكل الـ Funnel','rec.target':'استراتيجية الاستهداف',
+    'rec.freq':'Frequency & Reach','rec.channel':'Channel Mix','rec.unit':'اقتصاديات الوحدة','rec.obj':'هدف الكامبين',
+    'rec.struct':'هيكل الكامبين','rec.budget':'توزيع الميزانية','rec.test':'خطة اختبار الكريتيف (3-3-3)',
+    'rec.track':'قائمة Tracking','rec.scale':'قواعد التوسع',
+    'tone.label':'النبرة المناسبة','tone.avoid':'تجنب تماماً',
+    'hook.type':'نوع الـ Hook المناسب','hook.fw':'إطار الـ Copy','hook.examples':'Hooks مخصصة',
+    'copy.intro':'نسخ إعلانات مكتوبة من بيانات منتجك — جاهزة للنسخ في Meta Ads Manager',
+    'copy.btn':'📋 انسخ','copy.toast':'📋 تم النسخ',
+    'fill.warn':'⚠️ اكتب بيانات المنتج (Features + Benefits + VoC) في Phase 1 عشان نولّد Hooks حقيقية',
+    'empty.phase':'كمّل المراحل السابقة الأول',
+    'empty.phase2':'رجع للمرحلة الأولى وكمّل أسئلة البراند والعميل (Archetype + Personality + Awareness)',
+    'reset.confirm':'هتمسح كل الإجابات — متأكد؟',
+    'export.toast':'📄 تم التصدير','save.toast':'✅ تم الحفظ','reset.toast':'🔄 تم الريست'
+  },
+  en: {
+    'ui.title':'🎯 Marketing Strategy Builder','ui.subtitle':'From brand & customer understanding → Creative → Distribution → Meta Ads execution',
+    'ui.cam_ph':'Brand / Campaign name...','ui.save':'💾 Save','ui.new':'🔄 New',
+    'step.1.t':'Discovery','step.1.s':'Brand + Customer','step.2.t':'Creative','step.2.s':'Content Strategy',
+    'step.3.t':'Distribution','step.3.s':'Reaching Audience','step.4.t':'Meta Ads','step.4.s':'Execution',
+    'phase.1.h2':'Phase 1: Strategic Discovery','phase.1.p':'Deep questions about brand and customer — every answer feeds into recommendations in later phases',
+    'phase.2.h2':'Phase 2: Content Strategy','phase.2.p':'Creative recommendations based on Archetype + Awareness Level',
+    'phase.3.h2':'Phase 3: Distribution — Reaching the Audience','phase.3.p':'How to deliver content to the right people',
+    'phase.4.h2':'Phase 4: Meta Ads Execution','phase.4.p':'Campaign structure, budget, targeting, testing plan',
+    'div.profile.tag':'━━━ PRODUCT PROFILE — MOST IMPORTANT ━━━','div.profile.title':'Tell us about the product in detail',
+    'div.profile.sub':'All recommendations and copy will be built on this — more detail = more specific output',
+    'div.brand.tag':'━━━ BRAND POSITIONING ━━━','div.brand.title':'Brand Strategy',
+    'div.cust.tag':'━━━ CUSTOMER DISCOVERY ━━━','div.cust.title':'Target Customer Profile',
+    'pp.basics.tag':'PROFILE / BASICS','pp.basics.title':'Core Product Information','pp.basics.hint':"Write the way you'd describe it casually — no need to be formal",
+    'pp.name.label':'Product / Brand Name','pp.name.ph':'e.g. Junior, The Mat, Padel Lovers',
+    'pp.cat.label':'Product Category','pp.cat.ph':'e.g. Kids cotton clothing, doormats, padel rackets',
+    'pp.oneliner.label':'One-line product description','pp.oneliner.ph':'e.g. 100% Egyptian cotton kids clothing that lasts a full year',
+    'pp.price.label':'Price Range','pp.price.ph':'e.g. $15 - $50',
+    'pp.channel.label':'Primary Sales Channel','pp.channel.ph':'e.g. Shopify + WhatsApp',
+    'pp.feat.tag':'PROFILE / PRODUCT','pp.feat.title':'Top 3 Features','pp.feat.hint':'What you tell customers when they ask "Why should I buy from you?"',
+    'pp.f1.label':'Feature 1 — Strongest','pp.f1.ph':'e.g. 100% Egyptian cotton fabric',
+    'pp.f2.ph':'e.g. Exclusive in-house designs','pp.f3.ph':'e.g. 48-hour delivery',
+    'pp.ben.tag':'PROFILE / OUTCOMES','pp.ben.title':'Top 3 Real Benefits','pp.ben.hint':'Feature = "Egyptian cotton" — Benefit = "Your kid won\'t sweat"',
+    'pp.b1.label':'Benefit 1 — Most important','pp.b1.ph':'e.g. Your kid is comfortable and stops complaining',
+    'pp.b2.ph':'e.g. Lasts a full year','pp.b3.ph':"e.g. You won't find this anywhere else",
+    'pp.voc.tag':'PROFILE / CUSTOMER VOICE','pp.voc.title':'Voice of Customer (VoC)','pp.voc.hint':'The most important section — copy real customer language from reviews/WhatsApp',
+    'pp.voc.fw':'📚 Voice of Customer (VoC) — Foundation of effective copy',
+    'pp.voc.pain':'Real pain phrases (before purchase)','pp.voc.pain_ph':'- My daughter cries every time\n- Everything shrinks after one wash',
+    'pp.voc.love':'Praise / Reviews (after purchase)','pp.voc.love_ph':"- Best clothing I've bought\n- Wore it 4 months, still perfect",
+    'pp.voc.obj':'Objections you heard','pp.voc.obj_ph':'- A bit pricey\n- Not sure about sizing',
+    'pp.comp.tag':'PROFILE / COMPETITORS','pp.comp.title':'Real Competitors','pp.comp.hint':'Actual brand names customers compare you to',
+    'pp.comp.names':'Top 3 Competitors (by name)','pp.comp.names_ph':'e.g. H&M Kids, Mothercare',
+    'pp.comp.better':"What they have that you don't?",'pp.comp.better_ph':'e.g. More design variety, more stores',
+    'pp.comp.unique':"What you have that they don't? (Unique edge)",'pp.comp.unique_ph':'e.g. Premium fabric, better pricing',
+    'pp.bestad.tag':'PROFILE / BEST AD','pp.bestad.title':'Best performing ad (Optional)','pp.bestad.hint':"Paste a high-converting ad as reference for style",
+    'pp.bestad.label':'Winning ad copy','pp.bestad.ph':'Paste the best-performing caption',
+    'q1.title':"What's your business type?",'q1.hint':'Defines funnel nature and appropriate KPIs',
+    'q2.title':'What lifecycle stage is the brand in?','q2.hint':'Determines campaign goal (Awareness vs Conversion vs Retention)',
+    'q3.title':'Which archetype fits your brand?','q3.hint':'12 universal personas that define your tone and stories',
+    'q4.title':'Primary brand personality?','q4.hint':'One of 5 brand personality dimensions',
+    'q5.title':'Price Positioning?','q5.hint':"Price isn't a number — it's an implicit message about value",
+    'q6.title':'Core Demographics','q6.hint':'Determines Meta targeting',
+    'q6.age':'Age Range','q6.gender':'Gender','q6.income':'Income Tier','q6.geo':'Location','q6.geo_ph':'e.g. Cairo + Giza',
+    'q7.title':'Which need does the product fulfill?','q7.hint':'The deepest level = emotional connection level',
+    'q8.title':"What's the customer's awareness level?",'q8.hint':'Most important question — determines hook, copy, offer',
+    'q9.title':'The 3 Jobs customers hire your product to do (JTBD)','q9.hint':"Customers don't buy products — they hire them to do jobs",
+    'q9.func':'Functional Job','q9.func_ph':'e.g. Dress my daughter for school without hassle',
+    'q9.emo':'Emotional Job','q9.emo_ph':'e.g. Feel like a caring mom with great taste',
+    'q9.soc':'Social Job','q9.soc_ph':'e.g. My daughter looks polished to her friends',
+    'q10.title':'Pain Points','q10.hint':'These feed into Hooks and Headlines',
+    'q11.title':'Objections','q11.hint':'Every objection = a copy line that must address it',
+    'biz.ecom.t':'E-commerce','biz.ecom.d':'Direct-to-consumer online products',
+    'biz.service.t':'Service','biz.service.d':'Clinic, salon, consulting, training',
+    'biz.leadgen.t':'Lead Generation','biz.leadgen.d':'Real estate, insurance, B2B, education',
+    'biz.local.t':'Local Business','biz.local.d':'Restaurant, café, gym, retail',
+    'biz.info.t':'Info Product / Course','biz.info.d':'Courses, books, knowledge subscriptions',
+    'biz.saas.t':'SaaS / Digital Product','biz.saas.d':'Software, apps, subscription tools',
+    'lc.launch.t':'Launch','lc.launch.d':'New brand — Goal: Awareness',
+    'lc.growth.t':'Growth','lc.growth.d':'Growing in market — Acquisition',
+    'lc.mature.t':'Mature','lc.mature.d':'Stable market share — Retention',
+    'lc.pivot.t':'Pivot','lc.pivot.d':'Changing audience or positioning',
+    'ar.innocent.t':'The Innocent','ar.innocent.d':'Purity, safety — Dove, Coca-Cola',
+    'ar.sage.t':'The Sage','ar.sage.d':'Wisdom, expertise — Google, BBC',
+    'ar.explorer.t':'The Explorer','ar.explorer.d':'Freedom, adventure — Jeep, Patagonia',
+    'ar.outlaw.t':'The Outlaw','ar.outlaw.d':'Rebellion — Harley, Diesel',
+    'ar.magician.t':'The Magician','ar.magician.d':'Transformation — Apple, Disney',
+    'ar.hero.t':'The Hero','ar.hero.d':'Courage, achievement — Nike, FedEx',
+    'ar.lover.t':'The Lover','ar.lover.d':'Passion, sensuality — Chanel, Godiva',
+    'ar.jester.t':'The Jester','ar.jester.d':"Fun — Old Spice, M&M's",
+    'ar.everyman.t':'The Everyman','ar.everyman.d':'Belonging — IKEA, Target',
+    'ar.caregiver.t':'The Caregiver','ar.caregiver.d':"Care — Johnson's, UNICEF",
+    'ar.ruler.t':'The Ruler','ar.ruler.d':'Authority — Mercedes, Rolex',
+    'ar.creator.t':'The Creator','ar.creator.d':'Creativity — LEGO, Adobe',
+    'pers.sincerity.t':'Sincerity','pers.sincerity.d':'Family, authentic, healthy',
+    'pers.excitement.t':'Excitement','pers.excitement.d':'Youthful, daring, innovative',
+    'pers.competence.t':'Competence','pers.competence.d':'Professional, reliable, expert',
+    'pers.sophistication.t':'Sophistication','pers.sophistication.d':'Charming, elite, elegant',
+    'pers.ruggedness.t':'Ruggedness','pers.ruggedness.d':'Strong, rough, athletic',
+    'pp.luxury.t':'Premium / Luxury','pp.luxury.d':'50%+ above market — sells status',
+    'pp.mid.t':'Mid-market','pp.mid.d':'Value at fair price',
+    'pp.value.t':'Value / Budget','pp.value.d':'Cheaper than market — sells savings',
+    'pp.disruptive.t':'Disruptive','pp.disruptive.d':'Premium quality at mid price',
+    'm.physio.t':'Physiological','m.physio.d':'Food, sleep, health',
+    'm.safety.t':'Safety & Security','m.safety.d':'Insurance, savings, protection',
+    'm.belonging.t':'Belonging & Love','m.belonging.d':'Family, friends, relationships',
+    'm.esteem.t':'Esteem & Status','m.esteem.d':'Achievement, success, exclusivity',
+    'm.actualization.t':'Self-Actualization','m.actualization.d':'Growth, creativity, knowledge',
+    'aw.unaware.t':'1. Unaware','aw.unaware.d':"Doesn't know they have a problem",
+    'aw.problem.t':'2. Problem-Aware','aw.problem.d':"Feels problem, doesn't know solution",
+    'aw.solution.t':'3. Solution-Aware','aw.solution.d':"Knows solutions, not products",
+    'aw.product.t':'4. Product-Aware','aw.product.d':'Comparing products',
+    'aw.most.t':'5. Most-Aware','aw.most.d':'Knows your product, needs push',
+    'g.f':'Female','g.m':'Male','g.a':'All',
+    'inc.a':'A (Affluent)','inc.b':'B (Upper-middle)','inc.c':'C (Middle)','inc.d':'D (Lower)',
+    'pain.time':'Lack of time','pain.money':'Lack of money','pain.info':'Lack of info','pain.trust':'Lack of trust',
+    'pain.quality':'Poor market quality','pain.effort':'Effort/Exhaustion','pain.confusion':'Too many options',
+    'pain.stigma':'Social stigma','pain.risk':'Fear of loss','pain.comparison':'Social comparison',
+    'obj.price':'"Too expensive"','obj.trust':'"Not sure about quality"','obj.time':'"Not the right time"',
+    'obj.need':'"Don\'t really need it"','obj.alternative':'"Have a cheaper alternative"','obj.fit':'"Won\'t fit me"',
+    'obj.ship':'"Long shipping"','obj.return':'"How do I return it"','obj.brand':'"Never heard of brand"','obj.risk':'"Afraid it\'s a scam"',
+    'bud.title':'Financial Metrics','bud.monthly':'Monthly Budget ($)','bud.aov':'Average Order Value AOV ($)',
+    'bud.margin':'Profit Margin %','bud.repeat':'Purchase Frequency (yearly)',
+    'nav.back':'← Back','nav.next2':'Next: Creative →','nav.next3':'Next: Distribution →',
+    'nav.next4':'Next: Meta Ads →','nav.export':'📄 Export Plan',
+    'rec.tone':'Tone of Voice','rec.hook':'Hook Strategy','rec.copy':'Full Ad Copy Variations','rec.emo':'Emotional Trigger',
+    'rec.visual':'Visual Direction','rec.pillars':'Content Pillars','rec.format':'Format Mix','rec.cta':'Recommended CTA',
+    'rec.platform':'Platform Priority','rec.funnel':'Funnel Structure','rec.target':'Targeting Strategy',
+    'rec.freq':'Frequency & Reach','rec.channel':'Channel Mix','rec.unit':'Unit Economics','rec.obj':'Campaign Objective',
+    'rec.struct':'Campaign Structure','rec.budget':'Budget Allocation','rec.test':'Creative Testing Plan (3-3-3)',
+    'rec.track':'Tracking Checklist','rec.scale':'Scaling Rules',
+    'tone.label':'Suitable tone','tone.avoid':'Avoid completely',
+    'hook.type':'Hook type','hook.fw':'Copy framework','hook.examples':'Custom Hooks',
+    'copy.intro':'Ad copy written from your product data — ready to paste in Meta Ads Manager',
+    'copy.btn':'📋 Copy','copy.toast':'📋 Copied',
+    'fill.warn':'⚠️ Fill product data (Features + Benefits + VoC) in Phase 1 to generate real hooks',
+    'empty.phase':'Complete previous phases first',
+    'empty.phase2':'Go back to Phase 1 and complete brand and customer questions (Archetype + Personality + Awareness)',
+    'reset.confirm':'Clear all answers — are you sure?',
+    'export.toast':'📄 Exported','save.toast':'✅ Saved','reset.toast':'🔄 Reset done'
+  }
+};
+
+// ═════════════════ LANG ═════════════════
+const LANG_KEY = 'mkt_lang';
+let LANG = localStorage.getItem(LANG_KEY) || 'ar';
+
+function t(key) { return I18N[LANG][key] || I18N.ar[key] || key; }
+
+function applyLang(lang) {
+  LANG = lang;
+  localStorage.setItem(LANG_KEY, lang);
+  document.documentElement.setAttribute('lang', lang);
+  document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+  document.getElementById('langText').textContent = lang === 'ar' ? 'EN' : 'AR';
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const k = el.getAttribute('data-t');
+    if (I18N[lang][k]) el.textContent = I18N[lang][k];
+  });
+  document.querySelectorAll('[data-t-ph]').forEach(el => {
+    const k = el.getAttribute('data-t-ph');
+    if (I18N[lang][k]) el.setAttribute('placeholder', I18N[lang][k]);
+  });
+  // Re-render dynamic phases
+  if (document.getElementById('phase2').classList.contains('active')) renderPhase2();
+  if (document.getElementById('phase3').classList.contains('active')) renderPhase3();
+  if (document.getElementById('phase4').classList.contains('active')) renderPhase4();
+}
+function toggleLang() { applyLang(LANG === 'ar' ? 'en' : 'ar'); }
+
+// ═════════════════ THEME ═════════════════
+const THEME_KEY = 'mkt_theme';
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeIcon').textContent = theme === 'light' ? '🌙' : '☀️';
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(cur === 'dark' ? 'light' : 'dark');
+  localStorage.setItem(THEME_KEY, document.documentElement.getAttribute('data-theme'));
+}
+(function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  applyTheme(saved || (prefers ? 'light' : 'dark'));
+})();
+
+// ═════════════════ STATE ═════════════════
+const KEY = 'mkt_strategy_unified_v1';
+const state = {
+  name:'', prod_name:'', prod_category:'', prod_oneliner:'', prod_price:'', prod_channel:'',
+  prod_f1:'', prod_f2:'', prod_f3:'', prod_b1:'', prod_b2:'', prod_b3:'',
+  prod_voc_pain:'', prod_voc_love:'', prod_voc_obj:'',
+  prod_comp:'', prod_comp_better:'', prod_comp_unique:'', prod_best_ad:'',
+  geo:'', jtbd_func:'', jtbd_emo:'', jtbd_soc:'',
+  m_monthly:'', m_aov:'', m_margin:'', m_repeat:'',
+  biz_type:null, lifecycle:null, archetype:null, personality:null, price_pos:null,
+  maslow:null, awareness:null,
+  age:[], gender:[], income:[], pains:[], objections:[]
+};
+
+function goToPhase(n) {
+  document.querySelectorAll('.phase').forEach((p,i)=>p.classList.toggle('active', i===n-1));
+  document.querySelectorAll('.step').forEach((s,i)=>s.classList.toggle('active', i===n-1));
+  if (n===2) renderPhase2();
+  if (n===3) renderPhase3();
+  if (n===4) renderPhase4();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+document.querySelectorAll('.opts').forEach(grp => {
+  const q = grp.dataset.q;
+  grp.querySelectorAll('.opt').forEach(opt => {
+    opt.onclick = () => {
+      grp.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      state[q] = opt.dataset.v;
+      saveAll(); markStepDone();
+    };
+  });
+});
+document.querySelectorAll('.chips[data-multi="1"]').forEach(grp => {
+  const q = grp.dataset.q;
+  if (!Array.isArray(state[q])) state[q] = [];
+  grp.querySelectorAll('.chip').forEach(c => {
+    c.onclick = () => {
+      const v = c.dataset.v;
+      const i = state[q].indexOf(v);
+      if (i>-1) { state[q].splice(i,1); c.classList.remove('active'); }
+      else { state[q].push(v); c.classList.add('active'); }
+      saveAll();
+    };
+  });
+});
+['campaignName','prod_name','prod_category','prod_oneliner','prod_price','prod_channel',
+ 'prod_f1','prod_f2','prod_f3','prod_b1','prod_b2','prod_b3',
+ 'prod_voc_pain','prod_voc_love','prod_voc_obj','prod_comp','prod_comp_better','prod_comp_unique','prod_best_ad',
+ 'geo','jtbd_func','jtbd_emo','jtbd_soc',
+ 'm_monthly','m_aov','m_margin','m_repeat'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.oninput = () => { state[id==='campaignName'?'name':id] = el.value; saveAll(); };
+});
+
+function markStepDone() {
+  if (state.biz_type && state.lifecycle && state.archetype && state.personality && state.price_pos && state.maslow && state.awareness && state.age.length>0)
+    document.querySelector('.step[data-step="1"]').classList.add('done');
+}
+
+function saveAll() { localStorage.setItem(KEY, JSON.stringify(state)); }
+function loadAll() {
+  const raw = localStorage.getItem(KEY);
+  if (!raw) return;
+  try {
+    const s = JSON.parse(raw);
+    Object.assign(state, s);
+    if (s.name) document.getElementById('campaignName').value = s.name;
+    ['prod_name','prod_category','prod_oneliner','prod_price','prod_channel',
+     'prod_f1','prod_f2','prod_f3','prod_b1','prod_b2','prod_b3',
+     'prod_voc_pain','prod_voc_love','prod_voc_obj','prod_comp','prod_comp_better','prod_comp_unique','prod_best_ad',
+     'geo','jtbd_func','jtbd_emo','jtbd_soc',
+     'm_monthly','m_aov','m_margin','m_repeat'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && s[id]) el.value = s[id];
+    });
+    document.querySelectorAll('.opts').forEach(grp => {
+      const q = grp.dataset.q;
+      if (s[q]) grp.querySelectorAll('.opt').forEach(o => { if (o.dataset.v === s[q]) o.classList.add('selected'); });
+    });
+    document.querySelectorAll('.chips[data-multi="1"]').forEach(grp => {
+      const q = grp.dataset.q;
+      const arr = s[q] || [];
+      grp.querySelectorAll('.chip').forEach(c => { if (arr.includes(c.dataset.v)) c.classList.add('active'); });
+    });
+    markStepDone();
+  } catch(e){}
+}
+function resetAll() {
+  if (!confirm(t('reset.confirm'))) return;
+  localStorage.removeItem(KEY); location.reload();
+}
+function showToast(m) {
+  const tt = document.getElementById('toast');
+  tt.textContent = m;
+  tt.classList.add('show');
+  setTimeout(()=>tt.classList.remove('show'), 2400);
+}
+
+// ═════════════════ KNOWLEDGE BASE (bilingual) ═════════════════
+const archetypeToTone = {
+  ar: {
+    innocent:{tone:'دافئ، نقي، إيجابي',avoid:'السخرية، التعقيد، السواد'},
+    sage:{tone:'موضوعي، تعليمي، مدعوم بالأدلة',avoid:'العاطفة الزائدة، الادعاءات الفارغة'},
+    explorer:{tone:'حر، مغامر، ملهم',avoid:'الروتين، التقليدية'},
+    outlaw:{tone:'متمرد، صريح، مباشر',avoid:'الكلام المنمق، السلطة'},
+    magician:{tone:'سحري، تحويلي، ملهم',avoid:'الواقعية المملة'},
+    hero:{tone:'قوي، شجاع، تحدي',avoid:'الضعف، التردد'},
+    lover:{tone:'حسي، عاطفي، حميم',avoid:'الجفاف، الميكانيكية'},
+    jester:{tone:'مرح، خفيف، ساخر',avoid:'الجدية الزايدة'},
+    everyman:{tone:'بسيط، صادق، قريب',avoid:'النخبوية، التعالي'},
+    caregiver:{tone:'حنون، مطمئن، حماية',avoid:'البرود، الأنانية'},
+    ruler:{tone:'فخم، حازم، قيادي',avoid:'الشعبية، الأسعار الرخيصة'},
+    creator:{tone:'إبداعي، تعبيري، فني',avoid:'الجاهز، النمطية'}
+  },
+  en: {
+    innocent:{tone:'Warm, pure, positive',avoid:'Sarcasm, complexity, darkness'},
+    sage:{tone:'Objective, educational, evidence-backed',avoid:'Excessive emotion, empty claims'},
+    explorer:{tone:'Free, adventurous, inspiring',avoid:'Routine, traditionalism'},
+    outlaw:{tone:'Rebellious, blunt, direct',avoid:'Polished talk, authority'},
+    magician:{tone:'Magical, transformative, inspiring',avoid:'Boring realism'},
+    hero:{tone:'Strong, brave, challenging',avoid:'Weakness, hesitation'},
+    lover:{tone:'Sensual, emotional, intimate',avoid:'Dryness, mechanical tone'},
+    jester:{tone:'Fun, light, playful',avoid:'Excessive seriousness'},
+    everyman:{tone:'Simple, honest, relatable',avoid:'Elitism, condescension'},
+    caregiver:{tone:'Caring, reassuring, protective',avoid:'Coldness, selfishness'},
+    ruler:{tone:'Luxurious, decisive, leading',avoid:'Mass appeal, cheap pricing'},
+    creator:{tone:'Creative, expressive, artistic',avoid:'Pre-made, conventional'}
+  }
+};
+const awarenessToHook = {
+  ar: {
+    unaware: {hookType:'حقيقة صادمة / إحصائية', framework:'PAS — Problem, Agitate, Solution', cta:'تعليم بدون بيع مباشر', funnel:'TOFU'},
+    problem: {hookType:'تجسيد المشكلة + alternative reality', framework:'BAB — Before, After, Bridge', cta:'اعرف أكتر / حمّل الدليل', funnel:'TOFU → MOFU'},
+    solution:{hookType:'تقديم الحل + لماذا منتجك', framework:'FAB — Features, Advantages, Benefits', cta:'جرّب / عرفنا أكتر', funnel:'MOFU'},
+    product: {hookType:'مقارنة + تمييز', framework:'4 Us — Useful, Urgent, Unique, Ultra-specific', cta:'قارن / شوف الفرق', funnel:'MOFU → BOFU'},
+    most:    {hookType:'عرض / ندرة / دليل اجتماعي', framework:'Direct Offer + Urgency', cta:'اشتري دلوقتي / احجز مكانك', funnel:'BOFU'}
+  },
+  en: {
+    unaware: {hookType:'Shocking fact / statistic', framework:'PAS — Problem, Agitate, Solution', cta:'Educational, no direct sell', funnel:'TOFU'},
+    problem: {hookType:'Problem manifestation + alternative reality', framework:'BAB — Before, After, Bridge', cta:'Learn more / Download guide', funnel:'TOFU → MOFU'},
+    solution:{hookType:'Solution introduction + why your product', framework:'FAB — Features, Advantages, Benefits', cta:'Try / Learn more', funnel:'MOFU'},
+    product: {hookType:'Comparison + differentiation', framework:'4 Us — Useful, Urgent, Unique, Ultra-specific', cta:'Compare / See difference', funnel:'MOFU → BOFU'},
+    most:    {hookType:'Offer / scarcity / social proof', framework:'Direct Offer + Urgency', cta:'Buy now / Reserve spot', funnel:'BOFU'}
+  }
+};
+const maslowToTrigger = {
+  ar: { physio:'البقاء، الراحة الجسدية، الصحة', safety:'الأمان، الاستقرار، الضمان', belonging:'الانتماء، العائلة، القبول', esteem:'الإنجاز، المكانة، التقدير', actualization:'النمو، الإلهام، تحقيق الذات' },
+  en: { physio:'Survival, physical comfort, health', safety:'Safety, stability, guarantees', belonging:'Belonging, family, acceptance', esteem:'Achievement, status, recognition', actualization:'Growth, inspiration, self-actualization' }
+};
+const personalityToVisual = {
+  ar: {
+    sincerity:{style:'دافئ، طبيعي، عائلي',colors:'أخضر، بيج، أبيض'}, excitement:{style:'جريء، حيوي، شبابي',colors:'أحمر، أصفر، برتقالي'},
+    competence:{style:'احترافي، نظيف، منظم',colors:'أزرق، رمادي، أبيض'}, sophistication:{style:'فاخر، نظيف، minimal',colors:'أسود، ذهبي، أبيض'},
+    ruggedness:{style:'خشن، خام، صناعي',colors:'بني، أخضر داكن، أسود'}
+  },
+  en: {
+    sincerity:{style:'Warm, natural, family-friendly',colors:'Green, beige, white'}, excitement:{style:'Bold, lively, youthful',colors:'Red, yellow, orange'},
+    competence:{style:'Professional, clean, organized',colors:'Blue, gray, white'}, sophistication:{style:'Luxurious, minimal',colors:'Black, gold, white'},
+    ruggedness:{style:'Rough, raw, industrial',colors:'Brown, dark green, black'}
+  }
+};
+
+const archetypeLabel = a => t('ar.'+a+'.t').replace(/\(.*\)/,'').trim();
+const maslowLabel = m => t('m.'+m+'.t');
+const awarenessLabel = a => t('aw.'+a+'.t');
+const bizLabel = b => t('biz.'+b+'.t');
+
+function firstVoc(text) {
+  if (!text) return '';
+  const lines = text.split('\n').map(l=>l.replace(/^[-•*]\s*/,'').trim()).filter(Boolean);
+  return lines[0]||'';
+}
+function allVoc(text) {
+  if (!text) return [];
+  return text.split('\n').map(l=>l.replace(/^[-•*]\s*/,'').trim()).filter(Boolean);
+}
+
+function generateHooks(s) {
+  const aware = s.awareness;
+  const name = s.prod_name || (LANG==='ar'?'المنتج':'Product');
+  const cat = s.prod_category || (LANG==='ar'?'المنتج':'product');
+  const f1 = s.prod_f1||'', b1 = s.prod_b1||'', b2 = s.prod_b2||'', b3 = s.prod_b3||'';
+  const unique = s.prod_comp_unique||'';
+  const comp = s.prod_comp ? s.prod_comp.split(/[,،]/)[0].trim():'';
+  const painQuotes = allVoc(s.prod_voc_pain);
+  const loveQuotes = allVoc(s.prod_voc_love);
+  const painLine = painQuotes[0]||'';
+  const loveLine = loveQuotes[0]||'';
+  const out = [];
+
+  if (LANG === 'ar') {
+    if (aware==='unaware') {
+      if (painLine) out.push(`"${painLine}" — لو ده حصل معاكي، ${b1?'في حل: '+b1:'احنا فاهمين السبب'}`);
+      if (cat && f1) out.push(`الحاجة اللي محدش بيقولك عليها وانتي بتختاري ${cat}: ${f1}`);
+      if (b2) out.push(`فاكرة لما حصل "${painLine||'الموقف ده'}"؟ ممكن يبطل لو ${b2}`);
+      out.push(`5 علامات إن ${cat} اللي عندك مش مناسب`);
+      if (b1) out.push(`السر اللي خلى الناس تغيّر اختياراتها: ${b1}`);
+    } else if (aware==='problem') {
+      if (painLine) out.push(`"${painLine}"؟ احنا اتعرضنا لنفس الموقف — ${name} اتعمل عشانه`);
+      if (b1) out.push(`بدون مبالغة: ${b1}. ده اللي بيوفره ${name}`);
+      out.push(`قبل ما تشتري أي ${cat}، اقرأ ده الأول`);
+      if (b2) out.push(`الحل لـ"${painLine||cat}" مش في السعر — في ${b2}`);
+      if (f1) out.push(`الفرق الواحد اللي بيغير كل حاجة في ${cat}: ${f1}`);
+    } else if (aware==='solution') {
+      if (b1) out.push(`${name} — ${b1}`);
+      if (loveLine) out.push(`"${loveLine}" — ده اللي بيقوله عملاء ${name}`);
+      if (s.prod_oneliner) out.push(`${s.prod_oneliner}. كل ده في ${name}`);
+      if (f1 && s.prod_f2) out.push(`ليه ${name}؟ ${f1} + ${s.prod_f2}`);
+      if (unique) out.push(`اللي بيخلي ${name} مختلف: ${unique}`);
+    } else if (aware==='product') {
+      if (comp) out.push(`${name} ضد ${comp} — قارني الفرق بنفسك`);
+      if (unique) out.push(`الـ 3 حاجات اللي مش هتلاقيهم في ${cat} غير ${name}: ${unique}`);
+      if (loveLine) out.push(`عميلة جربت غيره قبل ${name} قالت: "${loveLine}"`);
+      if (f1) out.push(`قبل ما تختاري بين ${name} و${comp||'غيره'}، شوفي ${f1}`);
+      if (b3) out.push(`${b3} — السبب اللي بيخلي ${name} اختيار الذكيات`);
+    } else if (aware==='most') {
+      out.push(`${name} — خصم لفترة محدودة، آخر 48 ساعة`);
+      if (s.prod_price) out.push(`عرض اليوم: ${name} بـ ${s.prod_price} — الكمية محدودة`);
+      if (b1) out.push(`${b1} — ${name} متاح دلوقتي، اشتري قبل نفاد المخزون`);
+      if (loveQuotes.length>=2) out.push(`${loveQuotes.length*100}+ عميلة اشترت ${name} الشهر ده`);
+      out.push(`${name} — Free Shipping + إرجاع مجاني 14 يوم`);
+    }
+  } else {
+    if (aware==='unaware') {
+      if (painLine) out.push(`"${painLine}" — If this has happened to you, ${b1?"there's a solution: "+b1:"we understand why"}`);
+      if (cat && f1) out.push(`What no one tells you when choosing ${cat}: ${f1}`);
+      if (b2) out.push(`Remember when ${painLine||'this happened'}? It can stop with ${b2}`);
+      out.push(`5 signs your ${cat} isn't right`);
+      if (b1) out.push(`The secret that changed everyone's choice: ${b1}`);
+    } else if (aware==='problem') {
+      if (painLine) out.push(`"${painLine}"? We've been there — ${name} was made for this`);
+      if (b1) out.push(`No exaggeration: ${b1}. That's what ${name} delivers`);
+      out.push(`Before buying any ${cat}, read this first`);
+      if (b2) out.push(`The solution to "${painLine||cat}" isn't in price — it's in ${b2}`);
+      if (f1) out.push(`The one thing that changes ${cat}: ${f1}`);
+    } else if (aware==='solution') {
+      if (b1) out.push(`${name} — ${b1}`);
+      if (loveLine) out.push(`"${loveLine}" — what real ${name} customers say`);
+      if (s.prod_oneliner) out.push(`${s.prod_oneliner}. All in ${name}`);
+      if (f1 && s.prod_f2) out.push(`Why ${name}? ${f1} + ${s.prod_f2}`);
+      if (unique) out.push(`What makes ${name} different: ${unique}`);
+    } else if (aware==='product') {
+      if (comp) out.push(`${name} vs ${comp} — compare yourself`);
+      if (unique) out.push(`3 things you won't find in any ${cat} except ${name}: ${unique}`);
+      if (loveLine) out.push(`A customer who tried others before ${name} said: "${loveLine}"`);
+      if (f1) out.push(`Before choosing between ${name} and ${comp||'others'}, see ${f1}`);
+      if (b3) out.push(`${b3} — Why smart shoppers choose ${name}`);
+    } else if (aware==='most') {
+      out.push(`${name} — Limited time discount, last 48 hours`);
+      if (s.prod_price) out.push(`Today's offer: ${name} for ${s.prod_price} — limited stock`);
+      if (b1) out.push(`${b1} — ${name} available now, buy before sold out`);
+      if (loveQuotes.length>=2) out.push(`${loveQuotes.length*100}+ customers bought ${name} this month`);
+      out.push(`${name} — Free Shipping + 14-day Free returns`);
+    }
+  }
+  return out.filter(h=>h && !h.includes('undefined')).slice(0,5);
+}
+
+function generateCopy(s) {
+  const aware = s.awareness;
+  const name = s.prod_name || (LANG==='ar'?'المنتج':'the product');
+  const b1=s.prod_b1||'', b2=s.prod_b2||'', b3=s.prod_b3||'';
+  const f1=s.prod_f1||'', f2=s.prod_f2||'', f3=s.prod_f3||'';
+  const painLine = firstVoc(s.prod_voc_pain)||'';
+  const loveLine = firstVoc(s.prod_voc_love)||'';
+  const unique = s.prod_comp_unique||'';
+  const cta = awarenessToHook[LANG][aware]?.cta || (LANG==='ar'?'اطلبي دلوقتي':'Shop now');
+  const variations = [];
+
+  const isAr = LANG==='ar';
+  if (painLine && b1) {
+    variations.push({
+      framework:'PAS — Problem · Agitate · Solution',
+      copy: isAr
+        ? `${painLine}؟\n\nده مش بسبب البراند — ده بسبب إن أغلب ${s.prod_category||'المنتجات'} في السوق مش متعملة صح.\n\n${name} مختلف: ${b1}${f1?'\n\n✓ '+f1:''}${f2?'\n✓ '+f2:''}${f3?'\n✓ '+f3:''}\n\n👈 ${cta}`
+        : `${painLine}?\n\nThis isn't your fault — most ${s.prod_category||'products'} simply aren't made right.\n\n${name} is different: ${b1}${f1?'\n\n✓ '+f1:''}${f2?'\n✓ '+f2:''}${f3?'\n✓ '+f3:''}\n\n👉 ${cta}`
+    });
+  }
+  if (painLine && b2) {
+    variations.push({
+      framework:'BAB — Before · After · Bridge',
+      copy: isAr
+        ? `قبل: ${painLine}\n\nبعد ${name}: ${b2}\n\nإزاي؟ ${f1||'بسبب طريقة تصنيع مختلفة'}.\n\n${loveLine?'"'+loveLine+'"\n— عميلة حقيقية\n\n':''}👈 ${cta}`
+        : `Before: ${painLine}\n\nAfter ${name}: ${b2}\n\nHow? ${f1||'A different approach'}.\n\n${loveLine?'"'+loveLine+'"\n— Real customer\n\n':''}👉 ${cta}`
+    });
+  }
+  if (f1 && b1) {
+    variations.push({
+      framework:'FAB — Features · Advantages · Benefits',
+      copy: isAr
+        ? `${name} — ${s.prod_oneliner||b1}\n\n🔹 ${f1}${f2?'\n🔹 '+f2:''}${f3?'\n🔹 '+f3:''}\n\nاللي يعني بالنسبالك:\n→ ${b1}${b2?'\n→ '+b2:''}${b3?'\n→ '+b3:''}\n\n👈 ${cta}`
+        : `${name} — ${s.prod_oneliner||b1}\n\n🔹 ${f1}${f2?'\n🔹 '+f2:''}${f3?'\n🔹 '+f3:''}\n\nWhich means for you:\n→ ${b1}${b2?'\n→ '+b2:''}${b3?'\n→ '+b3:''}\n\n👉 ${cta}`
+    });
+  }
+  if (loveLine) {
+    variations.push({
+      framework:'Social Proof — Customer Voice',
+      copy: isAr
+        ? `"${loveLine}"\n— عميلة فعلية اشترت ${name}\n\nمش إحنا اللي بنقول، عملاؤنا بيقولوا.\n\n${b1?b1+'\n':''}${b2?b2+'\n':''}${unique?'\n✨ '+unique:''}\n\n👈 ${cta}`
+        : `"${loveLine}"\n— Real ${name} customer\n\nNot our words — our customers'.\n\n${b1?b1+'\n':''}${b2?b2+'\n':''}${unique?'\n✨ '+unique:''}\n\n👉 ${cta}`
+    });
+  }
+  return variations;
+}
+
+function generatePillars(s) {
+  const name = s.prod_name || (LANG==='ar'?'المنتج':'the product');
+  const cat = s.prod_category || (LANG==='ar'?'المنتج':'product');
+  const f1 = s.prod_f1||'', b1 = s.prod_b1||'';
+  const painLine = firstVoc(s.prod_voc_pain);
+  const loveLine = firstVoc(s.prod_voc_love);
+  const pillars = [];
+  const isAr = LANG==='ar';
+
+  pillars.push({title: isAr?`💡 محور تعليمي — "إزاي تختار ${cat} صح"`:`💡 Educational — "How to choose ${cat} right"`,
+                desc: isAr?`محتوى تعليمي${f1?`. ركز على ${f1} كمعيار جودة`:''}`:`Educational content${f1?`. Focus on ${f1} as quality criterion`:''}`});
+  if (painLine||s.jtbd_emo) pillars.push({
+    title: isAr?`💗 محور قصصي — "قبل وبعد ${name}"`:`💗 Storytelling — "Before & after ${name}"`,
+    desc: painLine?(isAr?`Pain Quote: "${painLine}" — Benefit: "${b1||''}"`:`Pain Quote: "${painLine}" — Benefit: "${b1||''}"`):(isAr?`قصص عملاء حقيقيين`:`Real customer stories`)
+  });
+  if (loveLine) pillars.push({title: isAr?`⭐ محور Social Proof`:`⭐ Social Proof Pillar`,
+                              desc: isAr?`Reviews حقيقية: "${loveLine}". UGC، قبل/بعد، نتائج محددة`:`Real reviews: "${loveLine}". UGC, before/after, results`});
+  pillars.push({title: isAr?`🔬 محور المنتج — "ليه ${name}؟"`:`🔬 Product — "Why ${name}?"`,
+                desc: isAr?`Close-ups + Demo${f1?`. اعرض ${f1}`:''}`:`Close-ups + Demo${f1?`. Show ${f1}`:''}`});
+  if (s.prod_comp && s.prod_comp_unique) pillars.push({
+    title: isAr?`⚔️ محور المقارنة — "${name} ضد ${s.prod_comp.split(/[,،]/)[0].trim()}"`:`⚔️ Comparison — "${name} vs ${s.prod_comp.split(/[,،]/)[0].trim()}"`,
+    desc: isAr?`قارن ذكي. أبرز ${s.prod_comp_unique}`:`Smart comparison. Highlight ${s.prod_comp_unique}`
+  });
+  return pillars;
+}
+
+function generateFormatMix(s) {
+  const aware = s.awareness;
+  let mix;
+  if (aware==='unaware'||aware==='problem') mix={video:60,image:25,carousel:15};
+  else if (aware==='solution'||aware==='product') mix={video:40,image:35,carousel:25};
+  else mix={video:25,image:50,carousel:25};
+  const isAr = LANG==='ar';
+  return `<table class="budget-table">
+    <tr><th>${isAr?'التنسيق':'Format'}</th><th>${isAr?'النسبة':'Share'}</th><th>${isAr?'الاستخدام':'Use'}</th></tr>
+    <tr><td>Video / Reels</td><td class="num">${mix.video}%</td><td>${isAr?'Hooks، Storytelling، UGC':'Hooks, Storytelling, UGC'}</td></tr>
+    <tr><td>${isAr?'صورة ثابتة':'Static Image'}</td><td class="num">${mix.image}%</td><td>${isAr?'Offers، Features، Social Proof':'Offers, Features, Social Proof'}</td></tr>
+    <tr><td>Carousel</td><td class="num">${mix.carousel}%</td><td>${isAr?'مقارنات، Multi-product':'Comparisons, Multi-product'}</td></tr>
+  </table>`;
+}
+
+function renderPhase2() {
+  const body = document.getElementById('phase2Body');
+  if (!state.archetype || !state.awareness || !state.personality) {
+    body.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-text">${t('empty.phase2')}</div></div>`;
+    return;
+  }
+  const arch = archetypeToTone[LANG][state.archetype];
+  const aware = awarenessToHook[LANG][state.awareness];
+  const visual = personalityToVisual[LANG][state.personality];
+  const maslowText = state.maslow ? maslowToTrigger[LANG][state.maslow] : '';
+  const hooks = generateHooks(state);
+  const variations = generateCopy(state);
+  const isAr = LANG==='ar';
+
+  body.innerHTML = `
+    <div class="reco"><div class="reco-head"><span class="reco-icon">🗣️</span><h3>${t('rec.tone')}</h3></div>
+      <div class="reco-body">
+        <p><strong>${t('tone.label')} (${archetypeLabel(state.archetype)}):</strong></p>
+        <div class="pill-list"><span class="pill success">${arch.tone}</span></div>
+        <p><strong>${t('tone.avoid')}:</strong> ${arch.avoid}</p>
+        <em>📚 Mark & Pearson 12 Brand Archetypes</em>
+      </div></div>
+
+    <div class="reco"><div class="reco-head"><span class="reco-icon">🎣</span><h3>${t('rec.hook')}</h3></div>
+      <div class="reco-body">
+        <p><strong>${t('hook.type')}:</strong> ${aware.hookType}</p>
+        <p><strong>${t('hook.fw')}:</strong> ${aware.framework}</p>
+        <div class="formula-box">
+          <div class="ftitle">${t('hook.examples')} — "${state.prod_name||(isAr?'منتجك':'your product')}":</div>
+          ${hooks.length ? hooks.map((h,i)=>`<div style="margin-bottom:8px;padding:6px 8px;background:var(--surface);border-radius:4px;"><strong style="color:var(--p2)">${i+1}.</strong> ${h}</div>`).join('') : `<div style="color:var(--muted);font-style:italic;">${t('fill.warn')}</div>`}
+        </div>
+        <em>📚 Eugene Schwartz Stages of Awareness</em>
+      </div></div>
+
+    ${variations.length ? `
+    <div class="reco"><div class="reco-head"><span class="reco-icon">📝</span><h3>${t('rec.copy')}</h3></div>
+      <div class="reco-body">
+        <p style="margin-bottom:14px;">${t('copy.intro')}</p>
+        ${variations.map((v,i)=>`
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;">
+            <div style="font-size:.72rem;color:var(--p2);font-weight:700;margin-bottom:8px;letter-spacing:.03em;">VARIATION ${i+1} · ${v.framework}</div>
+            <pre style="white-space:pre-wrap;font-family:inherit;font-size:.85rem;line-height:1.7;color:var(--text);margin:0;">${v.copy}</pre>
+            <button onclick="navigator.clipboard.writeText(\`${v.copy.replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`);showToast(t('copy.toast'))" style="margin-top:10px;background:var(--surface2);color:var(--text);border:1px solid var(--border);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.72rem;font-family:inherit;">${t('copy.btn')}</button>
+          </div>`).join('')}
+      </div></div>` : ''}
+
+    ${maslowText ? `
+    <div class="reco"><div class="reco-head"><span class="reco-icon">💗</span><h3>${t('rec.emo')}</h3></div>
+      <div class="reco-body">
+        <p>${isAr?'المحتوى لازم يلمس':'Content should touch'}: <strong>${maslowText}</strong></p>
+        <em>📚 Maslow's Hierarchy of Needs</em>
+      </div></div>` : ''}
+
+    <div class="reco"><div class="reco-head"><span class="reco-icon">🎨</span><h3>${t('rec.visual')}</h3></div>
+      <div class="reco-body">
+        <p><strong>${isAr?'الستايل':'Style'}:</strong> ${visual.style}</p>
+        <p><strong>${isAr?'الألوان':'Colors'}:</strong> ${visual.colors}</p>
+      </div></div>
+
+    <div class="reco"><div class="reco-head"><span class="reco-icon">📊</span><h3>${t('rec.pillars')}</h3></div>
+      <div class="reco-body">${generatePillars(state).map(p=>`<p>• <strong>${p.title}</strong> — ${p.desc}</p>`).join('')}</div></div>
+
+    <div class="reco"><div class="reco-head"><span class="reco-icon">📹</span><h3>${t('rec.format')}</h3></div>
+      <div class="reco-body">${generateFormatMix(state)}</div></div>
+
+    <div class="reco"><div class="reco-head"><span class="reco-icon">👉</span><h3>${t('rec.cta')}</h3></div>
+      <div class="reco-body"><p><strong>CTA:</strong> ${aware.cta}</p></div></div>
+  `;
+  document.querySelector('.step[data-step="2"]').classList.add('done');
+}
+
+function suggestInterests(cat) {
+  if (!cat) return [];
+  const c = cat.toLowerCase();
+  const s = [];
+  if (/لبس|ملابس|cloth|fashion|kid|child|baby|junior|أطفال/i.test(c)) s.push('Online Shopping','Children\'s clothing','Mothercare','H&M','Baby Products');
+  if (/مفروشات|سجاد|mat|rug|home|decor/i.test(c)) s.push('Home Decor','IKEA','Interior design','Furniture');
+  if (/بادل|padel|tennis|sport|رياضة/i.test(c)) s.push('Padel','Tennis','Sports equipment','Decathlon');
+  if (/جوهرات|jewel|accessor/i.test(c)) s.push('Jewelry','Pandora','Luxury goods');
+  if (/cosmet|makeup|beauty|skin|مكياج/i.test(c)) s.push('Cosmetics','Sephora','MAC');
+  if (!s.length) s.push('Online Shopping','Engaged Shoppers');
+  return s.slice(0,8);
+}
+
+function renderPhase3() {
+  const body = document.getElementById('phase3Body');
+  if (!state.biz_type || !state.awareness) {
+    body.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-text">${t('empty.phase')}</div></div>`;
+    return;
+  }
+  const isAr = LANG==='ar';
+  const ages = state.age||[];
+  const isYoung = ages.some(a=>['13-17','18-24'].includes(a));
+  let platforms = [{name:'Instagram + Facebook (Meta)', share:75, reason: isAr?'المنصة الأساسية — Reels + Feed + Stories':'Primary — Reels + Feed + Stories'}];
+  if (isYoung || state.archetype==='jester' || state.archetype==='outlaw') { platforms[0].share=65; platforms.push({name:'TikTok', share:25, reason: isAr?'الجيل Z + UGC قوي':'Gen Z + powerful UGC'}); }
+  if (state.biz_type==='leadgen' || state.biz_type==='saas') { platforms[0].share=Math.max(50,platforms[0].share-20); platforms.push({name:'Google Ads', share:25, reason: isAr?'العميل بيبحث بنية شراء':'Search intent'}); }
+  if (state.biz_type==='local') { platforms[0].share=60; platforms.push({name:'Google Maps + Local', share:30, reason: isAr?'استهداف جغرافي':'Geo-targeting'}); }
+  const tot = platforms.reduce((s,r)=>s+r.share,0);
+  platforms.forEach(p=>p.share=Math.round(p.share*100/tot));
+
+  const cat = state.prod_category||'';
+  const interests = suggestInterests(cat);
+  const channel = state.prod_channel||'';
+
+  const layers = [];
+  if (state.awareness==='unaware'||state.awareness==='problem') {
+    layers.push({layer: isAr?'Cold — Prospecting':'Cold — Prospecting',
+      approach: 'Advantage+ Audience (Broad)',
+      detail: isAr?`اترك الـ AI، حدد بس: العمر (${ages.join(', ')||'?'}) + المنطقة (${state.geo||'?'})`:`Let AI decide. Just set: Age (${ages.join(', ')||'?'}) + Region (${state.geo||'?'})`});
+  } else {
+    layers.push({layer:'Cold — Prospecting', approach:'Interest Stacking + LAL 1-3%',
+      detail: interests.length?(isAr?`Interests لـ "${cat}": ${interests.join(' / ')}`:`Interests for "${cat}": ${interests.join(' / ')}`):(isAr?'LAL من قائمة عملاء':'LAL from customer list')});
+  }
+  layers.push({layer:'Warm — Retargeting', approach: isAr?'Custom Audiences متعددة':'Multi-source Custom Audiences',
+    detail: isAr?`• زوار 30 يوم${channel.toLowerCase().includes('shopify')?' (Shopify Pixel)':''}\n• Video Views 75%+ آخر 90 يوم\n• Add to Cart آخر 14 يوم — مهم`:`• 30-day visitors${channel.toLowerCase().includes('shopify')?' (Shopify Pixel)':''}\n• Video Views 75%+ last 90 days\n• Add to Cart last 14 days — critical`});
+  if (state.biz_type==='ecom') layers.push({layer:'Hot — Conversion', approach:'DPA + Targeted Offers',
+    detail: isAr?`• Cart Abandoners — Catalog + 10% خصم\n• Past Buyers — Cross-sell بعد 30 يوم`:`• Cart Abandoners — Catalog + 10% off\n• Past Buyers — Cross-sell after 30 days`});
+
+  body.innerHTML = `
+    <div class="reco"><div class="reco-head"><span class="reco-icon">📱</span><h3>${t('rec.platform')}</h3></div>
+      <div class="reco-body">
+        <table class="budget-table"><tr><th>${isAr?'المنصة':'Platform'}</th><th>${isAr?'النسبة':'Share'}</th><th>${isAr?'السبب':'Why'}</th></tr>
+        ${platforms.map(p=>`<tr><td>${p.name}</td><td class="num">${p.share}%</td><td>${p.reason}</td></tr>`).join('')}</table>
+      </div></div>
+
+    <div class="reco"><div class="reco-head"><span class="reco-icon">🎯</span><h3>${t('rec.target')}</h3></div>
+      <div class="reco-body">
+        ${layers.map(l=>`<div style="margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">
+          <p><strong>${l.layer}:</strong> ${l.approach}</p>
+          <p style="font-size:.8rem;color:var(--muted);white-space:pre-line;">${l.detail}</p>
+        </div>`).join('')}
+        <em>📚 Meta Andromeda Update 2025</em>
+      </div></div>
+
+    <div class="reco"><div class="reco-head"><span class="reco-icon">📊</span><h3>${t('rec.freq')}</h3></div>
+      <div class="reco-body">
+        <p><strong>Frequency Cap:</strong> 2-3 ${isAr?'مشاهدات/أسبوع':'views/week'}</p>
+        <p><strong>Creative Fatigue:</strong> CTR ${isAr?'ينزل':'drops'} 20%+ ${isAr?'أو CPM يطلع':'or CPM rises'} 30%+</p>
+      </div></div>
+  `;
+  document.querySelector('.step[data-step="3"]').classList.add('done');
+}
+
+function renderPhase4() {
+  const body = document.getElementById('phase4Body');
+  if (!state.biz_type || !state.awareness) {
+    body.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-text">${t('empty.phase')}</div></div>`;
+    return;
+  }
+  const isAr = LANG==='ar';
+  const monthly=parseFloat(state.m_monthly)||0, aov=parseFloat(state.m_aov)||0, margin=parseFloat(state.m_margin)||0, repeat=parseFloat(state.m_repeat)||1;
+  const ltv = aov && margin ? (aov*(margin/100)*repeat) : 0;
+  const targetCAC = ltv ? (ltv/3) : 0;
+  const curSign = isAr ? 'جنيه' : '$';
+
+  // Objective
+  let obj;
+  if (state.biz_type==='ecom' && (state.awareness==='product'||state.awareness==='most')) obj={name:'Sales (Catalog Sales)', event:'Purchase'};
+  else if (state.biz_type==='ecom') obj={name:'Sales (Conversions)', event:'Purchase'};
+  else if (state.biz_type==='leadgen' || state.biz_type==='service') obj={name:'Leads', event:'Lead Form'};
+  else if (state.biz_type==='local') obj={name:'Engagement / Messages', event:'Click to WhatsApp'};
+  else if (state.lifecycle==='launch' || state.awareness==='unaware') obj={name:'Awareness', event:'ThruPlay'};
+  else obj={name:'Conversions', event:'Primary funnel goal'};
+
+  // Budget split
+  let split;
+  if (state.lifecycle==='launch') split={cold:80,warm:20};
+  else if (state.lifecycle==='growth') split={cold:65,warm:35};
+  else split={cold:50,warm:35,hot:15};
+  const labels = isAr ? {cold:'Cold (Prospecting)', warm:'Warm (Retargeting)', hot:'Hot (DPA)'} : {cold:'Cold (Prospecting)', warm:'Warm (Retargeting)', hot:'Hot (DPA + Catalog)'};
+
+  // Angles
+  const angles = [];
+  const painLine = firstVoc(state.prod_voc_pain);
+  if (painLine) angles.push((isAr?'زاوية VoC: ':'VoC angle: ')+`"${painLine.substring(0,50)}"`);
+  if (state.prod_comp_unique) angles.push((isAr?'زاوية التميز: ':'Differentiation: ')+`"${state.prod_comp_unique.substring(0,50)}"`);
+  if (state.prod_b1) angles.push((isAr?'زاوية النتيجة: ':'Outcome: ')+`"${state.prod_b1.substring(0,50)}"`);
+  while (angles.length<3) angles.push(isAr?'زاوية إضافية':'Additional angle');
+
+  body.innerHTML = `
+    ${monthly>0 && aov>0 && margin>0 ? `
+    <div class="reco"><div class="reco-head"><span class="reco-icon">💰</span><h3>${t('rec.unit')}</h3></div>
+      <div class="reco-body">
+        <table class="budget-table">
+          <tr><td>LTV</td><td class="num">${ltv.toFixed(0)} ${curSign}</td></tr>
+          <tr><td>${isAr?'Target CAC (LTV ÷ 3)':'Target CAC (LTV ÷ 3)'}</td><td class="num">${targetCAC.toFixed(0)} ${curSign}</td></tr>
+          <tr><td>${isAr?'عملاء شهرياً':'Monthly customers'}</td><td class="num">${Math.floor(monthly/targetCAC)}</td></tr>
+          <tr><td>${isAr?'الإيرادات المتوقعة':'Projected revenue'}</td><td class="num">${Math.floor((monthly/targetCAC)*aov).toLocaleString()} ${curSign}</td></tr>
+          <tr><td>${isAr?'Target ROAS':'Target ROAS'}</td><td class="num">${(aov/targetCAC).toFixed(1)}x</td></tr>
+        </table>
+      </div></div>` : ''}
+
+    <div class="reco"><div class="reco-head"><span class="reco-icon">🎯</span><h3>${t('rec.obj')}</h3></div>
+      <div class="reco-body">
+        <p><strong>${isAr?'الهدف في Meta Ads Manager':'Objective in Meta Ads Manager'}:</strong></p>
+        <div class="pill-list"><span class="pill info">${obj.name}</span></div>
+        <p><strong>Optimization Event:</strong> ${obj.event}</p>
+      </div></div>
+
+    ${monthly>0 ? `
+    <div class="reco"><div class="reco-head"><span class="reco-icon">💵</span><h3>${t('rec.budget')}</h3></div>
+      <div class="reco-body">
+        <table class="budget-table">
+          <tr><th>${isAr?'الطبقة':'Layer'}</th><th>${isAr?'النسبة':'Share'}</th><th>${isAr?'شهري':'Monthly'}</th><th>${isAr?'يومي':'Daily'}</th></tr>
+          ${Object.entries(split).map(([k,p])=>{const m=monthly*p/100; return `<tr><td>${labels[k]}</td><td class="num">${p}%</td><td class="num">${m.toLocaleString()} ${curSign}</td><td class="num">${(m/30).toFixed(0)} ${curSign}</td></tr>`;}).join('')}
+        </table>
+      </div></div>` : ''}
+
+    <div class="reco"><div class="reco-head"><span class="reco-icon">🧪</span><h3>${t('rec.test')}</h3></div>
+      <div class="reco-body">
+        <p><strong>${isAr?'الإطار':'Framework'}:</strong> 3 ${isAr?'زوايا × 3 تنسيقات × 3 funnel layers = 27 إعلان':'angles × 3 formats × 3 funnel layers = 27 ads'}</p>
+        <table class="budget-table">
+          <tr><th>${isAr?'البُعد':'Dimension'}</th><th>${isAr?'الخيارات':'Options'}</th></tr>
+          <tr><td>3 ${isAr?'زوايا':'Angles'}</td><td>${angles.slice(0,3).join(' / ')}</td></tr>
+          <tr><td>3 ${isAr?'تنسيقات':'Formats'}</td><td>Reel + Static 1:1 + Carousel</td></tr>
+          <tr><td>3 Funnel layers</td><td>TOFU / MOFU / BOFU</td></tr>
+        </table>
+        <p><strong>${isAr?'القاعدة':'Rule'}:</strong> ${isAr?'ABO بميزانية متساوية، 3-7 أيام، الفائز ينقل لـ ASC+':'ABO with equal budget, 3-7 days, winners to ASC+'}</p>
+      </div></div>
+
+    <div class="reco"><div class="reco-head"><span class="reco-icon">📈</span><h3>${t('rec.scale')}</h3></div>
+      <div class="reco-body">
+        <p><strong>${isAr?'متى تزيد':'When to scale'}:</strong> ${isAr?'CPA أقل من المستهدف 3-7 أيام':'CPA below target for 3-7 days'}</p>
+        <p><strong>${isAr?'التوسع الرأسي':'Vertical Scaling'}:</strong> ${isAr?'زيادة 15-30% كل 3 أيام':'15-30% increase every 3 days'}</p>
+        <p><strong>${isAr?'التوسع الأفقي':'Horizontal Scaling'}:</strong> ${isAr?'LAL أوسع (3% → 5% → 10%) + كريتيف جديد':'Wider LAL (3% → 5% → 10%) + new creative'}</p>
+        <p><strong>${isAr?'متى توقف':'When to stop'}:</strong> Frequency > 3.5, CPA +25%, CTR < 1%</p>
+      </div></div>
+  `;
+  document.querySelector('.step[data-step="4"]').classList.add('done');
+}
+
+function exportPlan() {
+  const isAr = LANG==='ar';
+  const lines = [];
+  const date = new Date().toLocaleDateString(isAr?'ar-EG':'en-US');
+  lines.push(`===== Marketing Strategy Plan =====`);
+  lines.push(`${isAr?'الكامبين':'Campaign'}: ${state.name||'—'}`);
+  lines.push(`${isAr?'التاريخ':'Date'}: ${date}\n`);
+  lines.push(`Product: ${state.prod_name||'—'} | ${state.prod_category||'—'}`);
+  lines.push(`UVP: ${state.prod_oneliner||'—'}`);
+  lines.push(`Features: ${[state.prod_f1,state.prod_f2,state.prod_f3].filter(Boolean).join(' | ')||'—'}`);
+  lines.push(`Benefits: ${[state.prod_b1,state.prod_b2,state.prod_b3].filter(Boolean).join(' | ')||'—'}`);
+  lines.push(`Archetype: ${archetypeLabel(state.archetype||'—')} | Awareness: ${awarenessLabel(state.awareness||'—')}\n`);
+  if (state.archetype && state.awareness) {
+    lines.push('━━━ HOOKS ━━━');
+    generateHooks(state).forEach((h,i)=>lines.push(`${i+1}. ${h}`));
+    lines.push('\n━━━ AD COPY ━━━');
+    generateCopy(state).forEach(v=>{lines.push(`-- ${v.framework} --`); lines.push(v.copy); lines.push('');});
+  }
+  const blob = new Blob([lines.join('\n')], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `strategy-${(state.name||'plan').replace(/\s+/g,'-')}-${Date.now()}.txt`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast(t('export.toast'));
+}
+
+// INIT
+loadAll();
+applyLang(LANG);
+</script>
+</body>
+</html>
