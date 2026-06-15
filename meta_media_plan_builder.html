@@ -103,6 +103,10 @@ td input:focus,td select:focus{outline:none;border-color:#378ADD}
 <div class="ctrl">
 <label>Client</label>
 <input type="text" id="clientName" value="" placeholder="Client / brand name" style="width:220px">
+<label style="min-width:50px">Logo</label>
+<input type="file" id="logoUpload" accept="image/*" onchange="handleLogo(this)" style="font-size:13px">
+<span id="logoStatus" style="font-size:12px;color:#888"></span>
+<img id="logoPreview" style="display:none;height:32px;border-radius:4px;border:0.5px solid #d3d1c7">
 </div>
 <div class="ctrl">
 <label>Total budget</label>
@@ -465,6 +469,25 @@ function exportText(){
 
 function printPlan(){window.print()}
 
+var logoBase64 = null;
+var logoAspect = 1;
+function handleLogo(input){
+  var file = input.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    logoBase64 = e.target.result;
+    var img = document.getElementById('logoPreview');
+    img.src = logoBase64;
+    img.style.display = 'inline-block';
+    document.getElementById('logoStatus').textContent = '';
+    var tmp = new Image();
+    tmp.onload = function(){logoAspect = tmp.width/tmp.height};
+    tmp.src = logoBase64;
+  };
+  reader.readAsDataURL(file);
+}
+
 function fmtNum(n){return Math.round(n).toLocaleString('en')}
 
 function getTableData(){
@@ -602,11 +625,17 @@ function exportPDF(){
   doc.setLineWidth(0.6);
   doc.line(0,16,W,16);
   doc.setLineWidth(0.2);
+  var logoOffset = M;
+  if(logoBase64){
+    var lh = 10, lw = lh*logoAspect;
+    doc.addImage(logoBase64,'PNG',M,3,lw,lh);
+    logoOffset = M+lw+4;
+  }
   var title = d.client ? 'Media Plan — '+d.client : 'Media Plan';
   doc.setTextColor(251,184,41);
   doc.setFontSize(16);
   doc.setFont(undefined,'bold');
-  doc.text(title,M,11);
+  doc.text(title,logoOffset,11);
   doc.setFontSize(9);
   doc.setFont(undefined,'normal');
   doc.setTextColor(200,210,230);
@@ -674,7 +703,9 @@ function exportPresentation(){
   function sHeader(t){
     doc.setFillColor(30,48,88);doc.rect(0,0,W,26,'F');
     doc.setDrawColor(251,184,41);doc.setLineWidth(0.8);doc.line(0,26,W,26);doc.setLineWidth(0.2);
-    doc.setTextColor(251,184,41);doc.setFontSize(18);doc.setFont(undefined,'bold');doc.text(t,M,17);doc.setFont(undefined,'normal');
+    var tx = M;
+    if(logoBase64){var lh2=14,lw2=lh2*logoAspect;doc.addImage(logoBase64,'PNG',M,6,lw2,lh2);tx=M+lw2+5}
+    doc.setTextColor(251,184,41);doc.setFontSize(18);doc.setFont(undefined,'bold');doc.text(t,tx,17);doc.setFont(undefined,'normal');
   }
   function slideFooter(p,total){
     doc.setFillColor(30,48,88);doc.rect(0,H-8,W,8,'F');
@@ -686,25 +717,27 @@ function exportPresentation(){
   // SLIDE 1: Title
   doc.setFillColor(30,48,88);
   doc.rect(0,0,W,H,'F');
+  if(logoBase64){var tlh=30,tlw=tlh*logoAspect;doc.addImage(logoBase64,'PNG',W/2-tlw/2,H/2-55,tlw,tlh)}
   doc.setDrawColor(251,184,41);doc.setLineWidth(1);
-  doc.line(W*0.25,H/2-35,W*0.75,H/2-35);
-  doc.line(W*0.25,H/2+30,W*0.75,H/2+30);
+  var lineTop = logoBase64 ? H/2-20 : H/2-35;
+  doc.line(W*0.25,lineTop,W*0.75,lineTop);
+  doc.line(W*0.25,H/2+35,W*0.75,H/2+35);
   doc.setLineWidth(0.2);
   doc.setTextColor(251,184,41);
   doc.setFontSize(38);
   doc.setFont(undefined,'bold');
-  doc.text('Media Plan',W/2,H/2-15,{align:'center'});
+  doc.text('Media Plan',W/2,H/2-2,{align:'center'});
   if(d.client){
     doc.setFontSize(22);
     doc.setTextColor(255,255,255);
-    doc.text(d.client,W/2,H/2+2,{align:'center'});
+    doc.text(d.client,W/2,H/2+14,{align:'center'});
   }
   doc.setFontSize(13);
   doc.setFont(undefined,'normal');
   doc.setTextColor(200,210,230);
-  doc.text(fmtNum(d.total)+' '+d.cur+' | '+d.dur+' months | '+d.obj.charAt(0).toUpperCase()+d.obj.slice(1),W/2,H/2+16,{align:'center'});
+  doc.text(fmtNum(d.total)+' '+d.cur+' | '+d.dur+' months | '+d.obj.charAt(0).toUpperCase()+d.obj.slice(1),W/2,H/2+24,{align:'center'});
   doc.setFontSize(10);
-  doc.text(new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),W/2,H/2+25,{align:'center'});
+  doc.text(new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),W/2,H/2+32,{align:'center'});
 
   // SLIDE 2: Overview
   doc.addPage([338,190],'landscape');
