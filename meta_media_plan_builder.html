@@ -461,382 +461,289 @@ function exportText(){
 
 function printPlan(){window.print()}
 
-function exportPDF(){
-  var jsPDF = window.jspdf.jsPDF;
-  var doc = new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+function fmtNum(n){return Math.round(n).toLocaleString('en')}
+
+function getTableData(){
   var total = parseFloat(document.getElementById('totalBudget').value)||0;
   var cur = document.getElementById('currency').value;
   var dur = document.getElementById('duration').value;
   var obj = document.getElementById('objective').value;
-  var W = 297, H = 210, M = 15;
+  var visCols = [];
+  optionalCols.forEach(function(c){if(visibleCols[c.key])visCols.push(c)});
+  var headers = ['Campaign','Platform','Stage','%','Budget'];
+  visCols.forEach(function(c){headers.push(c.label)});
+  var rows = [];
+  campaigns.forEach(function(c){
+    var row = [c.name,c.platform,STAGE_LABELS[c.stage],c.pct+'%',fmtNum(Math.round(total*c.pct/100))+' '+cur];
+    visCols.forEach(function(col){row.push(c[col.key]||'')});
+    rows.push(row);
+  });
+  var totalPct = campaigns.reduce(function(s,c){return s+c.pct},0);
+  var totalRow = ['Total','','',Math.round(totalPct)+'%',fmtNum(Math.round(total*totalPct/100))+' '+cur];
+  visCols.forEach(function(){totalRow.push('')});
+  return {headers:headers,rows:rows,totalRow:totalRow,total:total,cur:cur,dur:dur,obj:obj,totalPct:totalPct,visCols:visCols};
+}
 
-  doc.setFillColor(248,247,244);
-  doc.rect(0,0,W,H,'F');
+function drawTable(doc,data,x,y,tableW,rh){
+  var numCols = data.headers.length;
+  var colW = tableW/numCols;
+  var firstColW = colW*1.6;
+  var otherW = (tableW-firstColW)/(numCols-1);
+  var widths = [firstColW];
+  for(var i=1;i<numCols;i++) widths.push(otherW);
 
   doc.setFillColor(55,138,221);
-  doc.rect(0,0,W,12,'F');
+  doc.rect(x,y,tableW,rh,'F');
   doc.setTextColor(255,255,255);
-  doc.setFontSize(16);
-  doc.setFont(undefined,'bold');
-  doc.text('Media Plan',M,8.5);
-  doc.setFontSize(9);
-  doc.setFont(undefined,'normal');
-  doc.text('Generated '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),W-M,8.5,{align:'right'});
-
-  var y = 20;
-  doc.setTextColor(100,100,100);
   doc.setFontSize(8);
-  var summaryItems = [
-    'Budget: '+fmtNum(total)+' '+cur,
-    'Duration: '+dur+' months',
-    'Monthly: '+fmtNum(Math.round(total/parseInt(dur)))+' '+cur,
-    'Daily: '+fmtNum(Math.round(total/(parseInt(dur)*30)))+' '+cur,
-    'Objective: '+obj,
-    'Campaigns: '+campaigns.length
-  ];
-  var sx = M;
-  summaryItems.forEach(function(item){
-    var bw = doc.getTextWidth(item)+8;
-    doc.setFillColor(230,241,251);
-    doc.roundedRect(sx,y-3.5,bw,6,1.5,1.5,'F');
-    doc.setTextColor(12,68,124);
-    doc.text(item,sx+4,y);
-    sx += bw+4;
+  doc.setFont(undefined,'bold');
+  var cx = x;
+  data.headers.forEach(function(h,i){
+    doc.text(h,cx+3,y+rh*0.7);
+    cx += widths[i];
   });
-  y += 10;
+  y += rh;
 
-  // Funnel bar
+  doc.setFont(undefined,'normal');
+  doc.setFontSize(7.5);
+  data.rows.forEach(function(row,ri){
+    doc.setFillColor(ri%2===0?255:245, ri%2===0?255:244, ri%2===0?255:240);
+    doc.rect(x,y,tableW,rh,'F');
+    doc.setDrawColor(230,230,225);
+    doc.line(x,y+rh,x+tableW,y+rh);
+    cx = x;
+    doc.setTextColor(50,50,50);
+    row.forEach(function(cell,ci){
+      var txt = String(cell);
+      var maxW = widths[ci]-6;
+      if(doc.getTextWidth(txt)>maxW){
+        while(doc.getTextWidth(txt+'...')>maxW && txt.length>1) txt = txt.slice(0,-1);
+        txt += '...';
+      }
+      doc.text(txt,cx+3,y+rh*0.7);
+      cx += widths[ci];
+    });
+    y += rh;
+  });
+
+  doc.setFillColor(230,230,225);
+  doc.rect(x,y,tableW,rh,'F');
+  cx = x;
+  doc.setFont(undefined,'bold');
+  doc.setTextColor(50,50,50);
+  data.totalRow.forEach(function(cell,ci){
+    doc.text(String(cell),cx+3,y+rh*0.7);
+    cx += widths[ci];
+  });
+  doc.setFont(undefined,'normal');
+  return y+rh;
+}
+
+function drawFunnelBar(doc,x,y,w,h){
   var stages = {awareness:0,consideration:0,conversion:0,retention:0};
   campaigns.forEach(function(c){stages[c.stage]=(stages[c.stage]||0)+c.pct});
-  var totalPct = campaigns.reduce(function(s,c){return s+c.pct},0);
-  var barW = W-2*M, barH = 7, bx = M;
-  var funnelColors = {awareness:[127,119,221],consideration:[55,138,221],conversion:[29,158,117],retention:[239,159,39]};
+  var totalPct = campaigns.reduce(function(s,c){return s+c.pct},0)||1;
+  var fc = {awareness:[127,119,221],consideration:[55,138,221],conversion:[29,158,117],retention:[239,159,39]};
+  var bx = x;
   for(var st in stages){
     if(stages[st]>0){
-      var sw = barW*(stages[st]/(totalPct||1));
-      doc.setFillColor.apply(doc,funnelColors[st]);
-      doc.rect(bx,y,sw,barH,'F');
-      if(sw>12){
+      var sw = w*(stages[st]/totalPct);
+      doc.setFillColor.apply(doc,fc[st]);
+      doc.rect(bx,y,sw,h,'F');
+      if(sw>18){
         doc.setTextColor(255,255,255);
-        doc.setFontSize(7);
-        doc.text(STAGE_LABELS[st]+' '+Math.round(stages[st])+'%',bx+sw/2,y+barH/2+1,{align:'center'});
+        doc.setFontSize(h>10?9:7);
+        doc.text(STAGE_LABELS[st]+' '+Math.round(stages[st])+'%',bx+sw/2,y+h/2+1.5,{align:'center'});
       }
       bx += sw;
     }
   }
-  y += barH + 8;
+}
 
-  // Campaign table
-  doc.setFillColor(55,138,221);
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(8);
-  doc.setFont(undefined,'bold');
-  var cols = [{label:'Campaign',w:58},{label:'Platform',w:28},{label:'Stage',w:26},{label:'%',w:14},{label:'Budget',w:30}];
-  var visCols = [];
-  optionalCols.forEach(function(c){
-    if(visibleCols[c.key]) visCols.push(c);
-  });
-  visCols.forEach(function(c){cols.push({label:c.label,w:Math.floor((W-2*M-156)/visCols.length)})});
-  var cx = M;
-  var rh = 7;
-  cols.forEach(function(col){
-    doc.rect(cx,y,col.w,rh,'F');
-    doc.text(col.label,cx+2,y+5);
-    cx += col.w;
-  });
-  y += rh;
-  doc.setFont(undefined,'normal');
-
-  campaigns.forEach(function(c,i){
-    var isOdd = i%2===0;
-    if(isOdd){doc.setFillColor(255,255,255)}else{doc.setFillColor(245,244,240)}
-    cx = M;
-    var rowData = [c.name,c.platform,STAGE_LABELS[c.stage],c.pct+'%',fmtNum(Math.round(total*c.pct/100))+' '+cur];
-    visCols.forEach(function(col){rowData.push(c[col.key]||'')});
-    cols.forEach(function(col,j){
-      doc.rect(cx,y,col.w,rh,'F');
-      doc.setTextColor(40,40,40);
-      doc.setFontSize(7.5);
-      var txt = String(rowData[j]);
-      if(doc.getTextWidth(txt)>col.w-4) txt = txt.substring(0,Math.floor((col.w-6)/doc.getTextWidth('a')))+'.';
-      doc.text(txt,cx+2,y+5);
-      cx += col.w;
-    });
-    y += rh;
-    if(y>H-30){doc.addPage();y=M;doc.setFillColor(248,247,244);doc.rect(0,0,W,H,'F');}
-  });
-
-  // Total row
-  doc.setFillColor(230,230,225);
-  cx = M;
-  doc.setFont(undefined,'bold');
-  var totalData = ['Total','','',Math.round(totalPct)+'%',fmtNum(Math.round(total*totalPct/100))+' '+cur];
-  visCols.forEach(function(){totalData.push('')});
-  cols.forEach(function(col,j){
-    doc.rect(cx,y,col.w,rh,'F');
-    doc.setTextColor(40,40,40);
+function drawKPICards(doc,x,y,maxW,kw,kh){
+  var kg = 8;
+  var kx = x;
+  kpis.forEach(function(k){
+    if(kx+kw>x+maxW){kx=x;y+=kh+kg}
+    doc.setFillColor(241,239,232);
+    doc.roundedRect(kx,y,kw,kh,2,2,'F');
     doc.setFontSize(7.5);
-    doc.text(totalData[j],cx+2,y+5);
-    cx += col.w;
+    doc.setTextColor(136,136,136);
+    doc.text(k.label,kx+5,y+7);
+    doc.setFontSize(12);
+    doc.setTextColor(40,40,40);
+    doc.setFont(undefined,'bold');
+    doc.text(k.value+k.suffix,kx+5,y+kh-5);
+    doc.setFont(undefined,'normal');
+    kx += kw+kg;
   });
-  y += rh + 8;
+  return y+kh;
+}
+
+function exportPDF(){
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  var d = getTableData();
+  var W = 297, H = 210, M = 15, tableW = W-2*M;
+
+  doc.setFillColor(255,255,255);
+  doc.rect(0,0,W,H,'F');
+
+  doc.setFillColor(55,138,221);
+  doc.rect(0,0,W,14,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(16);
+  doc.setFont(undefined,'bold');
+  doc.text('Media Plan',M,10);
+  doc.setFontSize(9);
   doc.setFont(undefined,'normal');
+  doc.text('Generated '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),W-M,10,{align:'right'});
 
-  if(y>H-40){doc.addPage();y=M;doc.setFillColor(248,247,244);doc.rect(0,0,W,H,'F');}
+  var y = 22;
+  doc.setFontSize(8);
+  var pills = [
+    'Budget: '+fmtNum(d.total)+' '+d.cur,
+    'Duration: '+d.dur+' months',
+    'Monthly: '+fmtNum(Math.round(d.total/parseInt(d.dur)))+' '+d.cur,
+    'Daily: '+fmtNum(Math.round(d.total/(parseInt(d.dur)*30)))+' '+d.cur,
+    'Objective: '+d.obj,
+    'Campaigns: '+campaigns.length
+  ];
+  var sx = M;
+  pills.forEach(function(item){
+    var bw = doc.getTextWidth(item)+10;
+    doc.setFillColor(230,241,251);
+    doc.roundedRect(sx,y-4,bw,7,2,2,'F');
+    doc.setTextColor(12,68,124);
+    doc.text(item,sx+5,y);
+    sx += bw+4;
+  });
+  y += 10;
 
-  // KPIs
+  drawFunnelBar(doc,M,y,tableW,8);
+  y += 14;
+
+  y = drawTable(doc,d,M,y,tableW,7);
+  y += 10;
+
+  if(y>H-35){doc.addPage();doc.setFillColor(255,255,255);doc.rect(0,0,W,H,'F');y=M;}
+
   if(kpis.length>0){
     doc.setFontSize(10);
     doc.setTextColor(40,40,40);
     doc.setFont(undefined,'bold');
     doc.text('Expected results',M,y);
-    y += 6;
     doc.setFont(undefined,'normal');
-    var kw = 40, kh = 18, kg = 6;
-    var kx = M;
-    kpis.forEach(function(k){
-      if(kx+kw>W-M){kx=M;y+=kh+kg}
-      doc.setFillColor(241,239,232);
-      doc.roundedRect(kx,y,kw,kh,2,2,'F');
-      doc.setFontSize(7);
-      doc.setTextColor(136,136,136);
-      doc.text(k.label,kx+4,y+6);
-      doc.setFontSize(11);
-      doc.setTextColor(40,40,40);
-      doc.setFont(undefined,'bold');
-      doc.text(k.value+k.suffix,kx+4,y+14);
-      doc.setFont(undefined,'normal');
-      kx += kw+kg;
-    });
+    y += 6;
+    drawKPICards(doc,M,y,tableW,42,20);
   }
 
   doc.setTextColor(180,180,180);
   doc.setFontSize(7);
-  doc.text('Media Plan Builder — Built for performance marketers',W/2,H-5,{align:'center'});
-
+  doc.text('Media Plan Builder',W/2,H-5,{align:'center'});
   doc.save('media_plan.pdf');
 }
 
-function fmtNum(n){return Math.round(n).toLocaleString('en')}
-
 function exportPresentation(){
   var jsPDF = window.jspdf.jsPDF;
-  var total = parseFloat(document.getElementById('totalBudget').value)||0;
-  var cur = document.getElementById('currency').value;
-  var dur = document.getElementById('duration').value;
-  var obj = document.getElementById('objective').value;
+  var d = getTableData();
   var doc = new jsPDF({orientation:'landscape',unit:'mm',format:[338,190]});
-  var W = 338, H = 190, M = 20;
-  var funnelColors = {awareness:[127,119,221],consideration:[55,138,221],conversion:[29,158,117],retention:[239,159,39]};
-  var platColorRGB = {'Meta':[55,138,221],'Google Ads':[29,158,117],'TikTok':[127,119,221],'Snapchat':[239,159,39],'LinkedIn':[12,68,124],'Twitter/X':[68,68,68],'YouTube':[226,75,74],'Other':[136,136,136]};
+  var W = 338, H = 190, M = 20, tableW = W-2*M;
+  var fc = {awareness:[127,119,221],consideration:[55,138,221],conversion:[29,158,117],retention:[239,159,39]};
+  var pc = {'Meta':[55,138,221],'Google Ads':[29,158,117],'TikTok':[127,119,221],'Snapchat':[239,159,39],'LinkedIn':[12,68,124],'Twitter/X':[68,68,68],'YouTube':[226,75,74],'Other':[136,136,136]};
 
-  // --- SLIDE 1: Title ---
+  function slideBg(){doc.setFillColor(255,255,255);doc.rect(0,0,W,H,'F')}
+  function sHeader(t){doc.setFillColor(55,138,221);doc.rect(0,0,W,24,'F');doc.setTextColor(255,255,255);doc.setFontSize(18);doc.setFont(undefined,'bold');doc.text(t,M,16);doc.setFont(undefined,'normal')}
+
+  // SLIDE 1: Title
   doc.setFillColor(55,138,221);
   doc.rect(0,0,W,H,'F');
   doc.setTextColor(255,255,255);
   doc.setFontSize(36);
   doc.setFont(undefined,'bold');
-  doc.text('Media Plan',W/2,H/2-20,{align:'center'});
+  doc.text('Media Plan',W/2,H/2-22,{align:'center'});
   doc.setFontSize(16);
   doc.setFont(undefined,'normal');
-  doc.text(fmtNum(total)+' '+cur+' | '+dur+' months | '+obj.charAt(0).toUpperCase()+obj.slice(1),W/2,H/2+5,{align:'center'});
+  doc.text(fmtNum(d.total)+' '+d.cur+' | '+d.dur+' months | '+d.obj.charAt(0).toUpperCase()+d.obj.slice(1),W/2,H/2+2,{align:'center'});
   doc.setFontSize(11);
-  doc.text(new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),W/2,H/2+20,{align:'center'});
+  doc.text(new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),W/2,H/2+18,{align:'center'});
 
-  // --- SLIDE 2: Overview ---
+  // SLIDE 2: Overview
   doc.addPage([338,190],'landscape');
-  doc.setFillColor(248,247,244);
-  doc.rect(0,0,W,H,'F');
-  slideHeader(doc,'Plan overview',W,M);
-  var y = 35;
+  slideBg();
+  sHeader('Plan overview');
+  var y = 36;
   var cards = [
-    {label:'Total budget',val:fmtNum(total)+' '+cur},
-    {label:'Monthly',val:fmtNum(Math.round(total/parseInt(dur)))+' '+cur},
-    {label:'Daily',val:fmtNum(Math.round(total/(parseInt(dur)*30)))+' '+cur},
-    {label:'Campaigns',val:String(campaigns.length)}
+    {l:'Total budget',v:fmtNum(d.total)+' '+d.cur},
+    {l:'Monthly',v:fmtNum(Math.round(d.total/parseInt(d.dur)))+' '+d.cur},
+    {l:'Daily',v:fmtNum(Math.round(d.total/(parseInt(d.dur)*30)))+' '+d.cur},
+    {l:'Campaigns',v:String(campaigns.length)}
   ];
-  var cw = (W-2*M-3*12)/4;
+  var cw = (tableW-36)/4;
   cards.forEach(function(card,i){
     var cx = M+i*(cw+12);
-    doc.setFillColor(255,255,255);
-    doc.roundedRect(cx,y,cw,30,3,3,'F');
-    doc.setDrawColor(224,223,218);
-    doc.roundedRect(cx,y,cw,30,3,3,'S');
-    doc.setFontSize(9);
-    doc.setTextColor(136,136,136);
-    doc.text(card.label,cx+8,y+12);
-    doc.setFontSize(18);
-    doc.setTextColor(40,40,40);
-    doc.setFont(undefined,'bold');
-    doc.text(card.val,cx+8,y+24);
-    doc.setFont(undefined,'normal');
+    doc.setFillColor(248,247,244);
+    doc.roundedRect(cx,y,cw,32,3,3,'F');
+    doc.setFontSize(9);doc.setTextColor(136,136,136);doc.text(card.l,cx+10,y+13);
+    doc.setFontSize(20);doc.setTextColor(40,40,40);doc.setFont(undefined,'bold');doc.text(card.v,cx+10,y+26);doc.setFont(undefined,'normal');
   });
 
-  // Funnel bar
-  y = 80;
-  doc.setFontSize(11);
-  doc.setTextColor(40,40,40);
-  doc.setFont(undefined,'bold');
-  doc.text('Funnel breakdown',M,y);
-  doc.setFont(undefined,'normal');
+  y = 82;
+  doc.setFontSize(12);doc.setTextColor(40,40,40);doc.setFont(undefined,'bold');doc.text('Funnel breakdown',M,y);doc.setFont(undefined,'normal');
   y += 6;
+  drawFunnelBar(doc,M,y,tableW,14);
+  y += 22;
   var stages = {awareness:0,consideration:0,conversion:0,retention:0};
   campaigns.forEach(function(c){stages[c.stage]=(stages[c.stage]||0)+c.pct});
-  var totalPct = campaigns.reduce(function(s,c){return s+c.pct},0);
-  var barW = W-2*M, bx = M;
+  var lx = M;
   for(var st in stages){
     if(stages[st]>0){
-      var sw = barW*(stages[st]/(totalPct||1));
-      doc.setFillColor.apply(doc,funnelColors[st]);
-      doc.roundedRect(bx,y,sw,12,0,0,'F');
-      if(sw>20){
-        doc.setTextColor(255,255,255);
-        doc.setFontSize(9);
-        doc.text(STAGE_LABELS[st]+' '+Math.round(stages[st])+'%',bx+sw/2,y+8,{align:'center'});
-      }
-      bx += sw;
-    }
-  }
-  y += 20;
-  var lx = M;
-  for(var st2 in stages){
-    if(stages[st2]>0){
-      doc.setFillColor.apply(doc,funnelColors[st2]);
-      doc.circle(lx+3,y,3,'F');
-      doc.setTextColor(100,100,100);
-      doc.setFontSize(8);
-      doc.text(STAGE_LABELS[st2]+': '+Math.round(stages[st2])+'% — '+fmtNum(Math.round(total*stages[st2]/100))+' '+cur,lx+9,y+2);
-      lx += 75;
+      doc.setFillColor.apply(doc,fc[st]);
+      doc.circle(lx+3,y+1,3,'F');
+      doc.setTextColor(100,100,100);doc.setFontSize(8);
+      doc.text(STAGE_LABELS[st]+': '+Math.round(stages[st])+'% — '+fmtNum(Math.round(d.total*stages[st]/100))+' '+d.cur,lx+10,y+3);
+      lx += 80;
     }
   }
 
-  // Platform split
   y += 14;
-  doc.setFontSize(11);
-  doc.setTextColor(40,40,40);
-  doc.setFont(undefined,'bold');
-  doc.text('Platform split',M,y);
-  doc.setFont(undefined,'normal');
+  doc.setFontSize(12);doc.setTextColor(40,40,40);doc.setFont(undefined,'bold');doc.text('Platform split',M,y);doc.setFont(undefined,'normal');
   y += 6;
   var platTotals = {};
   campaigns.forEach(function(c){platTotals[c.platform]=(platTotals[c.platform]||0)+c.pct});
+  var totalPct = d.totalPct||1;
   var px = M;
   for(var pl in platTotals){
-    var pw = barW*(platTotals[pl]/(totalPct||1));
-    doc.setFillColor.apply(doc,platColorRGB[pl]||[136,136,136]);
-    doc.rect(px,y,pw,12,'F');
-    if(pw>25){
-      doc.setTextColor(255,255,255);
-      doc.setFontSize(9);
-      doc.text(pl+' '+Math.round(platTotals[pl])+'%',px+pw/2,y+8,{align:'center'});
-    }
+    var pw = tableW*(platTotals[pl]/totalPct);
+    doc.setFillColor.apply(doc,pc[pl]||[136,136,136]);
+    doc.rect(px,y,pw,14,'F');
+    if(pw>28){doc.setTextColor(255,255,255);doc.setFontSize(9);doc.text(pl+' '+Math.round(platTotals[pl])+'%',px+pw/2,y+9,{align:'center'})}
     px += pw;
   }
 
-  // --- SLIDE 3: Campaign details ---
+  // SLIDE 3: Campaign details
   doc.addPage([338,190],'landscape');
-  doc.setFillColor(248,247,244);
-  doc.rect(0,0,W,H,'F');
-  slideHeader(doc,'Campaign details',W,M);
-  y = 32;
-  var visCols = [];
-  optionalCols.forEach(function(c){if(visibleCols[c.key])visCols.push(c)});
-  var tcols = [{label:'Campaign',w:65},{label:'Platform',w:32},{label:'Stage',w:30},{label:'%',w:16},{label:'Budget',w:35}];
-  visCols.forEach(function(c){tcols.push({label:c.label,w:Math.floor((W-2*M-178)/visCols.length)})});
+  slideBg();
+  sHeader('Campaign details');
+  y = 34;
+  y = drawTable(doc,d,M,y,tableW,8);
 
-  doc.setFillColor(55,138,221);
-  var tcx = M;
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(8);
-  doc.setFont(undefined,'bold');
-  tcols.forEach(function(col){
-    doc.roundedRect(tcx,y,col.w,8,0,0,'F');
-    doc.text(col.label,tcx+3,y+5.5);
-    tcx += col.w;
-  });
-  y += 8;
-  doc.setFont(undefined,'normal');
-
-  campaigns.forEach(function(c,i){
-    if(y>H-20){doc.addPage([338,190],'landscape');doc.setFillColor(248,247,244);doc.rect(0,0,W,H,'F');slideHeader(doc,'Campaign details (cont.)',W,M);y=32;}
-    if(i%2===0){doc.setFillColor(255,255,255)}else{doc.setFillColor(245,244,240)}
-    tcx = M;
-    var rowData = [c.name,c.platform,STAGE_LABELS[c.stage],c.pct+'%',fmtNum(Math.round(total*c.pct/100))+' '+cur];
-    visCols.forEach(function(col){rowData.push(c[col.key]||'')});
-    tcols.forEach(function(col,j){
-      doc.rect(tcx,y,col.w,8,'F');
-      doc.setTextColor(50,50,50);
-      doc.setFontSize(7.5);
-      var txt = String(rowData[j]);
-      if(doc.getTextWidth(txt)>col.w-5) txt = txt.substring(0,Math.floor((col.w-6)/doc.getTextWidth('a')))+'.';
-      doc.text(txt,tcx+3,y+5.5);
-      tcx += col.w;
-    });
-    y += 8;
-  });
-
-  doc.setFillColor(230,230,225);
-  tcx = M;
-  doc.setFont(undefined,'bold');
-  var totRow = ['Total','','',Math.round(totalPct)+'%',fmtNum(Math.round(total*totalPct/100))+' '+cur];
-  visCols.forEach(function(){totRow.push('')});
-  tcols.forEach(function(col,j){
-    doc.rect(tcx,y,col.w,8,'F');
-    doc.setTextColor(50,50,50);
-    doc.setFontSize(7.5);
-    doc.text(totRow[j],tcx+3,y+5.5);
-    tcx += col.w;
-  });
-  doc.setFont(undefined,'normal');
-
-  // --- SLIDE 4: KPIs ---
+  // SLIDE 4: KPIs
   if(kpis.length>0){
     doc.addPage([338,190],'landscape');
-    doc.setFillColor(248,247,244);
-    doc.rect(0,0,W,H,'F');
-    slideHeader(doc,'Expected results',W,M);
-    y = 40;
-    var kw = 60, kh = 36, kg = 12;
-    var perRow = Math.floor((W-2*M+kg)/(kw+kg));
-    var kx = M;
-    kpis.forEach(function(k,i){
-      if(kx+kw>W-M){kx=M;y+=kh+kg}
-      doc.setFillColor(255,255,255);
-      doc.setDrawColor(224,223,218);
-      doc.roundedRect(kx,y,kw,kh,3,3,'FD');
-      doc.setFontSize(9);
-      doc.setTextColor(136,136,136);
-      doc.text(k.label,kx+8,y+12);
-      doc.setFontSize(18);
-      doc.setTextColor(40,40,40);
-      doc.setFont(undefined,'bold');
-      doc.text(k.value+k.suffix,kx+8,y+28);
-      doc.setFont(undefined,'normal');
-      kx += kw+kg;
-    });
+    slideBg();
+    sHeader('Expected results');
+    drawKPICards(doc,M,42,tableW,65,38);
   }
 
-  // Footer on all pages
   var pages = doc.internal.getNumberOfPages();
   for(var p=1;p<=pages;p++){
     doc.setPage(p);
-    doc.setTextColor(180,180,180);
-    doc.setFontSize(7);
+    doc.setTextColor(180,180,180);doc.setFontSize(7);
     doc.text('Media Plan Builder',M,H-6);
     doc.text('Page '+p+' of '+pages,W-M,H-6,{align:'right'});
   }
-
   doc.save('media_plan_presentation.pdf');
-}
-
-function slideHeader(doc,title,W,M){
-  doc.setFillColor(55,138,221);
-  doc.rect(0,0,W,22,'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(16);
-  doc.setFont(undefined,'bold');
-  doc.text(title,M,15);
-  doc.setFont(undefined,'normal');
 }
 
 function resetPlan(){
