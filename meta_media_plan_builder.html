@@ -101,6 +101,10 @@ td input:focus,td select:focus{outline:none;border-color:#378ADD}
 <div class="card">
 <div class="section-title"><i class="ti ti-settings" style="font-size:18px" aria-hidden="true"></i> Plan settings</div>
 <div class="ctrl">
+<label>Client</label>
+<input type="text" id="clientName" value="" placeholder="Client / brand name" style="width:220px">
+</div>
+<div class="ctrl">
 <label>Total budget</label>
 <input type="number" id="totalBudget" value="30000" min="100" step="1000" onchange="recalc()">
 <select id="currency" onchange="recalc()" style="width:90px">
@@ -468,6 +472,7 @@ function getTableData(){
   var cur = document.getElementById('currency').value;
   var dur = document.getElementById('duration').value;
   var obj = document.getElementById('objective').value;
+  var client = document.getElementById('clientName').value.trim();
   var visCols = [];
   optionalCols.forEach(function(c){if(visibleCols[c.key])visCols.push(c)});
   var headers = ['Campaign','Platform','Stage','%','Budget'];
@@ -481,7 +486,7 @@ function getTableData(){
   var totalPct = campaigns.reduce(function(s,c){return s+c.pct},0);
   var totalRow = ['Total','','',Math.round(totalPct)+'%',fmtNum(Math.round(total*totalPct/100))+' '+cur];
   visCols.forEach(function(){totalRow.push('')});
-  return {headers:headers,rows:rows,totalRow:totalRow,total:total,cur:cur,dur:dur,obj:obj,totalPct:totalPct,visCols:visCols};
+  return {headers:headers,rows:rows,totalRow:totalRow,total:total,cur:cur,dur:dur,obj:obj,totalPct:totalPct,visCols:visCols,client:client};
 }
 
 function drawTable(doc,data,x,y,tableW,rh){
@@ -492,9 +497,9 @@ function drawTable(doc,data,x,y,tableW,rh){
   var widths = [firstColW];
   for(var i=1;i<numCols;i++) widths.push(otherW);
 
-  doc.setFillColor(55,138,221);
+  doc.setFillColor(26,39,68);
   doc.rect(x,y,tableW,rh,'F');
-  doc.setTextColor(255,255,255);
+  doc.setTextColor(201,169,78);
   doc.setFontSize(8);
   doc.setFont(undefined,'bold');
   var cx = x;
@@ -526,11 +531,11 @@ function drawTable(doc,data,x,y,tableW,rh){
     y += rh;
   });
 
-  doc.setFillColor(230,230,225);
+  doc.setFillColor(36,52,88);
   doc.rect(x,y,tableW,rh,'F');
   cx = x;
   doc.setFont(undefined,'bold');
-  doc.setTextColor(50,50,50);
+  doc.setTextColor(201,169,78);
   data.totalRow.forEach(function(cell,ci){
     doc.text(String(cell),cx+3,y+rh*0.7);
     cx += widths[ci];
@@ -543,7 +548,7 @@ function drawFunnelBar(doc,x,y,w,h){
   var stages = {awareness:0,consideration:0,conversion:0,retention:0};
   campaigns.forEach(function(c){stages[c.stage]=(stages[c.stage]||0)+c.pct});
   var totalPct = campaigns.reduce(function(s,c){return s+c.pct},0)||1;
-  var fc = {awareness:[127,119,221],consideration:[55,138,221],conversion:[29,158,117],retention:[239,159,39]};
+  var fc = {awareness:[78,100,150],consideration:[26,39,68],conversion:[201,169,78],retention:[120,100,55]};
   var bx = x;
   for(var st in stages){
     if(stages[st]>0){
@@ -565,13 +570,15 @@ function drawKPICards(doc,x,y,maxW,kw,kh){
   var kx = x;
   kpis.forEach(function(k){
     if(kx+kw>x+maxW){kx=x;y+=kh+kg}
-    doc.setFillColor(241,239,232);
+    doc.setFillColor(240,238,232);
     doc.roundedRect(kx,y,kw,kh,2,2,'F');
+    doc.setDrawColor(201,169,78);
+    doc.roundedRect(kx,y,kw,kh,2,2,'S');
     doc.setFontSize(7.5);
-    doc.setTextColor(136,136,136);
+    doc.setTextColor(100,100,100);
     doc.text(k.label,kx+5,y+7);
     doc.setFontSize(12);
-    doc.setTextColor(40,40,40);
+    doc.setTextColor(26,39,68);
     doc.setFont(undefined,'bold');
     doc.text(k.value+k.suffix,kx+5,y+kh-5);
     doc.setFont(undefined,'normal');
@@ -589,17 +596,23 @@ function exportPDF(){
   doc.setFillColor(255,255,255);
   doc.rect(0,0,W,H,'F');
 
-  doc.setFillColor(55,138,221);
-  doc.rect(0,0,W,14,'F');
-  doc.setTextColor(255,255,255);
+  doc.setFillColor(26,39,68);
+  doc.rect(0,0,W,16,'F');
+  doc.setDrawColor(201,169,78);
+  doc.setLineWidth(0.6);
+  doc.line(0,16,W,16);
+  doc.setLineWidth(0.2);
+  var title = d.client ? 'Media Plan — '+d.client : 'Media Plan';
+  doc.setTextColor(201,169,78);
   doc.setFontSize(16);
   doc.setFont(undefined,'bold');
-  doc.text('Media Plan',M,10);
+  doc.text(title,M,11);
   doc.setFontSize(9);
   doc.setFont(undefined,'normal');
-  doc.text('Generated '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),W-M,10,{align:'right'});
+  doc.setTextColor(180,190,210);
+  doc.text('Generated '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),W-M,11,{align:'right'});
 
-  var y = 22;
+  var y = 24;
   doc.setFontSize(8);
   var pills = [
     'Budget: '+fmtNum(d.total)+' '+d.cur,
@@ -612,9 +625,11 @@ function exportPDF(){
   var sx = M;
   pills.forEach(function(item){
     var bw = doc.getTextWidth(item)+10;
-    doc.setFillColor(230,241,251);
+    doc.setFillColor(240,238,232);
     doc.roundedRect(sx,y-4,bw,7,2,2,'F');
-    doc.setTextColor(12,68,124);
+    doc.setDrawColor(201,169,78);
+    doc.roundedRect(sx,y-4,bw,7,2,2,'S');
+    doc.setTextColor(26,39,68);
     doc.text(item,sx+5,y);
     sx += bw+4;
   });
@@ -630,7 +645,7 @@ function exportPDF(){
 
   if(kpis.length>0){
     doc.setFontSize(10);
-    doc.setTextColor(40,40,40);
+    doc.setTextColor(26,39,68);
     doc.setFont(undefined,'bold');
     doc.text('Expected results',M,y);
     doc.setFont(undefined,'normal');
@@ -638,10 +653,13 @@ function exportPDF(){
     drawKPICards(doc,M,y,tableW,42,20);
   }
 
-  doc.setTextColor(180,180,180);
+  doc.setFillColor(26,39,68);
+  doc.rect(0,H-8,W,8,'F');
+  doc.setTextColor(201,169,78);
   doc.setFontSize(7);
-  doc.text('Media Plan Builder',W/2,H-5,{align:'center'});
-  doc.save('media_plan.pdf');
+  doc.text(d.client||'Media Plan Builder',M,H-3);
+  doc.text('Page 1',W-M,H-3,{align:'right'});
+  doc.save((d.client?d.client.replace(/\s+/g,'_')+'_':'')+'media_plan.pdf');
 }
 
 function exportPresentation(){
@@ -649,30 +667,50 @@ function exportPresentation(){
   var d = getTableData();
   var doc = new jsPDF({orientation:'landscape',unit:'mm',format:[338,190]});
   var W = 338, H = 190, M = 20, tableW = W-2*M;
-  var fc = {awareness:[127,119,221],consideration:[55,138,221],conversion:[29,158,117],retention:[239,159,39]};
+  var fc = {awareness:[78,100,150],consideration:[26,39,68],conversion:[201,169,78],retention:[120,100,55]};
   var pc = {'Meta':[55,138,221],'Google Ads':[29,158,117],'TikTok':[127,119,221],'Snapchat':[239,159,39],'LinkedIn':[12,68,124],'Twitter/X':[68,68,68],'YouTube':[226,75,74],'Other':[136,136,136]};
 
   function slideBg(){doc.setFillColor(255,255,255);doc.rect(0,0,W,H,'F')}
-  function sHeader(t){doc.setFillColor(55,138,221);doc.rect(0,0,W,24,'F');doc.setTextColor(255,255,255);doc.setFontSize(18);doc.setFont(undefined,'bold');doc.text(t,M,16);doc.setFont(undefined,'normal')}
+  function sHeader(t){
+    doc.setFillColor(26,39,68);doc.rect(0,0,W,26,'F');
+    doc.setDrawColor(201,169,78);doc.setLineWidth(0.8);doc.line(0,26,W,26);doc.setLineWidth(0.2);
+    doc.setTextColor(201,169,78);doc.setFontSize(18);doc.setFont(undefined,'bold');doc.text(t,M,17);doc.setFont(undefined,'normal');
+  }
+  function slideFooter(p,total){
+    doc.setFillColor(26,39,68);doc.rect(0,H-8,W,8,'F');
+    doc.setTextColor(201,169,78);doc.setFontSize(7);
+    doc.text(d.client||'Media Plan Builder',M,H-3);
+    doc.text('Page '+p+' of '+total,W-M,H-3,{align:'right'});
+  }
 
   // SLIDE 1: Title
-  doc.setFillColor(55,138,221);
+  doc.setFillColor(26,39,68);
   doc.rect(0,0,W,H,'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(36);
+  doc.setDrawColor(201,169,78);doc.setLineWidth(1);
+  doc.line(W*0.25,H/2-35,W*0.75,H/2-35);
+  doc.line(W*0.25,H/2+30,W*0.75,H/2+30);
+  doc.setLineWidth(0.2);
+  doc.setTextColor(201,169,78);
+  doc.setFontSize(38);
   doc.setFont(undefined,'bold');
-  doc.text('Media Plan',W/2,H/2-22,{align:'center'});
-  doc.setFontSize(16);
+  doc.text('Media Plan',W/2,H/2-15,{align:'center'});
+  if(d.client){
+    doc.setFontSize(22);
+    doc.setTextColor(255,255,255);
+    doc.text(d.client,W/2,H/2+2,{align:'center'});
+  }
+  doc.setFontSize(13);
   doc.setFont(undefined,'normal');
-  doc.text(fmtNum(d.total)+' '+d.cur+' | '+d.dur+' months | '+d.obj.charAt(0).toUpperCase()+d.obj.slice(1),W/2,H/2+2,{align:'center'});
-  doc.setFontSize(11);
-  doc.text(new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),W/2,H/2+18,{align:'center'});
+  doc.setTextColor(180,190,210);
+  doc.text(fmtNum(d.total)+' '+d.cur+' | '+d.dur+' months | '+d.obj.charAt(0).toUpperCase()+d.obj.slice(1),W/2,H/2+16,{align:'center'});
+  doc.setFontSize(10);
+  doc.text(new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),W/2,H/2+25,{align:'center'});
 
   // SLIDE 2: Overview
   doc.addPage([338,190],'landscape');
   slideBg();
   sHeader('Plan overview');
-  var y = 36;
+  var y = 38;
   var cards = [
     {l:'Total budget',v:fmtNum(d.total)+' '+d.cur},
     {l:'Monthly',v:fmtNum(Math.round(d.total/parseInt(d.dur)))+' '+d.cur},
@@ -682,14 +720,16 @@ function exportPresentation(){
   var cw = (tableW-36)/4;
   cards.forEach(function(card,i){
     var cx = M+i*(cw+12);
-    doc.setFillColor(248,247,244);
+    doc.setFillColor(240,238,232);
     doc.roundedRect(cx,y,cw,32,3,3,'F');
-    doc.setFontSize(9);doc.setTextColor(136,136,136);doc.text(card.l,cx+10,y+13);
-    doc.setFontSize(20);doc.setTextColor(40,40,40);doc.setFont(undefined,'bold');doc.text(card.v,cx+10,y+26);doc.setFont(undefined,'normal');
+    doc.setDrawColor(201,169,78);
+    doc.roundedRect(cx,y,cw,32,3,3,'S');
+    doc.setFontSize(9);doc.setTextColor(100,100,100);doc.text(card.l,cx+10,y+13);
+    doc.setFontSize(20);doc.setTextColor(26,39,68);doc.setFont(undefined,'bold');doc.text(card.v,cx+10,y+26);doc.setFont(undefined,'normal');
   });
 
-  y = 82;
-  doc.setFontSize(12);doc.setTextColor(40,40,40);doc.setFont(undefined,'bold');doc.text('Funnel breakdown',M,y);doc.setFont(undefined,'normal');
+  y = 84;
+  doc.setFontSize(12);doc.setTextColor(26,39,68);doc.setFont(undefined,'bold');doc.text('Funnel breakdown',M,y);doc.setFont(undefined,'normal');
   y += 6;
   drawFunnelBar(doc,M,y,tableW,14);
   y += 22;
@@ -700,14 +740,14 @@ function exportPresentation(){
     if(stages[st]>0){
       doc.setFillColor.apply(doc,fc[st]);
       doc.circle(lx+3,y+1,3,'F');
-      doc.setTextColor(100,100,100);doc.setFontSize(8);
+      doc.setTextColor(80,80,80);doc.setFontSize(8);
       doc.text(STAGE_LABELS[st]+': '+Math.round(stages[st])+'% — '+fmtNum(Math.round(d.total*stages[st]/100))+' '+d.cur,lx+10,y+3);
       lx += 80;
     }
   }
 
   y += 14;
-  doc.setFontSize(12);doc.setTextColor(40,40,40);doc.setFont(undefined,'bold');doc.text('Platform split',M,y);doc.setFont(undefined,'normal');
+  doc.setFontSize(12);doc.setTextColor(26,39,68);doc.setFont(undefined,'bold');doc.text('Platform split',M,y);doc.setFont(undefined,'normal');
   y += 6;
   var platTotals = {};
   campaigns.forEach(function(c){platTotals[c.platform]=(platTotals[c.platform]||0)+c.pct});
@@ -725,7 +765,7 @@ function exportPresentation(){
   doc.addPage([338,190],'landscape');
   slideBg();
   sHeader('Campaign details');
-  y = 34;
+  y = 36;
   y = drawTable(doc,d,M,y,tableW,8);
 
   // SLIDE 4: KPIs
@@ -733,17 +773,15 @@ function exportPresentation(){
     doc.addPage([338,190],'landscape');
     slideBg();
     sHeader('Expected results');
-    drawKPICards(doc,M,42,tableW,65,38);
+    drawKPICards(doc,M,44,tableW,65,38);
   }
 
   var pages = doc.internal.getNumberOfPages();
   for(var p=1;p<=pages;p++){
     doc.setPage(p);
-    doc.setTextColor(180,180,180);doc.setFontSize(7);
-    doc.text('Media Plan Builder',M,H-6);
-    doc.text('Page '+p+' of '+pages,W-M,H-6,{align:'right'});
+    slideFooter(p,pages);
   }
-  doc.save('media_plan_presentation.pdf');
+  doc.save((d.client?d.client.replace(/\s+/g,'_')+'_':'')+'media_plan_presentation.pdf');
 }
 
 function resetPlan(){
