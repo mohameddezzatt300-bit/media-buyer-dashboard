@@ -1,33 +1,32 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Meta Ads Media Plan Builder</title>
+<title>Media Plan Builder</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI','SF Pro',Tahoma,sans-serif;background:#f8f7f4;color:#1a1a1a;direction:rtl;min-height:100vh}
+body{font-family:'Segoe UI','SF Pro',system-ui,sans-serif;background:#f8f7f4;color:#1a1a1a;min-height:100vh}
 @media(prefers-color-scheme:dark){
 body{background:#1a1a1a;color:#e8e8e8}
 .card{background:#242424;border-color:#333}
 .mc{background:#2a2a2a}
 th{background:#2a2a2a;color:#aaa;border-color:#333}
 td{border-color:#333;color:#e8e8e8}
-td input,td select,.budget-row input,.budget-row select{background:#2a2a2a;color:#e8e8e8;border-color:#444}
+td input,td select,.ctrl input,.ctrl select{background:#2a2a2a;color:#e8e8e8;border-color:#444}
 .total-row{background:#2a2a2a}
 .tbl-wrap{border-color:#333}
-.add-btn:hover{background:#2a2a2a}
+.add-btn:hover,.toggle-btn:hover{background:#2a2a2a}
 .actions-bar button{background:#2a2a2a;color:#e8e8e8;border-color:#444}
 .actions-bar button:hover{background:#333}
-.pill-aw{background:#3C3489;color:#CECBF6}
-.pill-co{background:#0C447C;color:#B5D4F4}
-.pill-cv{background:#085041;color:#9FE1CB}
-.pill-rt{background:#633806;color:#FAC775}
+.toggle-btn{color:#e8e8e8;border-color:#444}
+.toggle-btn.active{background:#185FA5;border-color:#185FA5}
+.kpi-input{background:#2a2a2a;color:#e8e8e8;border-color:#444}
 }
-.container{max-width:960px;margin:0 auto;padding:2rem 1.5rem}
-.hdr{display:flex;align-items:center;gap:12px;margin-bottom:2rem}
+.container{max-width:1060px;margin:0 auto;padding:2rem 1.5rem}
+.hdr{display:flex;align-items:center;gap:12px;margin-bottom:2rem;flex-wrap:wrap}
 .hdr h1{font-size:22px;font-weight:500}
 .hdr .badge{font-size:12px;padding:4px 14px;border-radius:8px;background:#E6F1FB;color:#0C447C}
 @media(prefers-color-scheme:dark){.hdr .badge{background:#0C447C;color:#B5D4F4}}
@@ -36,24 +35,28 @@ td input,td select,.budget-row input,.budget-row select{background:#2a2a2a;color
 .mc{background:#f1efe8;border-radius:8px;padding:1rem}
 .mc .lbl{font-size:13px;color:#888;margin-bottom:4px}
 .mc .val{font-size:22px;font-weight:500}
-.mc .val.green{color:#1D9E75}
 .section-title{font-size:16px;font-weight:500;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.budget-row{display:flex;align-items:center;gap:12px;margin-bottom:1rem;flex-wrap:wrap}
-.budget-row label{font-size:14px;color:#888;min-width:100px}
-.budget-row input,.budget-row select{height:38px;font-size:14px;border:0.5px solid #d3d1c7;border-radius:8px;padding:0 12px;background:#fff;color:#1a1a1a}
-.budget-row input:focus,.budget-row select:focus{outline:none;border-color:#378ADD}
+.ctrl{display:flex;align-items:center;gap:12px;margin-bottom:1rem;flex-wrap:wrap}
+.ctrl label{font-size:14px;color:#888;min-width:80px}
+.ctrl input,.ctrl select{height:38px;font-size:14px;border:0.5px solid #d3d1c7;border-radius:8px;padding:0 12px;background:#fff;color:#1a1a1a}
+.ctrl input:focus,.ctrl select:focus{outline:none;border-color:#378ADD}
 .tbl-wrap{overflow-x:auto;border:0.5px solid #e0dfda;border-radius:12px}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:#f8f7f4;color:#888;font-weight:500;text-align:right;padding:12px;border-bottom:0.5px solid #e0dfda;white-space:nowrap}
+th{background:#f8f7f4;color:#888;font-weight:500;text-align:left;padding:12px;border-bottom:0.5px solid #e0dfda;white-space:nowrap}
 td{padding:10px 12px;border-bottom:0.5px solid #e0dfda;vertical-align:middle}
 tr:last-child td{border-bottom:none}
 td input,td select{width:100%;height:34px;font-size:13px;border:0.5px solid #d3d1c7;border-radius:8px;padding:0 8px;background:#fff;color:#1a1a1a}
 td input:focus,td select:focus{outline:none;border-color:#378ADD}
 .del-btn{background:none;border:none;color:#E24B4A;cursor:pointer;font-size:18px;padding:4px 8px;border-radius:6px}
 .del-btn:hover{background:#FCEBEB}
+@media(prefers-color-scheme:dark){.del-btn:hover{background:#501313}}
 .add-btn{display:inline-flex;align-items:center;gap:6px;margin-top:14px;cursor:pointer;font-size:14px;background:none;border:0.5px solid #d3d1c7;border-radius:8px;padding:8px 16px;color:#1a1a1a}
 .add-btn:hover{background:#f1efe8}
-@media(prefers-color-scheme:dark){.add-btn{color:#e8e8e8;border-color:#444}.del-btn:hover{background:#501313}}
+@media(prefers-color-scheme:dark){.add-btn{color:#e8e8e8;border-color:#444}}
+.toggle-btn{display:inline-flex;align-items:center;gap:5px;font-size:13px;padding:6px 14px;border:0.5px solid #d3d1c7;border-radius:8px;cursor:pointer;background:none;color:#1a1a1a;transition:all 0.15s}
+.toggle-btn:hover{background:#f1efe8}
+.toggle-btn.active{background:#378ADD;color:#fff;border-color:#378ADD}
+.toggles{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 .funnel-bar{display:flex;height:44px;border-radius:8px;overflow:hidden;margin-bottom:10px}
 .funnel-bar div{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;transition:width 0.3s}
 .funnel-labels{display:flex;gap:16px;font-size:12px;color:#888;flex-wrap:wrap}
@@ -65,16 +68,22 @@ td input:focus,td select:focus{outline:none;border-color:#378ADD}
 .actions-bar button:hover{background:#f1efe8}
 .total-row{background:#f8f7f4;font-weight:500}
 .total-row td{border-bottom:none}
-.pill{display:inline-block;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:500}
-.pill-aw{background:#EEEDFE;color:#3C3489}
-.pill-co{background:#E6F1FB;color:#0C447C}
-.pill-cv{background:#E1F5EE;color:#085041}
-.pill-rt{background:#FAEEDA;color:#633806}
+.kpi-input{width:120px;height:34px;font-size:14px;border:0.5px solid #d3d1c7;border-radius:8px;padding:0 10px;background:#fff;color:#1a1a1a;text-align:center;font-weight:500}
+.kpi-input:focus{outline:none;border-color:#378ADD}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.kpi-card{background:#f1efe8;border-radius:8px;padding:1rem;display:flex;flex-direction:column;gap:6px}
+@media(prefers-color-scheme:dark){.kpi-card{background:#2a2a2a}}
+.kpi-card .lbl{font-size:13px;color:#888}
+.kpi-card .kpi-row{display:flex;align-items:center;gap:8px}
+.kpi-card .remove-kpi{background:none;border:none;color:#E24B4A;cursor:pointer;font-size:14px;padding:2px}
+.platform-colors{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#888;margin-bottom:8px}
+.platform-colors span{display:flex;align-items:center;gap:4px}
+.platform-colors .dot{width:10px;height:10px;border-radius:2px}
 .footer{text-align:center;margin-top:2rem;font-size:12px;color:#888;padding:1rem}
 @media(max-width:600px){
-.budget-row{flex-direction:column;align-items:stretch}
-.budget-row label{min-width:auto}
-.budget-row input,.budget-row select{width:100%}
+.ctrl{flex-direction:column;align-items:stretch}
+.ctrl label{min-width:auto}
+.ctrl input,.ctrl select{width:100%}
 .metrics{grid-template-columns:repeat(2,1fr)}
 }
 </style>
@@ -82,37 +91,40 @@ td input:focus,td select:focus{outline:none;border-color:#378ADD}
 <body>
 <div class="container">
 <div class="hdr">
-<i class="ti ti-brand-meta" style="font-size:28px;color:#378ADD" aria-hidden="true"></i>
-<h1>Meta Ads media plan builder</h1>
-<span class="badge">تفاعلي</span>
+<i class="ti ti-chart-dots-3" style="font-size:28px;color:#378ADD" aria-hidden="true"></i>
+<h1>Media plan builder</h1>
+<span class="badge">Interactive</span>
 </div>
 
 <div class="card">
-<div class="section-title"><i class="ti ti-settings" style="font-size:18px" aria-hidden="true"></i> إعدادات البلان</div>
-<div class="budget-row">
-<label>إجمالي البادجت</label>
-<input type="number" id="totalBudget" value="30000" min="1000" step="1000" onchange="recalc()">
+<div class="section-title"><i class="ti ti-settings" style="font-size:18px" aria-hidden="true"></i> Plan settings</div>
+<div class="ctrl">
+<label>Total budget</label>
+<input type="number" id="totalBudget" value="30000" min="100" step="1000" onchange="recalc()">
 <select id="currency" onchange="recalc()" style="width:90px">
 <option value="EGP" selected>EGP</option>
 <option value="USD">USD</option>
 <option value="SAR">SAR</option>
 <option value="AED">AED</option>
+<option value="EUR">EUR</option>
+<option value="GBP">GBP</option>
 </select>
 </div>
-<div class="budget-row">
-<label>المدة</label>
+<div class="ctrl">
+<label>Duration</label>
 <select id="duration" onchange="recalc()" style="width:160px">
-<option value="1">شهر واحد</option>
-<option value="2">شهرين</option>
-<option value="3" selected>3 شهور</option>
-<option value="6">6 شهور</option>
+<option value="1">1 month</option>
+<option value="2">2 months</option>
+<option value="3" selected>3 months</option>
+<option value="6">6 months</option>
+<option value="12">12 months</option>
 </select>
-<label style="min-width:80px">الهدف</label>
-<select id="objective" style="width:180px" onchange="recalc()">
+<label>Objective</label>
+<select id="objective" onchange="recalc()" style="width:180px">
 <option value="conversions" selected>Conversions</option>
-<option value="leads">Lead Generation</option>
+<option value="leads">Lead generation</option>
 <option value="traffic">Traffic</option>
-<option value="awareness">Brand Awareness</option>
+<option value="awareness">Brand awareness</option>
 </select>
 </div>
 </div>
@@ -120,290 +132,341 @@ td input:focus,td select:focus{outline:none;border-color:#378ADD}
 <div id="metricsArea" class="metrics"></div>
 
 <div class="card">
-<div class="section-title"><i class="ti ti-chart-pie" style="font-size:18px" aria-hidden="true"></i> توزيع الفانل</div>
+<div class="section-title"><i class="ti ti-chart-pie" style="font-size:18px" aria-hidden="true"></i> Funnel breakdown</div>
 <div id="funnelBar" class="funnel-bar"></div>
 <div id="funnelLabels" class="funnel-labels"></div>
 </div>
 
 <div class="card">
-<div class="section-title"><i class="ti ti-list" style="font-size:18px" aria-hidden="true"></i> الكامبينز</div>
+<div class="section-title"><i class="ti ti-list" style="font-size:18px" aria-hidden="true"></i> Campaigns</div>
+<div class="toggles" id="colToggles"></div>
 <div class="tbl-wrap">
-<table id="campTable">
-<thead>
-<tr>
-<th style="width:22%">اسم الكامبين</th>
-<th style="width:13%">المرحلة</th>
-<th style="width:10%">النسبة %</th>
-<th style="width:13%">البادجت</th>
-<th style="width:13%">الهدف</th>
-<th style="width:14%">الجمهور</th>
-<th style="width:10%">الاستهداف</th>
-<th style="width:5%"></th>
-</tr>
-</thead>
-<tbody id="campBody"></tbody>
-</table>
+<table><thead><tr id="campHead"></tr></thead><tbody id="campBody"></tbody></table>
 </div>
-<button class="add-btn" onclick="addCampaign()"><i class="ti ti-plus" style="font-size:16px" aria-hidden="true"></i> إضافة كامبين</button>
+<button class="add-btn" onclick="addCampaign()"><i class="ti ti-plus" style="font-size:16px" aria-hidden="true"></i> Add campaign</button>
 </div>
 
 <div class="card">
-<div class="section-title"><i class="ti ti-chart-bar" style="font-size:18px" aria-hidden="true"></i> توزيع البادجت</div>
-<div class="chart-wrap"><canvas id="budgetChart" role="img" aria-label="توزيع البادجت على الكامبينز">Budget distribution across campaigns</canvas></div>
+<div class="section-title"><i class="ti ti-chart-bar" style="font-size:18px" aria-hidden="true"></i> Budget distribution</div>
+<div id="platformLegend" class="platform-colors"></div>
+<div class="chart-wrap"><canvas id="budgetChart" role="img" aria-label="Budget distribution across campaigns">Budget distribution</canvas></div>
 </div>
 
 <div class="card">
-<div class="section-title"><i class="ti ti-target" style="font-size:18px" aria-hidden="true"></i> مؤشرات الأداء المتوقعة</div>
-<div id="kpiArea"></div>
+<div class="section-title" style="margin-bottom:8px"><i class="ti ti-target" style="font-size:18px" aria-hidden="true"></i> Expected results</div>
+<p style="font-size:13px;color:#888;margin-bottom:14px">Click any value to edit. Add or remove KPIs as needed.</p>
+<div id="kpiArea" class="kpi-grid"></div>
+<button class="add-btn" onclick="addKPI()" style="margin-top:12px"><i class="ti ti-plus" style="font-size:16px" aria-hidden="true"></i> Add KPI</button>
 </div>
 
 <div class="actions-bar">
-<button onclick="exportCSV()"><i class="ti ti-file-spreadsheet" style="font-size:16px" aria-hidden="true"></i> تصدير CSV</button>
-<button onclick="exportText()"><i class="ti ti-download" style="font-size:16px" aria-hidden="true"></i> تصدير TXT</button>
-<button onclick="printPlan()"><i class="ti ti-printer" style="font-size:16px" aria-hidden="true"></i> طباعة</button>
-<button onclick="resetPlan()"><i class="ti ti-refresh" style="font-size:16px" aria-hidden="true"></i> إعادة تعيين</button>
+<button onclick="exportCSV()"><i class="ti ti-file-spreadsheet" style="font-size:16px" aria-hidden="true"></i> Export CSV</button>
+<button onclick="exportText()"><i class="ti ti-download" style="font-size:16px" aria-hidden="true"></i> Export TXT</button>
+<button onclick="printPlan()"><i class="ti ti-printer" style="font-size:16px" aria-hidden="true"></i> Print</button>
+<button onclick="resetPlan()"><i class="ti ti-refresh" style="font-size:16px" aria-hidden="true"></i> Reset</button>
 </div>
 
-<div class="footer">Meta Ads Media Plan Builder &mdash; Built for performance marketers</div>
+<div class="footer">Media Plan Builder &mdash; Built for performance marketers</div>
 </div>
 
 <script>
-const COLORS={awareness:'#7F77DD',consideration:'#378ADD',conversion:'#1D9E75',retention:'#EF9F27'};
-const STAGE_AR={awareness:'وعي',consideration:'اهتمام',conversion:'تحويل',retention:'استبقاء'};
-const PILL_CLS={awareness:'pill-aw',consideration:'pill-co',conversion:'pill-cv',retention:'pill-rt'};
+var FUNNEL_COLORS = {awareness:'#7F77DD',consideration:'#378ADD',conversion:'#1D9E75',retention:'#EF9F27'};
+var STAGE_LABELS = {awareness:'Awareness',consideration:'Consideration',conversion:'Conversion',retention:'Retention'};
+var PLATFORM_COLORS = {'Meta':'#378ADD','Google Ads':'#1D9E75','TikTok':'#7F77DD','Snapchat':'#EF9F27','LinkedIn':'#0C447C','Twitter/X':'#444','YouTube':'#E24B4A','Other':'#888'};
+var PLATFORMS = Object.keys(PLATFORM_COLORS);
 
-let campaigns=[
-  {name:'TOF — Broad Awareness',stage:'awareness',pct:15,goal:'Reach',audience:'Broad 18-45',targeting:'Broad'},
-  {name:'TOF — Interest Targeting',stage:'awareness',pct:10,goal:'Video Views',audience:'Interests',targeting:'Interest'},
-  {name:'MOF — Engagers Retarget',stage:'consideration',pct:20,goal:'Traffic',audience:'Engaged 7d',targeting:'Custom Audience'},
-  {name:'MOF — Lookalike',stage:'consideration',pct:15,goal:'Traffic',audience:'LAL 1-3%',targeting:'Lookalike'},
-  {name:'BOF — Retargeting',stage:'conversion',pct:25,goal:'Purchase',audience:'ATC/VC 14d',targeting:'Custom Audience'},
-  {name:'BOF — DPA Catalog',stage:'conversion',pct:15,goal:'Purchase',audience:'Catalog viewers',targeting:'DPA'}
+var optionalCols = [
+  {key:'goal',label:'Goal',default:true},
+  {key:'targeting',label:'Targeting',default:true},
+  {key:'audience',label:'Audience',default:true},
+  {key:'placement',label:'Placement',default:false},
+  {key:'notes',label:'Notes',default:false}
+];
+var visibleCols = {};
+optionalCols.forEach(function(c){visibleCols[c.key]=c.default});
+
+var campaigns = [
+  {name:'TOF — Broad Awareness',platform:'Meta',stage:'awareness',pct:15,goal:'Reach',audience:'Broad 18-45',targeting:'Broad',placement:'',notes:''},
+  {name:'TOF — Interest Targeting',platform:'Meta',stage:'awareness',pct:10,goal:'Video views',audience:'Interests',targeting:'Interest-based',placement:'',notes:''},
+  {name:'MOF — Engagers',platform:'Meta',stage:'consideration',pct:15,goal:'Traffic',audience:'Engaged 7d',targeting:'Custom audience',placement:'',notes:''},
+  {name:'MOF — Lookalike',platform:'Meta',stage:'consideration',pct:10,goal:'Traffic',audience:'LAL 1-3%',targeting:'Lookalike',placement:'',notes:''},
+  {name:'BOF — Retargeting',platform:'Meta',stage:'conversion',pct:20,goal:'Purchase',audience:'ATC/VC 14d',targeting:'Custom audience',placement:'',notes:''},
+  {name:'BOF — DPA Catalog',platform:'Meta',stage:'conversion',pct:10,goal:'Purchase',audience:'Catalog viewers',targeting:'DPA',placement:'',notes:''},
+  {name:'Google — Search Brand',platform:'Google Ads',stage:'conversion',pct:10,goal:'Purchase',audience:'Brand keywords',targeting:'Search',placement:'',notes:''},
+  {name:'Google — PMax',platform:'Google Ads',stage:'consideration',pct:10,goal:'ROAS',audience:'All signals',targeting:'PMax',placement:'',notes:''}
 ];
 
-let chart=null;
+var kpis = [];
+var chart = null;
+
+function initKPIs(){
+  var obj = document.getElementById('objective').value;
+  var cur = document.getElementById('currency').value;
+  var isEGP = cur === 'EGP';
+  if(obj==='conversions'){
+    kpis=[
+      {label:'CPM',value:isEGP?'45':'8',suffix:' '+cur},
+      {label:'CTR',value:'1.2',suffix:'%'},
+      {label:'CVR',value:'2.5',suffix:'%'},
+      {label:'CPA',value:isEGP?'150':'25',suffix:' '+cur},
+      {label:'ROAS',value:'3.0',suffix:'x'}
+    ];
+  }else if(obj==='leads'){
+    kpis=[
+      {label:'CPM',value:isEGP?'35':'6',suffix:' '+cur},
+      {label:'CTR',value:'1.5',suffix:'%'},
+      {label:'Lead CVR',value:'8',suffix:'%'},
+      {label:'CPL',value:isEGP?'50':'8',suffix:' '+cur}
+    ];
+  }else if(obj==='traffic'){
+    kpis=[
+      {label:'CPC',value:isEGP?'3':'0.50',suffix:' '+cur},
+      {label:'CTR',value:'2.0',suffix:'%'},
+      {label:'Bounce rate',value:'45',suffix:'%'}
+    ];
+  }else{
+    kpis=[
+      {label:'CPM',value:isEGP?'25':'4',suffix:' '+cur},
+      {label:'Reach',value:'500000',suffix:''},
+      {label:'Frequency',value:'2.5',suffix:'x'}
+    ];
+  }
+}
 
 function fmt(n){
-  const c=document.getElementById('currency').value;
-  return Math.round(n).toLocaleString('en')+' '+c;
+  return Math.round(n).toLocaleString('en')+' '+document.getElementById('currency').value;
 }
 
 function recalc(){
-  const total=parseFloat(document.getElementById('totalBudget').value)||0;
-  const dur=parseInt(document.getElementById('duration').value);
-  const monthly=total/dur;
-  const daily=total/(dur*30);
-  const totalPct=campaigns.reduce((s,c)=>s+c.pct,0);
+  var total = parseFloat(document.getElementById('totalBudget').value)||0;
+  var dur = parseInt(document.getElementById('duration').value);
+  var monthly = total/dur;
+  var daily = total/(dur*30);
 
-  document.getElementById('metricsArea').innerHTML=
-    '<div class="mc"><div class="lbl">إجمالي البادجت</div><div class="val">'+fmt(total)+'</div></div>'+
-    '<div class="mc"><div class="lbl">شهري</div><div class="val">'+fmt(monthly)+'</div></div>'+
-    '<div class="mc"><div class="lbl">يومي</div><div class="val">'+fmt(daily)+'</div></div>'+
-    '<div class="mc"><div class="lbl">عدد الكامبينز</div><div class="val">'+campaigns.length+'</div></div>';
+  document.getElementById('metricsArea').innerHTML =
+    '<div class="mc"><div class="lbl">Total budget</div><div class="val">'+fmt(total)+'</div></div>'+
+    '<div class="mc"><div class="lbl">Monthly</div><div class="val">'+fmt(monthly)+'</div></div>'+
+    '<div class="mc"><div class="lbl">Daily</div><div class="val">'+fmt(daily)+'</div></div>'+
+    '<div class="mc"><div class="lbl">Campaigns</div><div class="val">'+campaigns.length+'</div></div>';
 
-  const stages={awareness:0,consideration:0,conversion:0,retention:0};
+  var stages = {awareness:0,consideration:0,conversion:0,retention:0};
   campaigns.forEach(function(c){stages[c.stage]=(stages[c.stage]||0)+c.pct});
+  var totalPct = campaigns.reduce(function(s,c){return s+c.pct},0);
 
-  var barHTML='';
-  var labelsHTML='';
+  var barHTML = '';
+  var labelsHTML = '';
   for(var s in stages){
-    var p=stages[s];
+    var p = stages[s];
     if(p>0){
-      barHTML+='<div style="width:'+(totalPct?Math.round(p/totalPct*100):0)+'%;background:'+COLORS[s]+';color:#fff">'+Math.round(p)+'%</div>';
-      labelsHTML+='<span><span class="dot" style="background:'+COLORS[s]+'"></span>'+STAGE_AR[s]+' — '+Math.round(p)+'% — '+fmt(total*p/100)+'</span>';
+      barHTML += '<div style="width:'+(totalPct?Math.round(p/totalPct*100):0)+'%;background:'+FUNNEL_COLORS[s]+'">'+Math.round(p)+'%</div>';
+      labelsHTML += '<span><span class="dot" style="background:'+FUNNEL_COLORS[s]+'"></span>'+STAGE_LABELS[s]+' — '+Math.round(p)+'% — '+fmt(total*p/100)+'</span>';
     }
   }
-  document.getElementById('funnelBar').innerHTML=barHTML;
-  document.getElementById('funnelLabels').innerHTML=labelsHTML;
+  document.getElementById('funnelBar').innerHTML = barHTML;
+  document.getElementById('funnelLabels').innerHTML = labelsHTML;
 
+  renderToggles();
   renderTable(total);
   renderChart(total);
-  renderKPIs(total,dur);
+  renderKPIs(total);
+}
+
+function renderToggles(){
+  var html = '';
+  optionalCols.forEach(function(c){
+    var active = visibleCols[c.key];
+    html += '<button class="toggle-btn'+(active?' active':'')+'" onclick="toggleCol(\''+c.key+'\')">'+
+      '<i class="ti ti-'+(active?'eye':'eye-off')+'" style="font-size:14px" aria-hidden="true"></i> '+c.label+'</button>';
+  });
+  document.getElementById('colToggles').innerHTML = html;
+}
+
+function toggleCol(key){
+  visibleCols[key] = !visibleCols[key];
+  recalc();
 }
 
 function renderTable(total){
-  var tbody=document.getElementById('campBody');
-  var html='';
-  campaigns.forEach(function(c,i){
-    var amt=total*c.pct/100;
-    html+='<tr>'+
-      '<td><input value="'+c.name+'" onchange="campaigns['+i+'].name=this.value;recalc()"></td>'+
-      '<td><select onchange="campaigns['+i+'].stage=this.value;recalc()">'+
-        ['awareness','consideration','conversion','retention'].map(function(s){return '<option value="'+s+'"'+(c.stage===s?' selected':'')+'>'+STAGE_AR[s]+'</option>'}).join('')+
-      '</select></td>'+
-      '<td><input type="number" value="'+c.pct+'" min="0" max="100" step="1" onchange="campaigns['+i+'].pct=parseFloat(this.value)||0;recalc()"></td>'+
-      '<td style="font-weight:500;white-space:nowrap">'+fmt(amt)+'</td>'+
-      '<td><input value="'+c.goal+'" onchange="campaigns['+i+'].goal=this.value"></td>'+
-      '<td><input value="'+c.audience+'" onchange="campaigns['+i+'].audience=this.value"></td>'+
-      '<td><input value="'+(c.targeting||'')+'" onchange="campaigns['+i+'].targeting=this.value"></td>'+
-      '<td style="text-align:center"><button class="del-btn" onclick="delCampaign('+i+')" aria-label="حذف"><i class="ti ti-trash" aria-hidden="true"></i></button></td>'+
-    '</tr>';
+  var head = document.getElementById('campHead');
+  var tbody = document.getElementById('campBody');
+  var hhtml = '<th>Campaign</th><th>Platform</th><th>Stage</th><th>%</th><th>Budget</th>';
+  optionalCols.forEach(function(c){
+    if(visibleCols[c.key]) hhtml += '<th>'+c.label+'</th>';
   });
-  var totalPct=campaigns.reduce(function(s,c){return s+c.pct},0);
-  html+='<tr class="total-row">'+
-    '<td>الإجمالي</td><td></td>'+
-    '<td style="color:'+(Math.round(totalPct)===100?'#1D9E75':'#E24B4A')+'">'+Math.round(totalPct)+'%</td>'+
-    '<td>'+fmt(total*totalPct/100)+'</td><td></td><td></td><td></td><td></td>'+
-  '</tr>';
-  tbody.innerHTML=html;
+  hhtml += '<th></th>';
+  head.innerHTML = hhtml;
+
+  var html = '';
+  campaigns.forEach(function(c,i){
+    var amt = total*c.pct/100;
+    html += '<tr>';
+    html += '<td><input value="'+esc(c.name)+'" onchange="campaigns['+i+'].name=this.value"></td>';
+    html += '<td><select onchange="campaigns['+i+'].platform=this.value;recalc()">';
+    PLATFORMS.forEach(function(p){html += '<option value="'+p+'"'+(c.platform===p?' selected':'')+'>'+p+'</option>'});
+    html += '</select></td>';
+    html += '<td><select onchange="campaigns['+i+'].stage=this.value;recalc()">';
+    ['awareness','consideration','conversion','retention'].forEach(function(s){
+      html += '<option value="'+s+'"'+(c.stage===s?' selected':'')+'>'+STAGE_LABELS[s]+'</option>';
+    });
+    html += '</select></td>';
+    html += '<td><input type="number" value="'+c.pct+'" min="0" max="100" step="1" style="width:70px" onchange="campaigns['+i+'].pct=parseFloat(this.value)||0;recalc()"></td>';
+    html += '<td style="font-weight:500;white-space:nowrap">'+fmt(amt)+'</td>';
+    optionalCols.forEach(function(col){
+      if(visibleCols[col.key]){
+        html += '<td><input value="'+esc(c[col.key]||'')+'" onchange="campaigns['+i+'].'+col.key+'=this.value"></td>';
+      }
+    });
+    html += '<td style="text-align:center"><button class="del-btn" onclick="delCampaign('+i+')" aria-label="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button></td>';
+    html += '</tr>';
+  });
+
+  var totalPct = campaigns.reduce(function(s,c){return s+c.pct},0);
+  var visCnt = optionalCols.filter(function(c){return visibleCols[c.key]}).length;
+  html += '<tr class="total-row"><td>Total</td><td></td><td></td>';
+  html += '<td style="color:'+(Math.round(totalPct)===100?'#1D9E75':'#E24B4A')+'">'+Math.round(totalPct)+'%</td>';
+  html += '<td>'+fmt(total*totalPct/100)+'</td>';
+  for(var x=0;x<visCnt;x++) html += '<td></td>';
+  html += '<td></td></tr>';
+  tbody.innerHTML = html;
 }
 
 function renderChart(total){
-  var ctx=document.getElementById('budgetChart');
-  var labels=campaigns.map(function(c){return c.name});
-  var data=campaigns.map(function(c){return Math.round(total*c.pct/100)});
-  var bg=campaigns.map(function(c){return COLORS[c.stage]});
+  var ctx = document.getElementById('budgetChart');
+  var labels = campaigns.map(function(c){return c.name});
+  var data = campaigns.map(function(c){return Math.round(total*c.pct/100)});
+  var bg = campaigns.map(function(c){return PLATFORM_COLORS[c.platform]||'#888'});
 
-  if(chart){chart.destroy()}
-  var isDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches;
-  chart=new Chart(ctx,{
+  var usedPlatforms = {};
+  campaigns.forEach(function(c){usedPlatforms[c.platform]=true});
+  var legendHTML = '';
+  for(var p in usedPlatforms){
+    legendHTML += '<span><span class="dot" style="background:'+(PLATFORM_COLORS[p]||'#888')+'"></span>'+p+'</span>';
+  }
+  document.getElementById('platformLegend').innerHTML = legendHTML;
+
+  if(chart) chart.destroy();
+  var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches;
+  chart = new Chart(ctx,{
     type:'bar',
-    data:{labels:labels,datasets:[{data:data,backgroundColor:bg,borderRadius:4,barThickness:26}]},
+    data:{labels:labels,datasets:[{data:data,backgroundColor:bg,borderRadius:4,barThickness:24}]},
     options:{
       indexAxis:'y',
       responsive:true,
       maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return fmt(ctx.raw)}}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return fmt(c.raw)}}}},
       scales:{
-        x:{grid:{display:false,color:isDark?'#333':'#e0dfda'},ticks:{color:isDark?'#aaa':'#888',callback:function(v){return Math.round(v).toLocaleString()}}},
+        x:{grid:{display:false},ticks:{color:isDark?'#aaa':'#888',callback:function(v){return Math.round(v).toLocaleString()}}},
         y:{grid:{display:false},ticks:{color:isDark?'#ccc':'#444',font:{size:11}}}
       }
     }
   });
 }
 
-function renderKPIs(total,dur){
-  var obj=document.getElementById('objective').value;
-  var cur=document.getElementById('currency').value;
-  var isEGP=cur==='EGP';
-  var kpis=[];
-  if(obj==='conversions'){
-    var cpm=isEGP?45:8;
-    var ctr=1.2;
-    var cvr=2.5;
-    var impressions=Math.round(total/(cpm/1000));
-    var clicks=Math.round(impressions*ctr/100);
-    var conversions=Math.round(clicks*cvr/100);
-    var cpa=conversions>0?Math.round(total/conversions):0;
-    kpis=[
-      {label:'Impressions (تقديري)',value:impressions.toLocaleString()},
-      {label:'Clicks (تقديري)',value:clicks.toLocaleString()},
-      {label:'CTR المتوقع',value:ctr+'%'},
-      {label:'Conversions (تقديري)',value:conversions.toLocaleString()},
-      {label:'CPA المتوقع',value:fmt(cpa)},
-      {label:'CPM المتوقع',value:fmt(cpm)}
-    ];
-  }else if(obj==='leads'){
-    var cpm=isEGP?35:6;
-    var ctr=1.5;
-    var lcvr=8;
-    var impressions=Math.round(total/(cpm/1000));
-    var clicks=Math.round(impressions*ctr/100);
-    var leads=Math.round(clicks*lcvr/100);
-    var cpl=leads>0?Math.round(total/leads):0;
-    kpis=[
-      {label:'Impressions (تقديري)',value:impressions.toLocaleString()},
-      {label:'Clicks (تقديري)',value:clicks.toLocaleString()},
-      {label:'CTR المتوقع',value:ctr+'%'},
-      {label:'Leads (تقديري)',value:leads.toLocaleString()},
-      {label:'CPL المتوقع',value:fmt(cpl)},
-      {label:'Lead CVR',value:lcvr+'%'}
-    ];
-  }else if(obj==='traffic'){
-    var cpc=isEGP?3:0.5;
-    var clicks=Math.round(total/cpc);
-    var ctr=2.0;
-    var impressions=Math.round(clicks/(ctr/100));
-    kpis=[
-      {label:'Impressions (تقديري)',value:impressions.toLocaleString()},
-      {label:'Clicks (تقديري)',value:clicks.toLocaleString()},
-      {label:'CPC المتوقع',value:fmt(cpc)},
-      {label:'CTR المتوقع',value:ctr+'%'}
-    ];
-  }else{
-    var cpm=isEGP?25:4;
-    var impressions=Math.round(total/(cpm/1000));
-    var reach=Math.round(impressions*0.65);
-    kpis=[
-      {label:'Impressions (تقديري)',value:impressions.toLocaleString()},
-      {label:'Reach (تقديري)',value:reach.toLocaleString()},
-      {label:'CPM المتوقع',value:fmt(cpm)},
-      {label:'Frequency المتوقع',value:'2.5'}
-    ];
-  }
-  var html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">';
-  kpis.forEach(function(k){
-    html+='<div class="mc"><div class="lbl">'+k.label+'</div><div class="val" style="font-size:18px">'+k.value+'</div></div>';
+function renderKPIs(total){
+  var html = '';
+  kpis.forEach(function(k,i){
+    html += '<div class="kpi-card"><div class="lbl">'+esc(k.label)+'</div><div class="kpi-row">'+
+      '<input class="kpi-input" value="'+esc(k.value)+'" onchange="kpis['+i+'].value=this.value">'+
+      '<span style="font-size:13px;color:#888">'+esc(k.suffix)+'</span>'+
+      '<button class="remove-kpi" onclick="removeKPI('+i+')" aria-label="Remove"><i class="ti ti-x" aria-hidden="true"></i></button>'+
+      '</div></div>';
   });
-  html+='</div>';
-  document.getElementById('kpiArea').innerHTML=html;
+  document.getElementById('kpiArea').innerHTML = html;
+}
+
+function addKPI(){
+  var label = prompt('KPI name (e.g. ROAS, CPA, CTR):');
+  if(!label) return;
+  var suffix = prompt('Unit (e.g. %, x, EGP, USD — or leave empty):') || '';
+  kpis.push({label:label,value:'0',suffix:suffix});
+  renderKPIs(parseFloat(document.getElementById('totalBudget').value)||0);
+}
+
+function removeKPI(i){
+  kpis.splice(i,1);
+  renderKPIs(parseFloat(document.getElementById('totalBudget').value)||0);
 }
 
 function addCampaign(){
-  campaigns.push({name:'كامبين جديد',stage:'consideration',pct:5,goal:'Traffic',audience:'Custom',targeting:'Interest'});
+  campaigns.push({name:'New campaign',platform:'Meta',stage:'consideration',pct:5,goal:'',audience:'',targeting:'',placement:'',notes:''});
   recalc();
 }
 
 function delCampaign(i){
-  if(campaigns.length<=1)return;
+  if(campaigns.length<=1) return;
   campaigns.splice(i,1);
   recalc();
 }
 
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+
 function exportCSV(){
-  var total=parseFloat(document.getElementById('totalBudget').value)||0;
-  var cur=document.getElementById('currency').value;
-  var lines=['Campaign,Stage,Percentage,Budget ('+cur+'),Goal,Audience,Targeting'];
+  var total = parseFloat(document.getElementById('totalBudget').value)||0;
+  var cur = document.getElementById('currency').value;
+  var headers = ['Campaign','Platform','Stage','%','Budget ('+cur+')'];
+  optionalCols.forEach(function(c){if(visibleCols[c.key]) headers.push(c.label)});
+  var lines = [headers.join(',')];
   campaigns.forEach(function(c){
-    lines.push('"'+c.name+'",'+c.stage+','+c.pct+'%,'+Math.round(total*c.pct/100)+','+c.goal+',"'+c.audience+'","'+(c.targeting||'')+'"');
+    var row = ['"'+c.name+'"',c.platform,c.stage,c.pct,Math.round(total*c.pct/100)];
+    optionalCols.forEach(function(col){if(visibleCols[col.key]) row.push('"'+(c[col.key]||'')+'"')});
+    lines.push(row.join(','));
   });
-  var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='meta_media_plan.csv';
+  lines.push('');
+  lines.push('Expected Results');
+  kpis.forEach(function(k){lines.push(k.label+','+k.value+k.suffix)});
+  var blob = new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'media_plan.csv';
   a.click();
 }
 
 function exportText(){
-  var total=parseFloat(document.getElementById('totalBudget').value)||0;
-  var cur=document.getElementById('currency').value;
-  var dur=document.getElementById('duration').value;
-  var obj=document.getElementById('objective').value;
-  var txt='META ADS MEDIA PLAN\n';
-  txt+='====================\n\n';
-  txt+='Budget: '+fmt(total)+' | Duration: '+dur+' months | Objective: '+obj+'\n';
-  txt+='Monthly: '+fmt(total/parseInt(dur))+' | Daily: '+fmt(total/(parseInt(dur)*30))+'\n\n';
-  txt+='CAMPAIGNS\n';
-  txt+='Campaign | Stage | % | Budget | Goal | Audience | Targeting\n';
-  txt+='---'.repeat(20)+'\n';
+  var total = parseFloat(document.getElementById('totalBudget').value)||0;
+  var dur = document.getElementById('duration').value;
+  var obj = document.getElementById('objective').value;
+  var txt = 'MEDIA PLAN\n==========\n\n';
+  txt += 'Budget: '+fmt(total)+' | Duration: '+dur+' months | Objective: '+obj+'\n';
+  txt += 'Monthly: '+fmt(total/parseInt(dur))+' | Daily: '+fmt(total/(parseInt(dur)*30))+'\n\n';
+  txt += 'CAMPAIGNS\n';
   campaigns.forEach(function(c){
-    txt+=c.name+' | '+c.stage+' | '+c.pct+'% | '+fmt(total*c.pct/100)+' | '+c.goal+' | '+c.audience+' | '+(c.targeting||'')+'\n';
+    txt += '- '+c.name+' ['+c.platform+'] | '+c.stage+' | '+c.pct+'% | '+fmt(total*c.pct/100);
+    if(visibleCols.goal && c.goal) txt += ' | Goal: '+c.goal;
+    if(visibleCols.audience && c.audience) txt += ' | Audience: '+c.audience;
+    if(visibleCols.targeting && c.targeting) txt += ' | Targeting: '+c.targeting;
+    txt += '\n';
   });
-  var blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='meta_media_plan.txt';
+  txt += '\nEXPECTED RESULTS\n';
+  kpis.forEach(function(k){txt += '- '+k.label+': '+k.value+k.suffix+'\n'});
+  var blob = new Blob([txt],{type:'text/plain;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'media_plan.txt';
   a.click();
 }
 
 function printPlan(){window.print()}
 
 function resetPlan(){
-  campaigns=[
-    {name:'TOF — Broad Awareness',stage:'awareness',pct:15,goal:'Reach',audience:'Broad 18-45',targeting:'Broad'},
-    {name:'TOF — Interest Targeting',stage:'awareness',pct:10,goal:'Video Views',audience:'Interests',targeting:'Interest'},
-    {name:'MOF — Engagers Retarget',stage:'consideration',pct:20,goal:'Traffic',audience:'Engaged 7d',targeting:'Custom Audience'},
-    {name:'MOF — Lookalike',stage:'consideration',pct:15,goal:'Traffic',audience:'LAL 1-3%',targeting:'Lookalike'},
-    {name:'BOF — Retargeting',stage:'conversion',pct:25,goal:'Purchase',audience:'ATC/VC 14d',targeting:'Custom Audience'},
-    {name:'BOF — DPA Catalog',stage:'conversion',pct:15,goal:'Purchase',audience:'Catalog viewers',targeting:'DPA'}
+  campaigns = [
+    {name:'TOF — Broad Awareness',platform:'Meta',stage:'awareness',pct:15,goal:'Reach',audience:'Broad 18-45',targeting:'Broad',placement:'',notes:''},
+    {name:'TOF — Interest Targeting',platform:'Meta',stage:'awareness',pct:10,goal:'Video views',audience:'Interests',targeting:'Interest-based',placement:'',notes:''},
+    {name:'MOF — Engagers',platform:'Meta',stage:'consideration',pct:15,goal:'Traffic',audience:'Engaged 7d',targeting:'Custom audience',placement:'',notes:''},
+    {name:'MOF — Lookalike',platform:'Meta',stage:'consideration',pct:10,goal:'Traffic',audience:'LAL 1-3%',targeting:'Lookalike',placement:'',notes:''},
+    {name:'BOF — Retargeting',platform:'Meta',stage:'conversion',pct:20,goal:'Purchase',audience:'ATC/VC 14d',targeting:'Custom audience',placement:'',notes:''},
+    {name:'BOF — DPA Catalog',platform:'Meta',stage:'conversion',pct:10,goal:'Purchase',audience:'Catalog viewers',targeting:'DPA',placement:'',notes:''},
+    {name:'Google — Search Brand',platform:'Google Ads',stage:'conversion',pct:10,goal:'Purchase',audience:'Brand keywords',targeting:'Search',placement:'',notes:''},
+    {name:'Google — PMax',platform:'Google Ads',stage:'consideration',pct:10,goal:'ROAS',audience:'All signals',targeting:'PMax',placement:'',notes:''}
   ];
-  document.getElementById('totalBudget').value=30000;
-  document.getElementById('currency').value='EGP';
-  document.getElementById('duration').value='3';
-  document.getElementById('objective').value='conversions';
+  document.getElementById('totalBudget').value = 30000;
+  document.getElementById('currency').value = 'EGP';
+  document.getElementById('duration').value = '3';
+  document.getElementById('objective').value = 'conversions';
+  initKPIs();
   recalc();
 }
 
+initKPIs();
 recalc();
 </script>
 </body>
