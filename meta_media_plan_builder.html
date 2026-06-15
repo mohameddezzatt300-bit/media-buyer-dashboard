@@ -497,9 +497,9 @@ function drawTable(doc,data,x,y,tableW,rh){
   var widths = [firstColW];
   for(var i=1;i<numCols;i++) widths.push(otherW);
 
-  doc.setFillColor(26,39,68);
+  doc.setFillColor(30,48,88);
   doc.rect(x,y,tableW,rh,'F');
-  doc.setTextColor(201,169,78);
+  doc.setTextColor(251,184,41);
   doc.setFontSize(8);
   doc.setFont(undefined,'bold');
   var cx = x;
@@ -531,11 +531,11 @@ function drawTable(doc,data,x,y,tableW,rh){
     y += rh;
   });
 
-  doc.setFillColor(36,52,88);
+  doc.setFillColor(40,58,100);
   doc.rect(x,y,tableW,rh,'F');
   cx = x;
   doc.setFont(undefined,'bold');
-  doc.setTextColor(201,169,78);
+  doc.setTextColor(251,184,41);
   data.totalRow.forEach(function(cell,ci){
     doc.text(String(cell),cx+3,y+rh*0.7);
     cx += widths[ci];
@@ -548,7 +548,7 @@ function drawFunnelBar(doc,x,y,w,h){
   var stages = {awareness:0,consideration:0,conversion:0,retention:0};
   campaigns.forEach(function(c){stages[c.stage]=(stages[c.stage]||0)+c.pct});
   var totalPct = campaigns.reduce(function(s,c){return s+c.pct},0)||1;
-  var fc = {awareness:[78,100,150],consideration:[26,39,68],conversion:[201,169,78],retention:[120,100,55]};
+  var fc = {awareness:[70,90,140],consideration:[30,48,88],conversion:[251,184,41],retention:[232,147,46]};
   var bx = x;
   for(var st in stages){
     if(stages[st]>0){
@@ -572,13 +572,13 @@ function drawKPICards(doc,x,y,maxW,kw,kh){
     if(kx+kw>x+maxW){kx=x;y+=kh+kg}
     doc.setFillColor(240,238,232);
     doc.roundedRect(kx,y,kw,kh,2,2,'F');
-    doc.setDrawColor(201,169,78);
+    doc.setDrawColor(251,184,41);
     doc.roundedRect(kx,y,kw,kh,2,2,'S');
     doc.setFontSize(7.5);
     doc.setTextColor(100,100,100);
     doc.text(k.label,kx+5,y+7);
     doc.setFontSize(12);
-    doc.setTextColor(26,39,68);
+    doc.setTextColor(30,48,88);
     doc.setFont(undefined,'bold');
     doc.text(k.value+k.suffix,kx+5,y+kh-5);
     doc.setFont(undefined,'normal');
@@ -596,20 +596,20 @@ function exportPDF(){
   doc.setFillColor(255,255,255);
   doc.rect(0,0,W,H,'F');
 
-  doc.setFillColor(26,39,68);
+  doc.setFillColor(30,48,88);
   doc.rect(0,0,W,16,'F');
-  doc.setDrawColor(201,169,78);
+  doc.setDrawColor(251,184,41);
   doc.setLineWidth(0.6);
   doc.line(0,16,W,16);
   doc.setLineWidth(0.2);
   var title = d.client ? 'Media Plan — '+d.client : 'Media Plan';
-  doc.setTextColor(201,169,78);
+  doc.setTextColor(251,184,41);
   doc.setFontSize(16);
   doc.setFont(undefined,'bold');
   doc.text(title,M,11);
   doc.setFontSize(9);
   doc.setFont(undefined,'normal');
-  doc.setTextColor(180,190,210);
+  doc.setTextColor(200,210,230);
   doc.text('Generated '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),W-M,11,{align:'right'});
 
   var y = 24;
@@ -627,9 +627,9 @@ function exportPDF(){
     var bw = doc.getTextWidth(item)+10;
     doc.setFillColor(240,238,232);
     doc.roundedRect(sx,y-4,bw,7,2,2,'F');
-    doc.setDrawColor(201,169,78);
+    doc.setDrawColor(251,184,41);
     doc.roundedRect(sx,y-4,bw,7,2,2,'S');
-    doc.setTextColor(26,39,68);
+    doc.setTextColor(30,48,88);
     doc.text(item,sx+5,y);
     sx += bw+4;
   });
@@ -645,7 +645,7 @@ function exportPDF(){
 
   if(kpis.length>0){
     doc.setFontSize(10);
-    doc.setTextColor(26,39,68);
+    doc.setTextColor(30,48,88);
     doc.setFont(undefined,'bold');
     doc.text('Expected results',M,y);
     doc.setFont(undefined,'normal');
@@ -653,9 +653,9 @@ function exportPDF(){
     drawKPICards(doc,M,y,tableW,42,20);
   }
 
-  doc.setFillColor(26,39,68);
+  doc.setFillColor(30,48,88);
   doc.rect(0,H-8,W,8,'F');
-  doc.setTextColor(201,169,78);
+  doc.setTextColor(251,184,41);
   doc.setFontSize(7);
   doc.text(d.client||'Media Plan Builder',M,H-3);
   doc.text('Page 1',W-M,H-3,{align:'right'});
@@ -667,30 +667,30 @@ function exportPresentation(){
   var d = getTableData();
   var doc = new jsPDF({orientation:'landscape',unit:'mm',format:[338,190]});
   var W = 338, H = 190, M = 20, tableW = W-2*M;
-  var fc = {awareness:[78,100,150],consideration:[26,39,68],conversion:[201,169,78],retention:[120,100,55]};
+  var fc = {awareness:[70,90,140],consideration:[30,48,88],conversion:[251,184,41],retention:[232,147,46]};
   var pc = {'Meta':[55,138,221],'Google Ads':[29,158,117],'TikTok':[127,119,221],'Snapchat':[239,159,39],'LinkedIn':[12,68,124],'Twitter/X':[68,68,68],'YouTube':[226,75,74],'Other':[136,136,136]};
 
   function slideBg(){doc.setFillColor(255,255,255);doc.rect(0,0,W,H,'F')}
   function sHeader(t){
-    doc.setFillColor(26,39,68);doc.rect(0,0,W,26,'F');
-    doc.setDrawColor(201,169,78);doc.setLineWidth(0.8);doc.line(0,26,W,26);doc.setLineWidth(0.2);
-    doc.setTextColor(201,169,78);doc.setFontSize(18);doc.setFont(undefined,'bold');doc.text(t,M,17);doc.setFont(undefined,'normal');
+    doc.setFillColor(30,48,88);doc.rect(0,0,W,26,'F');
+    doc.setDrawColor(251,184,41);doc.setLineWidth(0.8);doc.line(0,26,W,26);doc.setLineWidth(0.2);
+    doc.setTextColor(251,184,41);doc.setFontSize(18);doc.setFont(undefined,'bold');doc.text(t,M,17);doc.setFont(undefined,'normal');
   }
   function slideFooter(p,total){
-    doc.setFillColor(26,39,68);doc.rect(0,H-8,W,8,'F');
-    doc.setTextColor(201,169,78);doc.setFontSize(7);
+    doc.setFillColor(30,48,88);doc.rect(0,H-8,W,8,'F');
+    doc.setTextColor(251,184,41);doc.setFontSize(7);
     doc.text(d.client||'Media Plan Builder',M,H-3);
     doc.text('Page '+p+' of '+total,W-M,H-3,{align:'right'});
   }
 
   // SLIDE 1: Title
-  doc.setFillColor(26,39,68);
+  doc.setFillColor(30,48,88);
   doc.rect(0,0,W,H,'F');
-  doc.setDrawColor(201,169,78);doc.setLineWidth(1);
+  doc.setDrawColor(251,184,41);doc.setLineWidth(1);
   doc.line(W*0.25,H/2-35,W*0.75,H/2-35);
   doc.line(W*0.25,H/2+30,W*0.75,H/2+30);
   doc.setLineWidth(0.2);
-  doc.setTextColor(201,169,78);
+  doc.setTextColor(251,184,41);
   doc.setFontSize(38);
   doc.setFont(undefined,'bold');
   doc.text('Media Plan',W/2,H/2-15,{align:'center'});
@@ -701,7 +701,7 @@ function exportPresentation(){
   }
   doc.setFontSize(13);
   doc.setFont(undefined,'normal');
-  doc.setTextColor(180,190,210);
+  doc.setTextColor(200,210,230);
   doc.text(fmtNum(d.total)+' '+d.cur+' | '+d.dur+' months | '+d.obj.charAt(0).toUpperCase()+d.obj.slice(1),W/2,H/2+16,{align:'center'});
   doc.setFontSize(10);
   doc.text(new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),W/2,H/2+25,{align:'center'});
@@ -722,14 +722,14 @@ function exportPresentation(){
     var cx = M+i*(cw+12);
     doc.setFillColor(240,238,232);
     doc.roundedRect(cx,y,cw,32,3,3,'F');
-    doc.setDrawColor(201,169,78);
+    doc.setDrawColor(251,184,41);
     doc.roundedRect(cx,y,cw,32,3,3,'S');
     doc.setFontSize(9);doc.setTextColor(100,100,100);doc.text(card.l,cx+10,y+13);
-    doc.setFontSize(20);doc.setTextColor(26,39,68);doc.setFont(undefined,'bold');doc.text(card.v,cx+10,y+26);doc.setFont(undefined,'normal');
+    doc.setFontSize(20);doc.setTextColor(30,48,88);doc.setFont(undefined,'bold');doc.text(card.v,cx+10,y+26);doc.setFont(undefined,'normal');
   });
 
   y = 84;
-  doc.setFontSize(12);doc.setTextColor(26,39,68);doc.setFont(undefined,'bold');doc.text('Funnel breakdown',M,y);doc.setFont(undefined,'normal');
+  doc.setFontSize(12);doc.setTextColor(30,48,88);doc.setFont(undefined,'bold');doc.text('Funnel breakdown',M,y);doc.setFont(undefined,'normal');
   y += 6;
   drawFunnelBar(doc,M,y,tableW,14);
   y += 22;
@@ -747,7 +747,7 @@ function exportPresentation(){
   }
 
   y += 14;
-  doc.setFontSize(12);doc.setTextColor(26,39,68);doc.setFont(undefined,'bold');doc.text('Platform split',M,y);doc.setFont(undefined,'normal');
+  doc.setFontSize(12);doc.setTextColor(30,48,88);doc.setFont(undefined,'bold');doc.text('Platform split',M,y);doc.setFont(undefined,'normal');
   y += 6;
   var platTotals = {};
   campaigns.forEach(function(c){platTotals[c.platform]=(platTotals[c.platform]||0)+c.pct});
