@@ -3,6 +3,18 @@ audit_data/
 *.token
 *.rtf
 
+# Sensitive — API credentials & tokens (NEVER commit)
+google-ads.yaml
+.github_token
+*.yaml
+*_token
+google_ads.yaml
+
+# Local server data cache (regenerated)
+gads_data.json
+
 # Local config
 .claude/
 .DS_Store
+5roosters_meta.env
+5roosters_data.json
