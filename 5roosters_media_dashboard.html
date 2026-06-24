@@ -98,6 +98,28 @@ td.good{color:var(--green);font-weight:700} td.bad{color:var(--red);font-weight:
 .obj-pill.sw{background:rgba(245,184,46,.2);color:var(--sw);border:1px solid rgba(245,184,46,.4)}
 .obj-pill.pe{background:rgba(230,57,70,.2);color:var(--pe);border:1px solid rgba(230,57,70,.4)}
 .obj-pill.sm{background:rgba(255,255,255,.08);color:var(--sm);border:1px solid rgba(255,255,255,.25)}
+.refresh-btn{background:var(--accent);color:#000;border:none;padding:7px 14px;border-radius:8px;
+              font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;
+              transition:.2s;margin-right:12px}
+.refresh-btn:hover{background:#ffcc4d;transform:scale(1.03)}
+.refresh-btn:disabled{opacity:.6;cursor:wait}
+.refresh-btn .spin{display:inline-block;animation:spin 1.2s linear infinite}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.toast-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;
+                justify-content:center;z-index:999}
+.toast-overlay.show{display:flex}
+.toast{background:var(--card);border:1px solid var(--accent);border-radius:14px;padding:28px 32px;
+        max-width:480px;text-align:center}
+.toast h3{color:var(--accent);font-size:18px;margin-bottom:12px}
+.toast p{color:var(--text);font-size:13px;line-height:1.8;margin-bottom:14px}
+.toast input{width:100%;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);
+              border-radius:8px;font-family:monospace;font-size:12px;margin-bottom:10px}
+.toast button{background:var(--accent);color:#000;border:none;padding:9px 18px;border-radius:8px;
+               font-size:13px;font-weight:700;cursor:pointer;margin:0 4px}
+.toast button.alt{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+.toast .status-log{text-align:left;font-family:monospace;font-size:11px;color:var(--muted);
+                    background:var(--bg);padding:10px;border-radius:8px;max-height:160px;overflow-y:auto;
+                    margin:10px 0}
 </style>
 </head>
 <body>
@@ -111,8 +133,26 @@ td.good{color:var(--green);font-weight:700} td.bad{color:var(--red);font-weight:
   <a href="#sm" class="sm">👍 Engagement</a>
   <a href="#problems">⚠️ Problems</a>
   <a href="#insights">💡 Insights</a>
+  <button class="refresh-btn" id="refreshBtn" style="margin-left:auto" onclick="startRefresh()">
+    <span id="refreshIcon">🔄</span> <span id="refreshLabel">Refresh Data</span>
+  </button>
   <span class="logo"><span class="rooster">🐓</span> 5 Roosters · 2026-05-25 → 2026-06-23</span>
 </nav>
+
+<div class="toast-overlay" id="toastOverlay">
+  <div class="toast" id="toastBox">
+    <h3 id="toastTitle">🔑 GitHub Token Required</h3>
+    <p id="toastBody">
+      عشان زرار التحديث يشتغل محتاج Personal Access Token من GitHub بصلاحية <strong>workflow</strong>.<br>
+      التوكين بيتحفظ في المتصفح بتاعك بس — مش بيتبعت لأي حد تاني.<br>
+      <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent)">اعمل واحد جديد من هنا</a>
+    </p>
+    <input type="password" id="patInput" placeholder="ghp_…" autocomplete="off">
+    <div id="toastLog" class="status-log" style="display:none"></div>
+    <button onclick="savePAT()">Save &amp; Refresh</button>
+    <button class="alt" onclick="closeToast()">Cancel</button>
+  </div>
+</div>
 
 <div class="page">
 <div class="banner">
@@ -2252,6 +2292,136 @@ new Chart(document.getElementById('splitChart'),{type:'doughnut',
   options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#f5ecd5',font:{size:12}}},tooltip:{callbacks:{label:function(c){return c.label+': '+c.raw.toLocaleString()+' EGP'}}}}}
 });
 new Chart(document.getElementById('ctrChart'),{type:'line',data:{labels,datasets:[{label:'CTR%',data:ctrs,borderColor:'#E63946',backgroundColor:'rgba(230,57,70,0.1)',tension:0.4,fill:true,pointRadius:3}]},options:base()});
+
+// ─── Refresh button → GitHub Actions workflow_dispatch ───
+const GH_OWNER = 'mohameddezzatt300-bit';
+const GH_REPO  = 'media-buyer-dashboard';
+const WF_FILE  = 'refresh-5roosters.yml';
+const GH_API   = 'https://api.github.com';
+
+function logStatus(msg) {
+  const log = document.getElementById('toastLog');
+  log.style.display = 'block';
+  const ts = new Date().toLocaleTimeString();
+  log.innerHTML += `<div>[${ts}] ${msg}</div>`;
+  log.scrollTop = log.scrollHeight;
+}
+
+function showToast(setupMode) {
+  document.getElementById('toastOverlay').classList.add('show');
+  document.getElementById('patInput').style.display = setupMode ? 'block' : 'none';
+  document.querySelector('#toastBox button').style.display = setupMode ? 'inline-block' : 'none';
+  document.getElementById('toastTitle').textContent = setupMode ? '🔑 GitHub Token Required' : '🔄 Refreshing Dashboard';
+  if (!setupMode) {
+    document.getElementById('toastBody').innerHTML = 'جاري سحب آخر داتا من Meta وإعادة بناء الداشبورد. ممكن ياخد ٦٠-٩٠ ثانية.';
+  }
+}
+
+function closeToast() {
+  document.getElementById('toastOverlay').classList.remove('show');
+  document.getElementById('toastLog').innerHTML = '';
+  document.getElementById('toastLog').style.display = 'none';
+}
+
+function savePAT() {
+  const pat = document.getElementById('patInput').value.trim();
+  if (!pat.startsWith('ghp_') && !pat.startsWith('github_pat_')) {
+    alert('التوكين لازم يبدأ بـ ghp_ أو github_pat_');
+    return;
+  }
+  localStorage.setItem('gh_pat_5roosters', pat);
+  startRefresh();
+}
+
+async function ghFetch(path, opts = {}) {
+  const pat = localStorage.getItem('gh_pat_5roosters');
+  return fetch(`${GH_API}${path}`, {
+    ...opts,
+    headers: {
+      'Authorization': `Bearer ${pat}`,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(opts.headers || {}),
+    },
+  });
+}
+
+async function startRefresh() {
+  const pat = localStorage.getItem('gh_pat_5roosters');
+  if (!pat) {
+    showToast(true);
+    return;
+  }
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true;
+  document.getElementById('refreshIcon').className = 'spin';
+  document.getElementById('refreshLabel').textContent = 'Refreshing…';
+  showToast(false);
+
+  try {
+    logStatus('triggering workflow…');
+    const dispatch = await ghFetch(`/repos/${GH_OWNER}/${GH_REPO}/actions/workflows/${WF_FILE}/dispatches`, {
+      method: 'POST',
+      body: JSON.stringify({ ref: 'main', inputs: { date_preset: 'last_30d' } }),
+    });
+    if (dispatch.status === 401) {
+      logStatus('❌ توكين خطأ أو منتهي. امسح وأدخل واحد جديد.');
+      localStorage.removeItem('gh_pat_5roosters');
+      setTimeout(() => { closeToast(); showToast(true); }, 2000);
+      return;
+    }
+    if (!dispatch.ok) {
+      const err = await dispatch.text();
+      logStatus(`❌ خطأ: HTTP ${dispatch.status} — ${err.slice(0, 200)}`);
+      return;
+    }
+    logStatus('✓ الـ workflow اتشغل، باستنى ينتهي…');
+
+    // Poll for the most recent workflow run
+    let runId = null;
+    for (let i = 0; i < 12; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+      const runs = await ghFetch(`/repos/${GH_OWNER}/${GH_REPO}/actions/workflows/${WF_FILE}/runs?per_page=1`);
+      const data = await runs.json();
+      if (data.workflow_runs && data.workflow_runs.length > 0) {
+        const r = data.workflow_runs[0];
+        if (new Date(r.created_at) > new Date(Date.now() - 5 * 60 * 1000)) {
+          runId = r.id;
+          break;
+        }
+      }
+    }
+    if (!runId) {
+      logStatus('⚠️ مش لاقي الـ run. افتح GitHub Actions يدوياً.');
+      return;
+    }
+    logStatus(`✓ run #${runId} موجود، باراقب التقدم…`);
+
+    // Poll until complete
+    for (let i = 0; i < 60; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+      const runRes = await ghFetch(`/repos/${GH_OWNER}/${GH_REPO}/actions/runs/${runId}`);
+      const run = await runRes.json();
+      logStatus(`status: ${run.status}${run.conclusion ? ' / ' + run.conclusion : ''}`);
+      if (run.status === 'completed') {
+        if (run.conclusion === 'success') {
+          logStatus('✅ تم! بأعمل reload للصفحة في ١٠ ثواني…');
+          setTimeout(() => location.reload(true), 10000);
+        } else {
+          logStatus(`❌ الـ workflow فشل: ${run.conclusion}`);
+        }
+        return;
+      }
+    }
+    logStatus('⚠️ timeout — افتح GitHub Actions لمتابعة الـ run يدوياً.');
+  } catch (e) {
+    logStatus(`❌ exception: ${e.message}`);
+  } finally {
+    btn.disabled = false;
+    document.getElementById('refreshIcon').className = '';
+    document.getElementById('refreshLabel').textContent = 'Refresh Data';
+  }
+}
 </script>
 </body>
 </html>
