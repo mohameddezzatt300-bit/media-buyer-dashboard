@@ -1,0 +1,67 @@
+name: Refresh 5 Roosters Dashboard
+
+on:
+  schedule:
+    # Every day at 06:00 UTC (08:00 Cairo time)
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      date_preset:
+        description: 'Meta date preset'
+        type: choice
+        default: 'last_30d'
+        options:
+          - last_7d
+          - last_14d
+          - last_30d
+          - last_90d
+          - this_month
+          - last_month
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Write env file from secrets
+        run: |
+          cat > 5roosters_meta.env <<EOF
+          META_APP_ID=${{ secrets.META_APP_ID }}
+          META_APP_SECRET=${{ secrets.META_APP_SECRET }}
+          META_ACCESS_TOKEN=${{ secrets.META_ACCESS_TOKEN }}
+          META_AD_ACCOUNT_ID=${{ secrets.META_AD_ACCOUNT_ID }}
+          EOF
+
+      - name: Pull Meta data
+        env:
+          DATE_PRESET: ${{ github.event.inputs.date_preset || 'last_30d' }}
+        run: python3 pull_5roosters.py
+
+      - name: Build dashboard
+        run: python3 build_5roosters_dashboard.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet 5roosters_media_dashboard.html; then
+            echo "No changes to dashboard."
+          else
+            git add 5roosters_media_dashboard.html
+            git commit -m "chore: daily refresh of 5 Roosters dashboard ($(date -u +%Y-%m-%d))"
+            git push
+          fi
+
+      - name: Cleanup secrets file
+        if: always()
+        run: rm -f 5roosters_meta.env 5roosters_data.json
