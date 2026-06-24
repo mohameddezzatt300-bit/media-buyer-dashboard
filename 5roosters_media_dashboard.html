@@ -133,9 +133,23 @@ td.good{color:var(--green);font-weight:700} td.bad{color:var(--red);font-weight:
   <a href="#sm" class="sm">👍 Engagement</a>
   <a href="#problems">⚠️ Problems</a>
   <a href="#insights">💡 Insights</a>
-  <button class="refresh-btn" id="refreshBtn" style="margin-left:auto" onclick="startRefresh()">
-    <span id="refreshIcon">🔄</span> <span id="refreshLabel">Refresh Data</span>
-  </button>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+    <select id="dateRangeSelect" onchange="onPresetChange()" class="refresh-btn"
+            style="background:var(--card2);color:var(--text);padding:6px 10px">
+      <option value="last_7d">Last 7 days</option>
+      <option value="last_14d">Last 14 days</option>
+      <option value="last_30d" selected>Last 30 days</option>
+      <option value="last_90d">Last 90 days</option>
+      <option value="this_month">This month</option>
+      <option value="last_month">Last month</option>
+      <option value="custom">Custom range…</option>
+    </select>
+    <input type="date" id="dateSince" style="display:none;background:var(--card2);color:var(--text);border:1px solid var(--border);padding:5px;border-radius:6px;font-size:12px">
+    <input type="date" id="dateUntil" style="display:none;background:var(--card2);color:var(--text);border:1px solid var(--border);padding:5px;border-radius:6px;font-size:12px">
+    <button class="refresh-btn" id="refreshBtn" onclick="startRefresh()">
+      <span id="refreshIcon">🔄</span> <span id="refreshLabel">Refresh</span>
+    </button>
+  </div>
   <span class="logo"><span class="rooster">🐓</span> 5 Roosters · 2026-05-25 → 2026-06-23</span>
 </nav>
 
@@ -2299,6 +2313,32 @@ const GH_REPO  = 'media-buyer-dashboard';
 const WF_FILE  = 'refresh-5roosters.yml';
 const GH_API   = 'https://api.github.com';
 
+function onPresetChange() {
+  const sel = document.getElementById('dateRangeSelect').value;
+  const since = document.getElementById('dateSince');
+  const until = document.getElementById('dateUntil');
+  const isCustom = sel === 'custom';
+  since.style.display = isCustom ? 'inline-block' : 'none';
+  until.style.display = isCustom ? 'inline-block' : 'none';
+  if (isCustom && !since.value) {
+    const t = new Date(); const m = new Date(); m.setDate(t.getDate() - 30);
+    since.value = m.toISOString().slice(0,10);
+    until.value = t.toISOString().slice(0,10);
+  }
+}
+
+function getDateInputs() {
+  const preset = document.getElementById('dateRangeSelect').value;
+  if (preset === 'custom') {
+    const s = document.getElementById('dateSince').value;
+    const u = document.getElementById('dateUntil').value;
+    if (!s || !u) { alert('اختار تاريخ بداية ونهاية'); return null; }
+    if (s > u) { alert('تاريخ البداية لازم يكون قبل تاريخ النهاية'); return null; }
+    return { date_preset: 'last_30d', time_range_since: s, time_range_until: u };
+  }
+  return { date_preset: preset, time_range_since: '', time_range_until: '' };
+}
+
 function logStatus(msg) {
   const log = document.getElementById('toastLog');
   log.style.display = 'block';
@@ -2359,10 +2399,15 @@ async function startRefresh() {
   showToast(false);
 
   try {
-    logStatus('triggering workflow…');
+    const inputs = getDateInputs();
+    if (!inputs) { btn.disabled = false; document.getElementById('refreshIcon').className = ''; document.getElementById('refreshLabel').textContent = 'Refresh'; closeToast(); return; }
+    const rangeLabel = inputs.time_range_since
+      ? `${inputs.time_range_since} → ${inputs.time_range_until}`
+      : inputs.date_preset;
+    logStatus(`triggering workflow for ${rangeLabel}…`);
     const dispatch = await ghFetch(`/repos/${GH_OWNER}/${GH_REPO}/actions/workflows/${WF_FILE}/dispatches`, {
       method: 'POST',
-      body: JSON.stringify({ ref: 'main', inputs: { date_preset: 'last_30d' } }),
+      body: JSON.stringify({ ref: 'main', inputs }),
     });
     if (dispatch.status === 401) {
       logStatus('❌ توكين خطأ أو منتهي. امسح وأدخل واحد جديد.');

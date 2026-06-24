@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       date_preset:
-        description: 'Meta date preset'
+        description: 'Meta date preset (ignored if since/until provided)'
         type: choice
         default: 'last_30d'
         options:
@@ -17,6 +17,14 @@ on:
           - last_90d
           - this_month
           - last_month
+      time_range_since:
+        description: 'Custom start date YYYY-MM-DD (optional, overrides preset)'
+        type: string
+        required: false
+      time_range_until:
+        description: 'Custom end date YYYY-MM-DD (optional, overrides preset)'
+        type: string
+        required: false
 
 permissions:
   contents: write
@@ -45,6 +53,8 @@ jobs:
       - name: Pull Meta data
         env:
           DATE_PRESET: ${{ github.event.inputs.date_preset || 'last_30d' }}
+          TIME_RANGE_SINCE: ${{ github.event.inputs.time_range_since }}
+          TIME_RANGE_UNTIL: ${{ github.event.inputs.time_range_until }}
         run: python3 pull_5roosters.py
 
       - name: Build dashboard

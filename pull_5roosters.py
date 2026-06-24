@@ -14,6 +14,15 @@ API_VERSION = "v21.0"
 BASE = f"https://graph.facebook.com/{API_VERSION}"
 
 DATE_PRESET = os.environ.get("DATE_PRESET", "last_30d")
+TIME_RANGE_SINCE = os.environ.get("TIME_RANGE_SINCE", "").strip()
+TIME_RANGE_UNTIL = os.environ.get("TIME_RANGE_UNTIL", "").strip()
+
+
+def date_params():
+    """Return Meta API date params — custom range overrides preset."""
+    if TIME_RANGE_SINCE and TIME_RANGE_UNTIL:
+        return {"time_range": json.dumps({"since": TIME_RANGE_SINCE, "until": TIME_RANGE_UNTIL})}
+    return {"date_preset": DATE_PRESET}
 
 
 def load_env():
@@ -146,7 +155,9 @@ def main():
     env = load_env()
     token = env["META_ACCESS_TOKEN"]
     acct = env["META_AD_ACCOUNT_ID"]
-    print(f"→ Pulling {acct} for preset={DATE_PRESET}")
+    dp = date_params()
+    range_label = f"since={TIME_RANGE_SINCE}, until={TIME_RANGE_UNTIL}" if "time_range" in dp else f"preset={DATE_PRESET}"
+    print(f"→ Pulling {acct} for {range_label}")
 
     common_insight_fields = (
         "spend,impressions,clicks,ctr,cpm,cpc,reach,frequency,"
@@ -161,7 +172,7 @@ def main():
     })
     acct_ins = fetch(f"{acct}/insights", {
         "fields": common_insight_fields,
-        "date_preset": DATE_PRESET,
+        **dp,
         "access_token": token,
     })
     summary = normalize_insight(acct_ins["data"][0]) if acct_ins.get("data") else {}
@@ -171,7 +182,7 @@ def main():
     camp_ins = async_insights(acct, {
         "fields": common_insight_fields + ",campaign_id,campaign_name,objective",
         "level": "campaign",
-        "date_preset": DATE_PRESET,
+        **dp,
         "filtering": json.dumps([{"field": "spend", "operator": "GREATER_THAN", "value": 0}]),
     }, token, label="campaigns")
     print(f"   {len(camp_ins)} campaigns spent > 0")
@@ -189,7 +200,7 @@ def main():
     ad_ins = async_insights(acct, {
         "fields": common_insight_fields + ",campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name",
         "level": "ad",
-        "date_preset": DATE_PRESET,
+        **dp,
         "filtering": json.dumps([{"field": "spend", "operator": "GREATER_THAN", "value": 0}]),
     }, token, label="ads")
     print(f"   {len(ad_ins)} ad rows")
@@ -209,7 +220,7 @@ def main():
     daily = paged(f"{acct}/insights", {
         "fields": common_insight_fields,
         "time_increment": 1,
-        "date_preset": DATE_PRESET,
+        **dp,
         "limit": 200,
         "access_token": token,
     })
@@ -222,7 +233,9 @@ def main():
         "date_range": {
             "start": summary.get("date_start"),
             "stop": summary.get("date_stop"),
-            "preset": DATE_PRESET,
+            "preset": DATE_PRESET if "time_range" not in dp else "custom",
+            "since": TIME_RANGE_SINCE,
+            "until": TIME_RANGE_UNTIL,
         },
         "summary": summary,
         "campaigns": campaigns,
