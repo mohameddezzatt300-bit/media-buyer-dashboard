@@ -9,7 +9,7 @@ on:
       date_preset:
         description: 'Meta date preset (ignored if since/until provided)'
         type: choice
-        default: 'last_30d'
+        default: 'this_month'
         options:
           - last_7d
           - last_14d
@@ -52,7 +52,7 @@ jobs:
 
       - name: Pull Meta data
         env:
-          DATE_PRESET: ${{ github.event.inputs.date_preset || 'last_30d' }}
+          DATE_PRESET: ${{ github.event.inputs.date_preset || 'this_month' }}
           TIME_RANGE_SINCE: ${{ github.event.inputs.time_range_since }}
           TIME_RANGE_UNTIL: ${{ github.event.inputs.time_range_until }}
         run: python3 pull_5roosters.py
@@ -60,7 +60,7 @@ jobs:
       - name: Build dashboard
         run: python3 build_5roosters_dashboard.py
 
-      - name: Commit and push if changed
+      - name: Commit and push if changed (Pages backup)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -71,6 +71,22 @@ jobs:
             git commit -m "chore: daily refresh of 5 Roosters dashboard ($(date -u +%Y-%m-%d))"
             git push
           fi
+
+      - name: Stage Netlify bundle
+        run: |
+          mkdir -p dist/netlify/functions
+          cp 5roosters_media_dashboard.html dist/index.html
+          cp netlify/functions/refresh-5roosters.js dist/netlify/functions/refresh-5roosters.js
+          printf '[build]\n  publish = "."\n  functions = "netlify/functions"\n' > dist/netlify.toml
+
+      - name: Deploy to Netlify (primary host)
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: |
+          npx --yes netlify-cli@latest deploy --prod --no-build \
+            --dir=dist --functions=dist/netlify/functions \
+            --site=${{ secrets.NETLIFY_SITE_ID }} \
+            --message="refresh $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
       - name: Cleanup secrets file
         if: always()
