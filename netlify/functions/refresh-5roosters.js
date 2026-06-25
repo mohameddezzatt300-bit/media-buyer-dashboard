@@ -1,28 +1,28 @@
-// Proxies a workflow_dispatch call to GitHub so we don't have to embed a PAT
-// in the public dashboard. The PAT is stored as a Netlify env var (GITHUB_PAT).
+// Netlify Function — proxies workflow_dispatch to GitHub.
+// The GitHub PAT lives in Netlify env var GITHUB_PAT, not in the public dashboard.
 
-export default async (req) => {
+exports.handler = async (event) => {
   const cors = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
-  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'POST only' }), {
-      status: 405, headers: { ...cors, 'Content-Type': 'application/json' },
-    });
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: cors, body: '' };
+  }
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, headers: { ...cors, 'Content-Type': 'application/json' },
+             body: JSON.stringify({ error: 'POST only' }) };
   }
 
   const pat = process.env.GITHUB_PAT;
   if (!pat) {
-    return new Response(JSON.stringify({ error: 'server missing GITHUB_PAT env var' }), {
-      status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
-    });
+    return { statusCode: 500, headers: { ...cors, 'Content-Type': 'application/json' },
+             body: JSON.stringify({ error: 'server missing GITHUB_PAT' }) };
   }
 
-  let body;
-  try { body = await req.json(); } catch { body = {}; }
+  let body = {};
+  try { body = JSON.parse(event.body || '{}'); } catch (e) {}
   const inputs = {
     date_preset: body.date_preset || 'last_30d',
     time_range_since: body.time_range_since || '',
@@ -43,14 +43,10 @@ export default async (req) => {
   );
 
   if (dispatch.status === 204) {
-    return new Response(JSON.stringify({ ok: true, inputs }), {
-      status: 200, headers: { ...cors, 'Content-Type': 'application/json' },
-    });
+    return { statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' },
+             body: JSON.stringify({ ok: true, inputs }) };
   }
   const errText = await dispatch.text();
-  return new Response(JSON.stringify({ error: `GitHub ${dispatch.status}: ${errText.slice(0, 300)}` }), {
-    status: 502, headers: { ...cors, 'Content-Type': 'application/json' },
-  });
+  return { statusCode: 502, headers: { ...cors, 'Content-Type': 'application/json' },
+           body: JSON.stringify({ error: `GitHub ${dispatch.status}: ${errText.slice(0, 300)}` }) };
 };
-
-export const config = { path: '/api/refresh-5roosters' };

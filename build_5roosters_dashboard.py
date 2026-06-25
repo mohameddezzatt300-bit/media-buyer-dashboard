@@ -639,7 +639,7 @@ new Chart(document.getElementById('splitChart'),{{type:'doughnut',
 new Chart(document.getElementById('ctrChart'),{{type:'line',data:{{labels,datasets:[{{label:'CTR%',data:ctrs,borderColor:'#E63946',backgroundColor:'rgba(230,57,70,0.1)',tension:0.4,fill:true,pointRadius:3}}]}},options:base()}});
 
 // ─── Refresh button → Netlify Function proxy → GitHub Actions ───
-const REFRESH_ENDPOINT = 'https://heartfelt-heliotrope-c096f8.netlify.app/api/refresh-5roosters';
+const REFRESH_ENDPOINT = 'https://5roosters-refresh-proxy.netlify.app/.netlify/functions/refresh-5roosters';
 const GH_OWNER = 'mohameddezzatt300-bit';
 const GH_REPO  = 'media-buyer-dashboard';
 
