@@ -639,11 +639,7 @@ new Chart(document.getElementById('splitChart'),{{type:'doughnut',
 new Chart(document.getElementById('ctrChart'),{{type:'line',data:{{labels,datasets:[{{label:'CTR%',data:ctrs,borderColor:'#E63946',backgroundColor:'rgba(230,57,70,0.1)',tension:0.4,fill:true,pointRadius:3}}]}},options:base()}});
 
 // ─── Refresh button → Netlify Function proxy → GitHub Actions ───
-// When served from same Netlify site as the function, relative path works.
-// When loaded from a different origin (e.g. file://, github.io), fall back to absolute.
-const REFRESH_ENDPOINT = (location.hostname.endsWith('.netlify.app'))
-  ? '/.netlify/functions/refresh-5roosters'
-  : 'https://5roosters-refresh-proxy.netlify.app/.netlify/functions/refresh-5roosters';
+const REFRESH_ENDPOINT = 'https://5roosters-refresh-proxy.netlify.app/.netlify/functions/refresh-5roosters';
 const GH_OWNER = 'mohameddezzatt300-bit';
 const GH_REPO  = 'media-buyer-dashboard';
 
@@ -727,8 +723,8 @@ async function pollLatestRun(triggeredAt) {{
       logStatus(`status: ${{run.status}}${{run.conclusion ? ' / ' + run.conclusion : ''}}`);
       if (run.status === 'completed') {{
         if (run.conclusion === 'success') {{
-          logStatus('✅ تم! reload للصفحة في ٤ ثواني…');
-          setTimeout(() => location.reload(true), 4000);
+          logStatus('✅ تم! reload للصفحة في ١٢ ثانية (Pages بيبني)…');
+          setTimeout(() => location.reload(true), 12000);
         }} else {{
           logStatus(`❌ الـ workflow فشل: ${{run.conclusion}}`);
         }}

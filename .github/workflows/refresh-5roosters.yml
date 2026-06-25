@@ -60,26 +60,17 @@ jobs:
       - name: Build dashboard
         run: python3 build_5roosters_dashboard.py
 
-      - name: Stage Netlify deploy bundle
+      - name: Commit and push if changed
         run: |
-          mkdir -p dist/netlify/functions
-          cp 5roosters_media_dashboard.html dist/index.html
-          cp netlify/functions/refresh-5roosters.js dist/netlify/functions/refresh-5roosters.js
-          cat > dist/netlify.toml <<'EOF'
-          [build]
-            publish = "."
-            functions = "netlify/functions"
-          EOF
-
-      - name: Deploy to Netlify
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID:    ${{ secrets.NETLIFY_SITE_ID }}
-        run: |
-          npx --yes netlify-cli@latest deploy \
-            --prod \
-            --dir=dist \
-            --message="refresh $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet 5roosters_media_dashboard.html; then
+            echo "No changes to dashboard."
+          else
+            git add 5roosters_media_dashboard.html
+            git commit -m "chore: daily refresh of 5 Roosters dashboard ($(date -u +%Y-%m-%d))"
+            git push
+          fi
 
       - name: Cleanup secrets file
         if: always()
