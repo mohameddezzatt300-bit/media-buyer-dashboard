@@ -353,11 +353,15 @@ td.good{{color:var(--green);font-weight:700}} td.bad{{color:var(--red);font-weig
 
 <div class="toast-overlay" id="toastOverlay">
   <div class="toast" id="toastBox">
-    <h3 id="toastTitle">🔄 Refreshing Dashboard</h3>
-    <p id="toastBody">جاري سحب آخر داتا من Meta وإعادة بناء الداشبورد. ممكن ياخد ٦٠-٩٠ ثانية.</p>
-    <input type="password" id="patInput" placeholder="ghp_…" autocomplete="off" style="display:none">
+    <h3 id="toastTitle">🔑 GitHub Token Required</h3>
+    <p id="toastBody">
+      عشان زرار التحديث يشتغل، الصق GitHub PAT بصلاحية <strong>workflow</strong>.<br>
+      التوكين بيتحفظ في المتصفح بتاعك بس — مش بيتبعت لأي حد.<br>
+      <a href="https://github.com/settings/tokens/new?scopes=repo,workflow&amp;description=5+Roosters+Dashboard" target="_blank" style="color:var(--accent)">اعمل واحد جديد</a>
+    </p>
+    <input type="password" id="patInput" placeholder="ghp_..." autocomplete="off">
     <div id="toastLog" class="status-log" style="display:none"></div>
-    <button onclick="savePAT()" style="display:none">Save &amp; Refresh</button>
+    <button id="saveBtn" onclick="savePAT()">Save &amp; Refresh</button>
     <button class="alt" onclick="closeToast()">Close</button>
   </div>
 </div>
@@ -638,10 +642,11 @@ new Chart(document.getElementById('splitChart'),{{type:'doughnut',
 }});
 new Chart(document.getElementById('ctrChart'),{{type:'line',data:{{labels,datasets:[{{label:'CTR%',data:ctrs,borderColor:'#E63946',backgroundColor:'rgba(230,57,70,0.1)',tension:0.4,fill:true,pointRadius:3}}]}},options:base()}});
 
-// ─── Refresh button → Netlify Function proxy → GitHub Actions ───
-const REFRESH_ENDPOINT = 'https://5roosters-refresh-proxy.netlify.app/.netlify/functions/refresh-5roosters';
+// ─── Refresh button → GitHub Actions workflow_dispatch (direct from browser) ───
 const GH_OWNER = 'mohameddezzatt300-bit';
 const GH_REPO  = 'media-buyer-dashboard';
+const WF_FILE  = 'refresh-5roosters.yml';
+const PAT_KEY  = 'gh_pat_5roosters';
 
 function onPresetChange() {{
   const sel = document.getElementById('dateRangeSelect').value;
@@ -677,14 +682,14 @@ function logStatus(msg) {{
   log.scrollTop = log.scrollHeight;
 }}
 
-function savePAT() {{ /* deprecated — kept to prevent reference errors from old cached HTML */ }}
-
-function showToast() {{
+function showToast(setupMode) {{
   document.getElementById('toastOverlay').classList.add('show');
-  document.getElementById('patInput').style.display = 'none';
-  document.querySelector('#toastBox button').style.display = 'none';
-  document.getElementById('toastTitle').textContent = '🔄 Refreshing Dashboard';
-  document.getElementById('toastBody').innerHTML = 'جاري سحب آخر داتا من Meta وإعادة بناء الداشبورد. ممكن ياخد ٦٠-٩٠ ثانية.';
+  document.getElementById('patInput').style.display = setupMode ? 'block' : 'none';
+  document.getElementById('saveBtn').style.display = setupMode ? 'inline-block' : 'none';
+  document.getElementById('toastTitle').textContent = setupMode ? '🔑 GitHub Token Required' : '🔄 Refreshing Dashboard';
+  if (!setupMode) {{
+    document.getElementById('toastBody').innerHTML = 'جاري سحب آخر داتا من Meta وإعادة بناء الداشبورد. ممكن ياخد ٦٠-٩٠ ثانية.';
+  }}
 }}
 
 function closeToast() {{
@@ -693,13 +698,36 @@ function closeToast() {{
   document.getElementById('toastLog').style.display = 'none';
 }}
 
+function savePAT() {{
+  const pat = document.getElementById('patInput').value.trim();
+  if (!pat.startsWith('ghp_') && !pat.startsWith('github_pat_')) {{
+    alert('التوكين لازم يبدأ بـ ghp_ أو github_pat_');
+    return;
+  }}
+  localStorage.setItem(PAT_KEY, pat);
+  closeToast();
+  startRefresh();
+}}
+
+async function ghFetch(path, opts = {{}}) {{
+  const pat = localStorage.getItem(PAT_KEY);
+  return fetch(`https://api.github.com${{path}}`, {{
+    ...opts,
+    headers: {{
+      'Authorization': `Bearer ${{pat}}`,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(opts.headers || {{}}),
+    }},
+  }});
+}}
+
 async function pollLatestRun(triggeredAt) {{
-  const wfRunsUrl = `https://api.github.com/repos/${{GH_OWNER}}/${{GH_REPO}}/actions/workflows/refresh-5roosters.yml/runs?per_page=1`;
   let runId = null;
   for (let i = 0; i < 15; i++) {{
     await new Promise(r => setTimeout(r, 4000));
     try {{
-      const res = await fetch(wfRunsUrl);
+      const res = await ghFetch(`/repos/${{GH_OWNER}}/${{GH_REPO}}/actions/workflows/${{WF_FILE}}/runs?per_page=1`);
       const data = await res.json();
       if (data.workflow_runs && data.workflow_runs.length > 0) {{
         const r = data.workflow_runs[0];
@@ -712,13 +740,13 @@ async function pollLatestRun(triggeredAt) {{
     }} catch {{}}
   }}
   if (!runId) {{
-    logStatus('⚠️ مش لاقي run — Pages هيتحدث لوحده خلال دقيقتين. اعمل reload يدوي.');
+    logStatus('⚠️ مش لاقي run — اعمل reload يدوي بعد دقيقتين.');
     return;
   }}
   for (let i = 0; i < 40; i++) {{
-    await new Promise(r => setTimeout(r, 6000));
+    await new Promise(r => setTimeout(r, 5000));
     try {{
-      const res = await fetch(`https://api.github.com/repos/${{GH_OWNER}}/${{GH_REPO}}/actions/runs/${{runId}}`);
+      const res = await ghFetch(`/repos/${{GH_OWNER}}/${{GH_REPO}}/actions/runs/${{runId}}`);
       const run = await res.json();
       logStatus(`status: ${{run.status}}${{run.conclusion ? ' / ' + run.conclusion : ''}}`);
       if (run.status === 'completed') {{
@@ -736,13 +764,19 @@ async function pollLatestRun(triggeredAt) {{
 }}
 
 async function startRefresh() {{
+  const pat = localStorage.getItem(PAT_KEY);
+  if (!pat) {{
+    showToast(true);
+    return;
+  }}
   const inputs = getDateInputs();
   if (!inputs) return;
+
   const btn = document.getElementById('refreshBtn');
   btn.disabled = true;
   document.getElementById('refreshIcon').className = 'spin';
   document.getElementById('refreshLabel').textContent = 'Refreshing…';
-  showToast();
+  showToast(false);
 
   const rangeLabel = inputs.time_range_since
     ? `${{inputs.time_range_since}} → ${{inputs.time_range_until}}`
@@ -751,21 +785,24 @@ async function startRefresh() {{
   const triggeredAt = Date.now();
 
   try {{
-    const res = await fetch(REFRESH_ENDPOINT, {{
-      method: 'POST',
-      headers: {{ 'Content-Type': 'application/json' }},
-      body: JSON.stringify(inputs),
-    }});
-    let payload = {{}};
-    try {{ payload = await res.json(); }} catch {{}}
+    const res = await ghFetch(
+      `/repos/${{GH_OWNER}}/${{GH_REPO}}/actions/workflows/${{WF_FILE}}/dispatches`,
+      {{ method: 'POST', body: JSON.stringify({{ ref: 'main', inputs }}) }}
+    );
+    if (res.status === 401 || res.status === 403) {{
+      logStatus('❌ التوكين خطأ أو منتهي. هطلب واحد جديد…');
+      localStorage.removeItem(PAT_KEY);
+      setTimeout(() => {{ closeToast(); showToast(true); }}, 1500);
+      return;
+    }}
     if (!res.ok) {{
-      logStatus(`❌ ${{payload.error || res.status}} — تأكد إن Netlify function متعملة deploy و GITHUB_PAT متعين في env vars.`);
+      logStatus(`❌ HTTP ${{res.status}} — ${{(await res.text()).slice(0,150)}}`);
       return;
     }}
     logStatus('✓ workflow triggered');
     await pollLatestRun(triggeredAt);
   }} catch (e) {{
-    logStatus(`❌ ${{e.message}} — مش قادر يوصل للـ Netlify endpoint.`);
+    logStatus(`❌ ${{e.message}}`);
   }} finally {{
     btn.disabled = false;
     document.getElementById('refreshIcon').className = '';
