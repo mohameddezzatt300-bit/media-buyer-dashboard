@@ -58,20 +58,24 @@ def post(path, params):
         raise RuntimeError(f"HTTP {e.code} on POST {path}: {body[:500]}") from None
 
 
-def async_insights(acct, params, token, label="async"):
-    """Run an async insights report and return all rows."""
+def async_submit(acct, params, token, label="async"):
+    """Submit an async insights job, return its run_id."""
     params = {**params, "access_token": token}
     print(f"   submitting {label} async job…")
     r = post(f"{acct}/insights", params)
     run_id = r.get("report_run_id")
     if not run_id:
         raise RuntimeError(f"no report_run_id in {r}")
-    # Poll
-    for i in range(120):  # up to ~10 min
-        time.sleep(5)
+    return run_id
+
+
+def async_fetch(run_id, token, label="async"):
+    """Poll an async job until complete and return all rows."""
+    for i in range(180):  # up to ~9 min at 3s
+        time.sleep(3)
         status = fetch(run_id, {"access_token": token})
-        pct = status.get("async_percent_completion", 0)
         st = status.get("async_status")
+        pct = status.get("async_percent_completion", 0)
         print(f"   [{label}] {st} {pct}%")
         if st == "Job Completed":
             break
@@ -79,7 +83,6 @@ def async_insights(acct, params, token, label="async"):
             raise RuntimeError(f"{label} {st}")
     else:
         raise RuntimeError(f"{label} polling timed out")
-    # Fetch results
     out = []
     params_get = {"access_token": token, "limit": 500}
     path = f"{run_id}/insights"
@@ -93,6 +96,12 @@ def async_insights(acct, params, token, label="async"):
         u = urlparse(nxt)
         path = u.path.lstrip("/").split("/", 1)[1]
         params_get = dict(parse_qsl(u.query))
+
+
+def async_insights(acct, params, token, label="async"):
+    """One-shot wrapper: submit + fetch."""
+    run_id = async_submit(acct, params, token, label)
+    return async_fetch(run_id, token, label)
 
 
 def paged(path, params):
@@ -177,14 +186,28 @@ def main():
     })
     summary = normalize_insight(acct_ins["data"][0]) if acct_ins.get("data") else {}
 
-    # 2. Campaign-level insights (async — too many campaigns for sync)
-    print("2/5 campaign insights (async)…")
-    camp_ins = async_insights(acct, {
+    # 2+3. Submit both async jobs upfront, then fetch results in parallel
+    print("2-3/5 submitting parallel async jobs (campaigns + ads)…")
+    camp_run_id = async_submit(acct, {
         "fields": common_insight_fields + ",campaign_id,campaign_name,objective",
         "level": "campaign",
         **dp,
         "filtering": json.dumps([{"field": "spend", "operator": "GREATER_THAN", "value": 0}]),
     }, token, label="campaigns")
+    ad_run_id = async_submit(acct, {
+        "fields": common_insight_fields + ",campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name",
+        "level": "ad",
+        **dp,
+        "filtering": json.dumps([{"field": "spend", "operator": "GREATER_THAN", "value": 0}]),
+    }, token, label="ads")
+
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        f_camp = ex.submit(async_fetch, camp_run_id, token, "campaigns")
+        f_ad   = ex.submit(async_fetch, ad_run_id, token, "ads")
+        camp_ins = f_camp.result()
+        ad_ins   = f_ad.result()
+
     print(f"   {len(camp_ins)} campaigns spent > 0")
     campaigns = []
     for r in camp_ins:
@@ -194,15 +217,6 @@ def main():
             "objective": r.get("objective"),
             "insights": normalize_insight(r),
         })
-
-    # 3. Ad-level insights (async, only ads that actually spent)
-    print("3/5 ad insights (async)…")
-    ad_ins = async_insights(acct, {
-        "fields": common_insight_fields + ",campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name",
-        "level": "ad",
-        **dp,
-        "filtering": json.dumps([{"field": "spend", "operator": "GREATER_THAN", "value": 0}]),
-    }, token, label="ads")
     print(f"   {len(ad_ins)} ad rows")
     ads = []
     for r in ad_ins:
