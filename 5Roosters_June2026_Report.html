@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تقرير أداء 5 Roosters — يونيو 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --gold:#F2B01E; --gold-2:#F6C445; --gold-soft:#FBE9BE;
+    --red:#E1352A; --red-2:#c02a20;
+    --ink:#161513; --ink-2:#2c2a26;
+    --paper:#FFFDF7; --card:#ffffff;
+    --muted:#8a8578; --line:#eadfc3;
+    --good:#1f9d57; --warn:#d98a12; --bad:#d23b30; --off:#9a9a9a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Cairo',sans-serif;background:var(--paper);color:var(--ink);line-height:1.7;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 22px 80px}
+  .num{font-family:'Inter',sans-serif;font-weight:800;font-variant-numeric:tabular-nums}
+  .hero{position:relative;background:
+      radial-gradient(1200px 400px at 80% -10%, rgba(255,255,255,.25), transparent),
+      linear-gradient(135deg,var(--gold) 0%, var(--gold-2) 55%, #f7cf6a 100%);
+      overflow:hidden;padding:46px 0 130px;margin-bottom:-92px}
+  .hero::after{content:"";position:absolute;inset:auto 0 0 0;height:120px;
+      background:radial-gradient(60% 120px at 50% 100%, rgba(0,0,0,.05), transparent)}
+  .hero-in{max-width:1160px;margin:0 auto;padding:0 22px;display:flex;align-items:center;gap:28px;position:relative;z-index:2}
+  .logo-badge{width:132px;height:138px;background:var(--gold);border-radius:22px;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+      box-shadow:0 18px 40px rgba(120,80,0,.28), inset 0 0 0 3px rgba(255,255,255,.35)}
+  .logo-svg{width:118px;height:124px}
+  .hero h1{font-size:34px;font-weight:900;color:var(--ink);letter-spacing:-.5px;line-height:1.2}
+  .hero .sub{font-size:16px;color:#5a4a12;font-weight:700;margin-top:6px}
+  .hero .chips{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
+  .chip{background:rgba(22,21,19,.9);color:#ffe9a8;padding:7px 15px;border-radius:30px;font-size:13px;font-weight:700}
+  .chip.red{background:var(--red);color:#fff}
+  section{margin-top:46px}
+  .sec-head{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+  .sec-head .bar{width:6px;height:30px;background:var(--red);border-radius:4px}
+  .sec-head h2{font-size:23px;font-weight:900;color:var(--ink)}
+  .sec-head .en{font-family:'Inter';font-size:12px;color:var(--muted);font-weight:600;margin-top:2px}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;
+      position:relative;overflow:hidden;box-shadow:0 4px 14px rgba(140,110,20,.05)}
+  .kpi::before{content:"";position:absolute;top:0;right:0;width:5px;height:100%;background:var(--gold)}
+  .kpi-spend::before,.kpi-cpp::before{background:var(--red)}
+  .kpi-rev::before,.kpi-roas::before,.kpi-pur::before{background:var(--good)}
+  .kpi-title{font-size:13px;color:var(--muted);font-weight:700;margin-bottom:8px}
+  .kpi-val{font-family:'Inter';font-size:29px;font-weight:800;color:var(--ink);line-height:1}
+  .kpi-unit{font-size:13px;color:var(--muted);font-weight:600;margin-right:5px}
+  .kpi-sub{font-size:11.5px;color:#a49b86;margin-top:9px;line-height:1.5}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;
+      box-shadow:0 6px 20px rgba(140,110,20,.06)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .grid-3{display:grid;grid-template-columns:1.4fr 1fr;gap:20px}
+  .callout{background:linear-gradient(135deg,#fff 0%,var(--gold-soft) 160%);
+      border:1px solid var(--line);border-right:6px solid var(--red);border-radius:16px;padding:22px 24px}
+  .callout p{font-size:15.5px;color:var(--ink-2);margin-bottom:10px}
+  .callout p:last-child{margin-bottom:0}
+  .callout b{color:var(--red-2)}
+  .highlight{background:var(--gold-soft);padding:1px 7px;border-radius:6px;font-weight:700}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{background:var(--ink);color:#ffe9a8;padding:11px 10px;font-weight:700;text-align:center;font-size:12.5px}
+  th:first-child,td.tl{text-align:right}
+  td{padding:10px;text-align:center;border-bottom:1px solid #f2ead6;color:var(--ink-2);font-weight:600}
+  td.tl{font-weight:700;color:var(--ink)}
+  tr:hover td{background:#fffaf0}
+  .row-hot td{background:#f2fbf5}
+  .row-hot:hover td{background:#e9f7ee}
+  .ensub{font-family:'Inter';font-size:10.5px;color:var(--muted);font-weight:600}
+  .muted2{color:var(--muted);font-weight:600;font-size:11px}
+  .pill{display:inline-block;padding:3px 11px;border-radius:20px;font-family:'Inter';font-weight:800;font-size:12px}
+  .pill.good{background:#e3f6ea;color:var(--good)}
+  .pill.warn{background:#fcf1dc;color:var(--warn)}
+  .pill.bad{background:#fce4e2;color:var(--bad)}
+  .pill.off{background:#eee;color:var(--off)}
+  .chart-box{position:relative;height:300px}
+  .chart-sm{position:relative;height:280px}
+  .cat-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
+  .ck{background:#f2fbf5;border:1px solid #d6efdf;border-radius:14px;padding:14px 12px;text-align:center}
+  .ck .l{font-size:12px;color:#5c7a66;font-weight:700;margin-bottom:5px}
+  .ck .v{font-family:'Inter';font-size:22px;font-weight:800;color:var(--ink)}
+  .ck .u{font-size:11px;color:var(--muted);font-weight:600}
+  .hero-tag{display:inline-block;background:var(--good);color:#fff;font-size:12px;font-weight:800;
+      padding:4px 12px;border-radius:20px;margin-right:10px;vertical-align:middle}
+  .interp{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px}
+  .imetric{background:#fffaf0;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .imetric .h{font-weight:800;color:var(--ink);font-size:14.5px;margin-bottom:4px}
+  .imetric .h .v{font-family:'Inter';color:var(--red-2)}
+  .imetric p{font-size:13px;color:#6f6857}
+  .rec{display:flex;gap:16px;padding:18px 0;border-bottom:1px dashed var(--line)}
+  .rec:last-child{border-bottom:none}
+  .rec-n{flex-shrink:0;width:42px;height:42px;border-radius:12px;background:var(--red);color:#fff;
+      display:flex;align-items:center;justify-content:center;font-family:'Inter';font-weight:800;font-size:19px}
+  .rec-n.gold{background:var(--gold);color:var(--ink)}
+  .rec h4{font-size:16px;font-weight:800;margin-bottom:4px}
+  .rec p{font-size:14px;color:#6f6857}
+  .rec .impact{display:inline-block;margin-top:7px;font-size:12px;font-weight:800;color:var(--good);
+      background:#e3f6ea;padding:2px 10px;border-radius:20px}
+  .split-cmp{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center}
+  .cmp-box{text-align:center;padding:16px;border-radius:14px;border:1px solid var(--line)}
+  .cmp-box.a{background:#f2fbf5} .cmp-box.b{background:#fff6f5}
+  .cmp-box .lbl{font-size:13px;color:var(--muted);font-weight:700}
+  .cmp-box .big{font-family:'Inter';font-size:26px;font-weight:800;margin:4px 0}
+  .cmp-arrow{font-size:26px;color:var(--red);font-weight:900}
+  .note{margin-bottom:14px;color:#6f6857;font-size:14px}
+  /* problem analysis */
+  .prob-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .prob{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:17px 20px 15px;
+      border-right:5px solid var(--red);box-shadow:0 4px 14px rgba(140,110,20,.05)}
+  .prob.med{border-right-color:var(--warn)}
+  .prob-head{display:flex;align-items:center;gap:10px;margin-bottom:3px}
+  .prob-sev{font-family:'Inter';font-size:10.5px;font-weight:800;padding:3px 10px;border-radius:20px;flex-shrink:0}
+  .prob-sev.high{background:#fce4e2;color:var(--bad)}
+  .prob-sev.med{background:#fcf1dc;color:var(--warn)}
+  .prob h4{font-size:15.5px;font-weight:800;color:var(--ink)}
+  .prob-en{font-family:'Inter';font-size:10.5px;color:var(--muted);font-weight:600;margin-bottom:8px}
+  .prob p{font-size:13px;color:#6f6857;line-height:1.65}
+  .prob p b{color:var(--red-2);font-weight:800}
+  .prob .cost{display:inline-block;margin-top:11px;font-size:11.5px;font-weight:800;color:var(--bad);
+      background:#fce4e2;padding:3px 12px;border-radius:20px}
+  .prob.med .cost{color:var(--warn);background:#fcf1dc}
+  footer{margin-top:56px;text-align:center;color:var(--muted);font-size:13px;
+      border-top:2px solid var(--line);padding-top:22px}
+  footer b{color:var(--red-2)}
+  @media(max-width:820px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr)}
+    .grid2,.grid-3,.interp,.split-cmp,.prob-grid{grid-template-columns:1fr}
+    .cat-kpis{grid-template-columns:repeat(3,1fr)}
+    .hero-in{flex-direction:column;text-align:center}
+    .cmp-arrow{transform:rotate(90deg)}
+  }
+  @media print{ body{background:#fff} .card,.kpi{box-shadow:none} .hero{-webkit-print-color-adjust:exact;print-color-adjust:exact} }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-in">
+    <div class="logo-badge"><svg viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg" class="logo-svg">
+  <path d="M96 8 C78 14 70 32 74 50 C60 46 44 52 40 68 C56 66 66 72 72 82
+           C70 96 78 108 96 110 C104 96 104 74 100 58 C112 60 122 54 124 42
+           C112 44 104 40 100 32 C106 22 104 12 96 8 Z" fill="#E1352A"/>
+  <circle cx="86" cy="70" r="9" fill="#fff"/>
+  <circle cx="88" cy="72" r="4.5" fill="#1a1a1a"/>
+  <path d="M100 92 L156 116 L156 168 L100 196 L44 168 L44 116 Z" fill="none" stroke="#1a1a1a" stroke-width="7"/>
+  <path d="M100 100 L149 121 L149 164 L100 188 L51 164 L51 121 Z" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
+  <path d="M78 128 q-16 4 -20 14 q14 -4 20 2 q-6 -8 0 -16Z" fill="#fff"/>
+  <path d="M122 128 q16 4 20 14 q-14 -4 -20 2 q6 -8 0 -16Z" fill="#fff"/>
+  <text x="100" y="150" text-anchor="middle" font-family="Arial Black,Arial" font-weight="900" font-size="40" fill="#1a1a1a">5</text>
+  <path d="M40 158 L160 158 L152 178 L48 178 Z" fill="#1a1a1a"/>
+  <text x="100" y="173" text-anchor="middle" font-family="Arial Black,Arial" font-weight="900" font-size="16" letter-spacing="1.5" fill="#fff">ROOSTERS</text>
+  <text x="100" y="190" text-anchor="middle" font-family="Arial" font-weight="700" font-size="8.5" letter-spacing="1" fill="#fff">Fried Chicken</text>
+</svg></div>
+    <div>
+      <h1>تقرير الأداء الإعلاني — 5 Roosters</h1>
+      <div class="sub">Fawry 5 Roosters · تحليل حملات Meta (Facebook &amp; Instagram) مقسّمة حسب نوع الحملة</div>
+      <div class="chips">
+        <span class="chip">🗓️ يونيو 2026 · 1 → 30</span>
+        <span class="chip red">العملة: الجنيه المصري (EGP)</span>
+        <span class="chip">Account ID: 1027608031831068</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section>
+    <div class="sec-head"><div class="bar"></div><div><h2>المؤشرات الرئيسية</h2><div class="en">Key Performance Indicators — June 2026</div></div></div>
+    <div class="kpi-grid">
+    <div class="kpi kpi-spend">
+      <div class="kpi-title">إجمالي الإنفاق</div>
+      <div class="kpi-val">526,801<span class="kpi-unit">ج.م</span></div>
+      <div class="kpi-sub">الميزانية المصروفة خلال يونيو</div>
+    </div>
+    <div class="kpi kpi-rev">
+      <div class="kpi-title">الإيرادات المُتتبَّعة</div>
+      <div class="kpi-val">1,361,856<span class="kpi-unit">ج.م</span></div>
+      <div class="kpi-sub">قيمة المبيعات المسجَّلة عبر البيكسل</div>
+    </div>
+    <div class="kpi kpi-pur">
+      <div class="kpi-title">عدد الطلبات (Purchases)</div>
+      <div class="kpi-val">2,977<span class="kpi-unit">طلب</span></div>
+      <div class="kpi-sub">إجمالي عمليات الشراء المُتتبَّعة</div>
+    </div>
+    <div class="kpi kpi-aov">
+      <div class="kpi-title">متوسط قيمة الطلب (AOV)</div>
+      <div class="kpi-val">457<span class="kpi-unit">ج.م</span></div>
+      <div class="kpi-sub">متوسط قيمة الفاتورة الواحدة</div>
+    </div>
+    <div class="kpi kpi-impr">
+      <div class="kpi-title">مرات الظهور</div>
+      <div class="kpi-val">17.9M<span class="kpi-unit">ظهور</span></div>
+      <div class="kpi-sub">وصل الإعلان لـ 4.8M شخص</div>
+    </div>
+    <div class="kpi kpi-ctr">
+      <div class="kpi-title">نسبة النقر (CTR)</div>
+      <div class="kpi-val">4.11<span class="kpi-unit">%</span></div>
+      <div class="kpi-sub">أعلى من متوسط قطاع المطاعم (~1.5%)</div>
+    </div>
+    <div class="kpi kpi-msg">
+      <div class="kpi-title">الرسائل (WhatsApp/DM)</div>
+      <div class="kpi-val">42,846<span class="kpi-unit">محادثة</span></div>
+      <div class="kpi-sub">محادثات بدأها العملاء للطلب</div>
+    </div>
+    <div class="kpi kpi-cpc">
+      <div class="kpi-title">تكلفة النقرة (CPC)</div>
+      <div class="kpi-val">0.71<span class="kpi-unit">ج.م</span></div>
+      <div class="kpi-sub">تكلفة منخفضة جدًا للنقرة</div>
+    </div>
+    <div class="kpi kpi-likes">
+      <div class="kpi-title">لايكات الصفحة</div>
+      <div class="kpi-val">24,899<span class="kpi-unit">لايك</span></div>
+      <div class="kpi-sub">متابعون جدد للصفحة خلال الشهر</div>
+    </div>
+    <div class="kpi kpi-freq">
+      <div class="kpi-title">التكرار (Frequency)</div>
+      <div class="kpi-val">3.7<span class="kpi-unit">×</span></div>
+      <div class="kpi-sub">متوسط مرات رؤية الشخص للإعلان</div>
+    </div></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="bar"></div><div><h2>الملخص التنفيذي</h2><div class="en">Executive Summary</div></div></div>
+    <div class="callout">
+      <p>خلال يونيو 2026 أنفق حساب <b>5 Roosters</b> مبلغ <span class="highlight">526,801 ج.م</span> وحقّق إيرادات مُتتبَّعة قدرها <span class="highlight">1,361,856 ج.م</span> بعائد مخلوط <b>2.59×</b> عبر <b>2,977 طلب</b>.</p>
+      <p>عند تقسيم الحساب حسب <b>نوع الحملة</b> تظهر القصة الحقيقية بوضوح: حملات <b>المبيعات (Conv)</b> استهلكت <span class="highlight">17%</span> فقط من الميزانية لكنها ولّدت <span class="highlight">91%</span> من الإيرادات و<b>84%</b> من الطلبات بعائد استثنائي <b>13.7×</b> وتكلفة طلب <b>37 ج.م</b> فقط. في المقابل ذهب <b>74%</b> من الإنفاق إلى حملات <b>الرسائل والتفاعل</b> التي تبني القمع وتولّد <b>30,485 محادثة واتساب</b> (طلبات أوفلاين لا يتتبّعها البيكسل).</p>
+      <p>الرسالة الأساسية: <b>المحرّك الرابح واضح ومُثبت</b> — إعادة توزيع الميزانية من حملات التفاعل نحو حملات المبيعات هي أكبر فرصة لمضاعفة النتائج دون زيادة الإنفاق.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="bar"></div><div><h2>الأداء اليومي عبر الشهر</h2><div class="en">Daily Spend, Revenue &amp; ROAS Trend</div></div></div>
+    <div class="card"><div class="chart-box"><canvas id="trend"></canvas></div></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="bar"></div><div><h2>التقسيم حسب نوع الحملة</h2><div class="en">Breakdown by Campaign Type — the core story</div></div></div>
+    <div class="grid-3">
+      <div class="card" style="overflow-x:auto">
+        <table>
+          <thead><tr><th>نوع الحملة</th><th>عدد الحملات</th><th>الإنفاق</th><th>% الإنفاق</th><th>الإيراد</th><th>ROAS</th><th>النتيجة</th></tr></thead>
+          <tbody><tr class="row-hot">
+      <td class="tl"><b>المبيعات (Conversions)</b><div class="ensub">Website Conversions / Sales</div></td>
+      <td>22 <span class="muted2">(10 شغّالة)</span></td>
+      <td>91,167</td>
+      <td>17.3%</td>
+      <td>1,246,095</td>
+      <td><span class="pill good">13.7×</span></td>
+      <td>2,490 طلب</td>
+    </tr><tr>
+      <td class="tl"><b>الرسائل (Messages)</b><div class="ensub">WhatsApp & Direct Messages</div></td>
+      <td>39 <span class="muted2">(32 شغّالة)</span></td>
+      <td>224,578</td>
+      <td>42.6%</td>
+      <td>95,718</td>
+      <td><span class="pill bad">0.4×</span></td>
+      <td>30,485 رسالة</td>
+    </tr><tr>
+      <td class="tl"><b>التفاعل (Engagement)</b><div class="ensub">Post Engagement</div></td>
+      <td>39 <span class="muted2">(29 شغّالة)</span></td>
+      <td>162,669</td>
+      <td>30.9%</td>
+      <td>20,043</td>
+      <td><span class="pill bad">0.1×</span></td>
+      <td>301,291 تفاعل</td>
+    </tr><tr>
+      <td class="tl"><b>لايكات الصفحة (Page Likes)</b><div class="ensub">Facebook Page Likes</div></td>
+      <td>4 <span class="muted2">(4 شغّالة)</span></td>
+      <td>19,376</td>
+      <td>3.7%</td>
+      <td>0</td>
+      <td><span class="pill off">—</span></td>
+      <td>16,614 لايك</td>
+    </tr><tr>
+      <td class="tl"><b>زيارات إنستجرام (IG Visits)</b><div class="ensub">Instagram Profile Visits</div></td>
+      <td>1 <span class="muted2">(1 شغّالة)</span></td>
+      <td>21,219</td>
+      <td>4.0%</td>
+      <td>0</td>
+      <td><span class="pill off">—</span></td>
+      <td>زيارات بروفايل</td>
+    </tr><tr>
+      <td class="tl"><b>المكالمات (Calls)</b><div class="ensub">Call Campaigns</div></td>
+      <td>1 <span class="muted2">(0 شغّالة)</span></td>
+      <td>528</td>
+      <td>0.1%</td>
+      <td>0</td>
+      <td><span class="pill off">—</span></td>
+      <td>مكالمات</td>
+    </tr><tr>
+      <td class="tl"><b>التوظيف (Hiring)</b><div class="ensub">Recruitment</div></td>
+      <td>1 <span class="muted2">(1 شغّالة)</span></td>
+      <td>7,264</td>
+      <td>1.4%</td>
+      <td>0</td>
+      <td><span class="pill off">—</span></td>
+      <td>توظيف</td>
+    </tr></tbody>
+        </table>
+      </div>
+      <div class="card"><div class="chart-sm"><canvas id="catChart"></canvas></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="bar"></div><div><h2><span class="hero-tag">الأهم</span>حملات المبيعات (Conversions)</h2><div class="en">Website Conversions — the profit engine</div></div></div>
+    <div class="cat-kpis">
+      <div class="ck"><div class="l">الإنفاق</div><div class="v">91,167</div><div class="u">ج.م · 17% من الميزانية</div></div>
+      <div class="ck"><div class="l">الإيراد</div><div class="v">1,246,095</div><div class="u">ج.م · 91% من الإجمالي</div></div>
+      <div class="ck"><div class="l">ROAS</div><div class="v">13.7×</div><div class="u">عائد الإنفاق</div></div>
+      <div class="ck"><div class="l">الطلبات</div><div class="v">2,490</div><div class="u">طلب مُتتبَّع</div></div>
+      <div class="ck"><div class="l">تكلفة الطلب</div><div class="v">37</div><div class="u">ج.م / طلب</div></div>
+      <div class="ck"><div class="l">متوسط الطلب</div><div class="v">500</div><div class="u">ج.م / فاتورة</div></div>
+    </div>
+    <div class="grid2">
+      <div class="card" style="overflow-x:auto">
+        <h4 style="margin-bottom:12px;font-size:15px">🏆 كل حملات المبيعات (22 حملة) — مرتّبة بالإيراد</h4>
+        <table><thead><tr><th>الحملة</th><th>الحالة</th><th>الإنفاق</th><th>طلبات</th><th>الإيراد</th><th>CPP</th><th>ROAS</th></tr></thead><tbody><tr>
+      <td class="tl">Twist Mix Offer_28 Apr</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>11,148</td>
+      <td>324</td>
+      <td>168,466</td>
+      <td>34</td>
+      <td><span class="pill good">15.1×</span></td>
+    </tr><tr>
+      <td class="tl">cairo_Alex_5 MAY</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>9,660</td>
+      <td>270</td>
+      <td>124,725</td>
+      <td>36</td>
+      <td><span class="pill good">12.9×</span></td>
+    </tr><tr>
+      <td class="tl">offers_alex - 2</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>8,814</td>
+      <td>242</td>
+      <td>119,871</td>
+      <td>36</td>
+      <td><span class="pill good">13.6×</span></td>
+    </tr><tr>
+      <td class="tl">offers_2 june _Retargeting</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>6,794</td>
+      <td>193</td>
+      <td>100,169</td>
+      <td>35</td>
+      <td><span class="pill good">14.7×</span></td>
+    </tr><tr>
+      <td class="tl">happy offer | Cairo - Alex - Giza | 9 June</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>6,798</td>
+      <td>176</td>
+      <td>91,318</td>
+      <td>39</td>
+      <td><span class="pill good">13.4×</span></td>
+    </tr><tr>
+      <td class="tl">offers_LLK 2% / Broad_5 GOV_13</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>5,782</td>
+      <td>186</td>
+      <td>86,935</td>
+      <td>31</td>
+      <td><span class="pill good">15.0×</span></td>
+    </tr><tr>
+      <td class="tl">offers_madia_safqa new</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>5,717</td>
+      <td>159</td>
+      <td>84,254</td>
+      <td>36</td>
+      <td><span class="pill good">14.7×</span></td>
+    </tr><tr>
+      <td class="tl">offers_cairo_safqa new</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>5,678</td>
+      <td>166</td>
+      <td>83,836</td>
+      <td>34</td>
+      <td><span class="pill good">14.8×</span></td>
+    </tr><tr>
+      <td class="tl">offers_alex</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>5,446</td>
+      <td>164</td>
+      <td>77,758</td>
+      <td>33</td>
+      <td><span class="pill good">14.3×</span></td>
+    </tr><tr>
+      <td class="tl">POV - VIDEO_13 June</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>3,635</td>
+      <td>102</td>
+      <td>54,652</td>
+      <td>36</td>
+      <td><span class="pill good">15.0×</span></td>
+    </tr><tr>
+      <td class="tl">Saving Offer_DarkMeat_24 Jun</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>4,256</td>
+      <td>110</td>
+      <td>52,791</td>
+      <td>39</td>
+      <td><span class="pill good">12.4×</span></td>
+    </tr><tr>
+      <td class="tl">offers_6 october_safqa new</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>3,869</td>
+      <td>89</td>
+      <td>46,621</td>
+      <td>43</td>
+      <td><span class="pill good">12.1×</span></td>
+    </tr><tr>
+      <td class="tl">offers_madia_win creative</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>2,831</td>
+      <td>68</td>
+      <td>39,121</td>
+      <td>42</td>
+      <td><span class="pill good">13.8×</span></td>
+    </tr><tr>
+      <td class="tl">Offers - Win C | Cairo - Alex - Giza | 6 Jun</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>3,276</td>
+      <td>75</td>
+      <td>33,754</td>
+      <td>44</td>
+      <td><span class="pill good">10.3×</span></td>
+    </tr><tr>
+      <td class="tl">offers_alex_safqa new</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>2,699</td>
+      <td>63</td>
+      <td>29,459</td>
+      <td>43</td>
+      <td><span class="pill good">10.9×</span></td>
+    </tr><tr>
+      <td class="tl">tanta_9 may</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>1,475</td>
+      <td>29</td>
+      <td>14,663</td>
+      <td>51</td>
+      <td><span class="pill good">9.9×</span></td>
+    </tr><tr>
+      <td class="tl">offers_2 june _Retargeting - ex last pur 15D</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>856</td>
+      <td>21</td>
+      <td>11,499</td>
+      <td>41</td>
+      <td><span class="pill good">13.4×</span></td>
+    </tr><tr>
+      <td class="tl">darkmeat offer_giza_27 jun</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>757</td>
+      <td>18</td>
+      <td>10,251</td>
+      <td>42</td>
+      <td><span class="pill good">13.5×</span></td>
+    </tr><tr>
+      <td class="tl">POV - VIDEO_scaling</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>677</td>
+      <td>13</td>
+      <td>7,155</td>
+      <td>52</td>
+      <td><span class="pill good">10.6×</span></td>
+    </tr><tr>
+      <td class="tl">darkmeat offer_alex_27 jun</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>331</td>
+      <td>12</td>
+      <td>3,748</td>
+      <td>28</td>
+      <td><span class="pill good">11.3×</span></td>
+    </tr><tr>
+      <td class="tl">Safqa Offer no price_alex_27 Jun</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>335</td>
+      <td>4</td>
+      <td>2,715</td>
+      <td>84</td>
+      <td><span class="pill good">8.1×</span></td>
+    </tr><tr>
+      <td class="tl">Safqa Offer no price_cairo_27 Jun</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>334</td>
+      <td>6</td>
+      <td>2,334</td>
+      <td>56</td>
+      <td><span class="pill good">7.0×</span></td>
+    </tr></tbody></table>
+      </div>
+      <div class="card" style="overflow-x:auto">
+        <h4 style="margin-bottom:12px;font-size:15px">🎯 أفضل الإعلانات أداءً (Winning Ads)</h4>
+        <table><thead><tr><th>الإعلان</th><th>الإنفاق</th><th>طلبات</th><th>الإيراد</th><th>CTR</th><th>ROAS</th></tr></thead><tbody><tr>
+      <td class="tl">New Sales Ad - Copy 2</td>
+      <td>6,562</td>
+      <td>208</td>
+      <td>106,508</td>
+      <td>2.8%</td>
+      <td><span class="pill good">16.2×</span></td>
+    </tr><tr>
+      <td class="tl">New Sales Ad</td>
+      <td>7,530</td>
+      <td>218</td>
+      <td>102,069</td>
+      <td>4.4%</td>
+      <td><span class="pill good">13.6×</span></td>
+    </tr><tr>
+      <td class="tl">New Sales Ad - Copy</td>
+      <td>7,101</td>
+      <td>204</td>
+      <td>101,998</td>
+      <td>4.2%</td>
+      <td><span class="pill good">14.4×</span></td>
+    </tr><tr>
+      <td class="tl">New Sales Ad - Copy</td>
+      <td>5,567</td>
+      <td>159</td>
+      <td>80,317</td>
+      <td>3.8%</td>
+      <td><span class="pill good">14.4×</span></td>
+    </tr><tr>
+      <td class="tl">ad 1 - Copy</td>
+      <td>5,380</td>
+      <td>148</td>
+      <td>76,465</td>
+      <td>4.1%</td>
+      <td><span class="pill good">14.2×</span></td>
+    </tr><tr>
+      <td class="tl">New Sales Ad - Copy</td>
+      <td>4,524</td>
+      <td>138</td>
+      <td>65,626</td>
+      <td>4.1%</td>
+      <td><span class="pill good">14.5×</span></td>
+    </tr><tr>
+      <td class="tl">New Sales Ad - Copy 2</td>
+      <td>4,586</td>
+      <td>116</td>
+      <td>61,958</td>
+      <td>2.5%</td>
+      <td><span class="pill good">13.5×</span></td>
+    </tr><tr>
+      <td class="tl">ad 1 - Copy</td>
+      <td>4,602</td>
+      <td>107</td>
+      <td>56,562</td>
+      <td>3.2%</td>
+      <td><span class="pill good">12.3×</span></td>
+    </tr></tbody></table>
+        <p class="note" style="margin-top:14px;margin-bottom:0">إعلانات «New Sales Ad» ونسخها هي العمود الفقري للمبيعات — تحقق <b>13–16×</b> بثبات. هذه هي الإعلانات التي يجب مضاعفة ميزانيتها.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="bar"></div><div><h2>حملات الرسائل (Messages / WhatsApp)</h2><div class="en">Messaging Campaigns — 39 campaigns · 43% of budget</div></div></div>
+    <div class="card" style="overflow-x:auto">
+      <p class="note">أكبر بند إنفاق في الحساب (43%). تولّد <b>30,485 محادثة واتساب</b> بمتوسط تكلفة <b>7.4 ج.م</b> للمحادثة. عائدها المباشر في البيكسل منخفض (0.4×) لأن معظم الطلبات تُغلق أوفلاين عبر الواتساب — لذا قياسها الحقيقي يحتاج ربط الطلبات الفعلية.</p>
+      <table><thead><tr><th>الحملة</th><th>الحالة</th><th>الإنفاق</th><th>الرسائل</th><th>تكلفة الرسالة</th><th>CTR</th></tr></thead><tbody><tr>
+      <td class="tl">What'sApp_Specific Area_Cairo_Giza</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>24,516</td>
+      <td>5,133</td>
+      <td>4.8</td>
+      <td>4.6%</td>
+    </tr><tr>
+      <td class="tl">What'sApp_Specific Area_Alex</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>14,491</td>
+      <td>3,325</td>
+      <td>4.4</td>
+      <td>4.8%</td>
+    </tr><tr>
+      <td class="tl">Whats'app Campaign_13 June</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>5,012</td>
+      <td>1,490</td>
+      <td>3.4</td>
+      <td>6.9%</td>
+    </tr><tr>
+      <td class="tl">safir masr al gdida - safqaaa - Copy</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>11,940</td>
+      <td>1,417</td>
+      <td>8.4</td>
+      <td>3.6%</td>
+    </tr><tr>
+      <td class="tl">safir masr al gdida - karmasha</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>11,963</td>
+      <td>1,412</td>
+      <td>8.5</td>
+      <td>3.9%</td>
+    </tr><tr>
+      <td class="tl">Karmasha offer - alex</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>5,371</td>
+      <td>933</td>
+      <td>5.8</td>
+      <td>6.5%</td>
+    </tr><tr>
+      <td class="tl">Al safqa 2 Offer -  alex</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>5,417</td>
+      <td>922</td>
+      <td>5.9</td>
+      <td>6.9%</td>
+    </tr><tr>
+      <td class="tl">Al safqa 2 Offer -  Souter</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>5,380</td>
+      <td>824</td>
+      <td>6.5</td>
+      <td>5.5%</td>
+    </tr><tr>
+      <td class="tl">Karmasha offer - Souter</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>5,358</td>
+      <td>786</td>
+      <td>6.8</td>
+      <td>5.4%</td>
+    </tr><tr>
+      <td class="tl">Karmasha offer - zahraa</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>5,357</td>
+      <td>684</td>
+      <td>7.8</td>
+      <td>4.7%</td>
+    </tr><tr>
+      <td class="tl">Al safqa 2 Offer - 6 elzahraa</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>5,376</td>
+      <td>681</td>
+      <td>7.9</td>
+      <td>4.6%</td>
+    </tr><tr>
+      <td class="tl">Karmasha offer - rehab</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>5,367</td>
+      <td>669</td>
+      <td>8.0</td>
+      <td>4.1%</td>
+    </tr></tbody></table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="bar"></div><div><h2>حملات التفاعل (Engagement)</h2><div class="en">Post Engagement — 39 campaigns · 31% of budget</div></div></div>
+    <div class="card" style="overflow-x:auto">
+      <p class="note">تستهلك <b>31%</b> من الميزانية لتحقيق <b>301,291 تفاعل</b>، لكن عائدها المبيعي شبه معدوم (0.1×). مفيدة للوعي بالعلامة لكنها أكبر فرصة لإعادة توجيه الميزانية.</p>
+      <table><thead><tr><th>الحملة</th><th>الحالة</th><th>الإنفاق</th><th>التفاعلات</th><th>تكلفة التفاعل</th><th>CTR</th></tr></thead><tbody><tr>
+      <td class="tl">eid video_2 june</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>2,121</td>
+      <td>50,320</td>
+      <td>0.04</td>
+      <td>3.5%</td>
+    </tr><tr>
+      <td class="tl">g_world cup video</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>891</td>
+      <td>27,657</td>
+      <td>0.03</td>
+      <td>1.5%</td>
+    </tr><tr>
+      <td class="tl">happy offerـ9 june</td>
+      <td><span class="pill off">متوقفة</span></td>
+      <td>12,699</td>
+      <td>13,171</td>
+      <td>0.96</td>
+      <td>4.1%</td>
+    </tr><tr>
+      <td class="tl">Karmasha Offer -  alex</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>4,718</td>
+      <td>13,119</td>
+      <td>0.36</td>
+      <td>10.7%</td>
+    </tr><tr>
+      <td class="tl">Tanta offers - karmasha page</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>6,002</td>
+      <td>11,005</td>
+      <td>0.55</td>
+      <td>5.5%</td>
+    </tr><tr>
+      <td class="tl">Al Safqa Offer -  alex - - Copy</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>4,809</td>
+      <td>9,841</td>
+      <td>0.49</td>
+      <td>9.8%</td>
+    </tr><tr>
+      <td class="tl">Karmasha Offer -  Souter</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>4,704</td>
+      <td>9,674</td>
+      <td>0.49</td>
+      <td>5.3%</td>
+    </tr><tr>
+      <td class="tl">Al Safqa Offer -  Souter  - - Copy</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>4,803</td>
+      <td>8,401</td>
+      <td>0.57</td>
+      <td>5.5%</td>
+    </tr><tr>
+      <td class="tl">Karmasha Offer -  rehab</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>4,716</td>
+      <td>8,197</td>
+      <td>0.58</td>
+      <td>4.6%</td>
+    </tr><tr>
+      <td class="tl">Karmasha Offer -  hadaiaa</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>4,718</td>
+      <td>8,173</td>
+      <td>0.58</td>
+      <td>4.7%</td>
+    </tr></tbody></table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="bar"></div><div><h2>لايكات الصفحة والأهداف الأخرى</h2><div class="en">Page Likes, Instagram, Calls &amp; Hiring</div></div></div>
+    <div class="grid2">
+      <div class="card" style="overflow-x:auto">
+        <h4 style="margin-bottom:12px;font-size:15px">👍 لايكات صفحة فيسبوك</h4>
+        <p class="note">جلبت <b>16,614 لايك</b> للصفحة بتكلفة <b>1.17 ج.م</b> للايك الواحد.</p>
+        <table><thead><tr><th>الحملة</th><th>الحالة</th><th>الإنفاق</th><th>اللايكات</th><th>تكلفة اللايك</th></tr></thead><tbody><tr>
+      <td class="tl">14/1</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>11,928</td>
+      <td>12,786</td>
+      <td>0.93</td>
+    </tr><tr>
+      <td class="tl">zagazig - 16/1</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>3,215</td>
+      <td>1,499</td>
+      <td>2.14</td>
+    </tr><tr>
+      <td class="tl">Tanta _14 March</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>2,838</td>
+      <td>1,147</td>
+      <td>2.47</td>
+    </tr><tr>
+      <td class="tl">new - ex.page like</td>
+      <td><span class="pill good">شغّالة</span></td>
+      <td>1,396</td>
+      <td>1,182</td>
+      <td>1.18</td>
+    </tr></tbody></table>
+      </div>
+      <div class="card" style="overflow-x:auto">
+        <h4 style="margin-bottom:12px;font-size:15px">📱 إنستجرام · مكالمات · توظيف</h4>
+        <p class="note">أهداف مساندة باستهلاك محدود من الميزانية. حملة زيارات إنستجرام وحدها استهلكت <b>21,219 ج.م</b> دون طلبات مُتتبَّعة.</p>
+        <table><thead><tr><th>النوع</th><th>الحملة</th><th>الحالة</th><th>الإنفاق</th><th>الوصول</th><th>رسائل</th></tr></thead><tbody><tr>
+          <td class="tl">زيارات إنستجرام (IG Visits)</td>
+          <td class="tl">Campaign</td>
+          <td><span class="pill good">شغّالة</span></td>
+          <td>21,219</td>
+          <td>479,783</td>
+          <td>69</td>
+        </tr><tr>
+          <td class="tl">المكالمات (Calls)</td>
+          <td class="tl">Offers_29 June</td>
+          <td><span class="pill off">متوقفة</span></td>
+          <td>528</td>
+          <td>8,603</td>
+          <td>5</td>
+        </tr><tr>
+          <td class="tl">التوظيف (Hiring)</td>
+          <td class="tl">15\2</td>
+          <td><span class="pill good">شغّالة</span></td>
+          <td>7,264</td>
+          <td>66,182</td>
+          <td>1,188</td>
+        </tr></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="bar"></div><div><h2>ماذا تعني كل الأرقام؟</h2><div class="en">What every number means</div></div></div>
+    <div class="card">
+      <div class="interp">
+        <div class="imetric"><div class="h">ROAS المخلوط = <span class="v">2.59×</span></div><p>العائد على مستوى الحساب كله. الرقم مسحوب لأسفل بسبب حملات الرسائل والتفاعل؛ حملات المبيعات وحدها تحقق <b>13.7×</b>.</p></div>
+        <div class="imetric"><div class="h">تكلفة الطلب (Conv) = <span class="v">37 ج.م</span></div><p>تكلفة الطلب داخل حملات المبيعات النقية — رقم ممتاز جدًا لقطاع الوجبات السريعة (مقابل 177 ج.م على الحساب كله).</p></div>
+        <div class="imetric"><div class="h">نسبة النقر (CTR) = <span class="v">4.11%</span></div><p>أعلى بكثير من متوسط قطاع المطاعم (~1.5%). الإبداع والعروض جذّابة جدًا وتوقف المستخدم عن التمرير.</p></div>
+        <div class="imetric"><div class="h">تكلفة الرسالة = <span class="v">7.4 ج.م</span></div><p>متوسط تكلفة بدء محادثة واتساب. قناة طلب فعّالة، لكن إيرادها لا يظهر في البيكسل ويحتاج تتبّعًا يدويًا/CRM.</p></div>
+        <div class="imetric"><div class="h">التكرار (Frequency) = <span class="v">3.7×</span></div><p>الشخص الواحد رأى الإعلان ~3.7 مرات. رقم صحّي، لكن مع اقترابه من 4 يبدأ خطر «إرهاق الإعلان».</p></div>
+        <div class="imetric"><div class="h">لايكات الصفحة = <span class="v">24,899 لايك</span></div><p>نمو عضوي للصفحة كأثر جانبي مجاني من كل الحملات + حملات اللايك المخصصة. يبني جمهورًا لإعادة الاستهداف مستقبلًا.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="bar"></div><div><h2>النصف الأول مقابل النصف الثاني</h2><div class="en">First Half vs Second Half — efficiency trend</div></div></div>
+    <div class="card">
+      <div class="split-cmp">
+        <div class="cmp-box a">
+          <div class="lbl">1 → 15 يونيو</div>
+          <div class="big" style="color:var(--good)">3.41×</div>
+          <div class="lbl">ROAS · إنفاق 227,180 ج.م</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px">CPM ~26 · 1,614 طلب</div>
+        </div>
+        <div class="cmp-arrow">←</div>
+        <div class="cmp-box b">
+          <div class="lbl">16 → 30 يونيو</div>
+          <div class="big" style="color:var(--red)">1.96×</div>
+          <div class="lbl">ROAS · إنفاق 299,621 ج.م</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px">CPM ~31 · 1,363 طلب</div>
+        </div>
+      </div>
+      <p style="margin-top:18px;color:#6f6857;font-size:14px;text-align:center">
+        انخفض العائد بنسبة <b style="color:var(--red)">43%</b> في النصف الثاني مع تغيّر الإنفاق بـ <b>+32%</b> — إشارة لمراقبة الـ CPM وتوزيع الميزانية بين أنواع الحملات.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="bar"></div><div><h2>تحليل مشاكل الشهر</h2><div class="en">June Problems &amp; Missed Opportunities — what went wrong</div></div></div>
+    <div class="callout" style="margin-bottom:20px;border-right-color:var(--warn)">
+      <p style="margin-bottom:0">رغم أن حملات المبيعات ممتازة، الحساب ككل خسر كفاءة كبيرة خلال يونيو بسبب مشاكل في التوزيع والتوسّع والتشغيل. فيما يلي أبرز المشاكل مرتّبة حسب الخطورة، كل واحدة بالأرقام التي تثبتها:</p>
+    </div>
+    <div class="prob-grid"><div class="prob high">
+      <div class="prob-head">
+        <span class="prob-sev high">حرِج</span>
+        <h4>انهيار الكفاءة عند زيادة الإنفاق</h4>
+      </div>
+      <div class="prob-en">Efficiency collapsed while scaling</div>
+      <p>في النصف الثاني من الشهر زاد الإنفاق بـ <b>+32%</b> (227,180 ← 299,621 ج.م) لكن الطلبات <b>انخفضت -16%</b> (1614 ← 1363 طلب). العائد هبط من <b>3.41×</b> إلى <b>1.96×</b> وتكلفة الطلب كادت تتضاعف من <b>141</b> إلى <b>220 ج.م</b>. أسوأ يوم كان 24 يونيو بعائد 1.28× فقط.</p>
+      <span class="cost">خسارة كفاءة ~43%</span>
+    </div><div class="prob high">
+      <div class="prob-head">
+        <span class="prob-sev high">حرِج</span>
+        <h4>إيقاف حملات مبيعات رابحة ومُثبتة</h4>
+      </div>
+      <div class="prob-en">Proven winning campaigns paused</div>
+      <p><b>9 حملة مبيعات</b> بعائد 10–14× (ولّدت معًا <b>415,953 ج.م</b> بعائد <b>12.6×</b>) موقوفة حاليًا — مثل «cairo_Alex» (12.9×) و«offers_alex-2» (13.6×) و«madia_win creative» (13.8×). أوقفنا الرابح بدل ما نوسّعه، بينما حملات وعي أضعف ما زالت شغّالة.</p>
+      <span class="cost">فرصة توسّع ضائعة</span>
+    </div><div class="prob high">
+      <div class="prob-head">
+        <span class="prob-sev high">حرِج</span>
+        <h4>ثلث الميزانية بعائد مبيعي شبه صفري</h4>
+      </div>
+      <div class="prob-en">A third of budget on near-zero sales return</div>
+      <p>حملات <b>التفاعل + إنستجرام</b> استهلكت <b>183,888 ج.م (35%)</b> من الميزانية مقابل <b>87 طلب فقط</b> — بينما حملات المبيعات (المحرّك الحقيقي) أخذت 17% فقط. سوء توزيع واضح بين مصدر الربح والإنفاق.</p>
+      <span class="cost">~183,888 ج.م قابلة لإعادة التوزيع</span>
+    </div><div class="prob med">
+      <div class="prob-head">
+        <span class="prob-sev med">متوسط</span>
+        <h4>تفاوت كبير في تكلفة الرسالة</h4>
+      </div>
+      <div class="prob-en">Wide variance in cost per message</div>
+      <p>تكلفة المحادثة تتراوح من <b>3.4</b> إلى <b>16.5 ج.م</b> (فرق <b>5×</b>). حملة «Tagamo3 opening» تدفع 16.5 ج.م للرسالة مقابل 3.4 ج.م في حملات الواتساب الجغرافية — نفس النتيجة بضعف التكلفة أو أكثر.</p>
+      <span class="cost">إهدار في حملات الرسائل الغالية</span>
+    </div><div class="prob med">
+      <div class="prob-head">
+        <span class="prob-sev med">متوسط</span>
+        <h4>إرهاق إعلاني وارتفاع الـ CPM</h4>
+      </div>
+      <div class="prob-en">Ad fatigue &amp; rising CPM</div>
+      <p>التكرار وصل <b>3.7×</b> (قرب منطقة الإرهاق) وتكلفة الألف ظهور ارتفعت من <b>~24</b> إلى <b>~33 ج.م (+36%)</b> من بداية الشهر لآخره — نفس الإبداعات تُعرض بكثرة فترتفع تكلفة كل نتيجة.</p>
+      <span class="cost">تكلفة النتيجة في ازدياد</span>
+    </div><div class="prob med">
+      <div class="prob-head">
+        <span class="prob-sev med">متوسط</span>
+        <h4>عدم استقرار وتيرة الإنفاق</h4>
+      </div>
+      <div class="prob-en">Unstable spend pacing</div>
+      <p>تذبذب يومي حاد في الإنفاق (من <b>1,190</b> إلى <b>28,207 ج.م</b> في اليوم) وبداية شهر ضعيفة: أول يومين <b>2,445</b> و<b>1,190 ج.م</b> ثم قفزة مفاجئة إلى <b>21,072 ج.م</b> في اليوم الثالث. البداية البطيئة = أيام مبيعات مهدرة والقفزات تربك خوارزمية التعلّم.</p>
+      <span class="cost">أيام مبيعات مهدرة</span>
+    </div></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="bar"></div><div><h2>خطة تحسين الحساب</h2><div class="en">Optimization Roadmap</div></div></div>
+    <div class="card">
+      <div class="rec"><div class="rec-n">1</div><div>
+        <h4>إعادة توزيع الميزانية نحو حملات المبيعات (Conv)</h4>
+        <p>حملات Conv تحقق 13.7× بينما التفاعل عند 0.1×. تحويل 20–30% من ميزانية التفاعل (162,669 ج.م) إلى أفضل حملات المبيعات قد يرفع إجمالي الإيرادات دون زيادة الإنفاق.</p>
+        <span class="impact">أثر متوقع: +25–40% إيرادات</span>
+      </div></div>
+      <div class="rec"><div class="rec-n gold">2</div><div>
+        <h4>مضاعفة الإعلانات الرابحة (Scale Winners)</h4>
+        <p>إعلانات «New Sales Ad» ونسخها تحقق 13–16× بثبات. ارفع ميزانيتها تدريجيًا (20% كل 2–3 أيام) واعمل نسخًا جديدة بنفس الزاوية لتجنّب إرهاق الجمهور.</p>
+        <span class="impact">أثر متوقع: نمو مبيعات مستقر</span>
+      </div></div>
+      <div class="rec"><div class="rec-n">3</div><div>
+        <h4>تتبّع طلبات واتساب لقياس حملات الرسائل</h4>
+        <p>حملات الرسائل (43% من الميزانية) تولّد 30,485 محادثة لكن إيرادها لا يظهر في البيكسل. ربط الطلبات الفعلية عبر CRM/كوبونات سيكشف عائدها الحقيقي ويسمح بقرار دقيق: تكبير أم تقليص.</p>
+        <span class="impact">أثر متوقع: وضوح كامل للـ ROI</span>
+      </div></div>
+      <div class="rec"><div class="rec-n gold">4</div><div>
+        <h4>مراجعة الحملات المستنزِفة بلا عائد مبيعي</h4>
+        <p>حملة «Instagram profile visits» (21,219 ج.م) وحملات التفاعل الأضعف تستهلك ميزانية بعائد شبه صفري. راجعها أو أعد توجيه ميزانيتها لحملات التحويل.</p>
+        <span class="impact">أثر متوقع: توفير ~8–10% من الإنفاق</span>
+      </div></div>
+      <div class="rec"><div class="rec-n">5</div><div>
+        <h4>ضبط إرهاق الإعلان (Frequency 3.7×)</h4>
+        <p>مع اقتراب التكرار من 4 وارتفاع CPM، جدّد الإبداعات كل 10–14 يومًا ووسّع الجماهير المشابهة (Lookalikes) لخفض التكلفة والحفاظ على كفاءة حملات المبيعات.</p>
+        <span class="impact">أثر متوقع: خفض CPM 10–15%</span>
+      </div></div>
+    </div>
+  </section>
+
+  <footer>
+    <b>5 Roosters — Fried Chicken</b> · تقرير أداء Meta Ads لشهر يونيو 2026 · مقسّم حسب نوع الحملة<br>
+    البيانات مسحوبة مباشرة من Meta Marketing API · العملة: الجنيه المصري · إجمالي 107 حملة و302 إعلان
+  </footer>
+
+</div>
+
+
+<script>
+const gold='#F2B01E', red='#E1352A', green='#1f9d57', ink='#161513',
+      blue='#378ADD', purple='#7A5Cc0', gray='#b8ad95';
+Chart.defaults.font.family='Cairo, Inter, sans-serif';
+Chart.defaults.color='#6f6857';
+
+new Chart(document.getElementById('trend'),{
+  type:'bar',
+  data:{labels:["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30"],
+    datasets:[
+      {type:'bar',label:'الإنفاق (ج.م)',data:[2445, 1190, 21072, 19448, 19529, 16376, 17486, 15496, 15907, 16419, 16590, 14610, 14692, 18047, 17874, 18531, 9271, 9025, 26249, 21467, 21468, 15996, 9010, 21921, 28207, 24351, 19079, 27457, 24964, 22625],backgroundColor:'rgba(225,53,42,.22)',borderColor:red,borderWidth:1,borderRadius:4,yAxisID:'y',order:3},
+      {type:'bar',label:'الإيراد (ج.م)',data:[29526, 7399, 48653, 62444, 90258, 61697, 52692, 44437, 47165, 68324, 59770, 53792, 56824, 45384, 46507, 42028, 32369, 17492, 55971, 35179, 36038, 35431, 28995, 28029, 51075, 47941, 41594, 52233, 37639, 44970],backgroundColor:'rgba(242,176,30,.75)',borderColor:gold,borderWidth:1,borderRadius:4,yAxisID:'y',order:2},
+      {type:'line',label:'ROAS (×)',data:[12.08, 6.22, 2.31, 3.21, 4.62, 3.77, 3.01, 2.87, 2.97, 4.16, 3.6, 3.68, 3.87, 2.51, 2.6, 2.27, 3.49, 1.94, 2.13, 1.64, 1.68, 2.21, 3.22, 1.28, 1.81, 1.97, 2.18, 1.9, 1.51, 1.99],borderColor:green,backgroundColor:green,borderWidth:3,tension:.35,pointRadius:3,pointBackgroundColor:green,yAxisID:'y1',order:1}
+    ]},
+  options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{weight:'700'}}}},
+    scales:{
+      y:{position:'right',title:{display:true,text:'ج.م'},grid:{color:'#f2ead6'},ticks:{callback:v=>v>=1000?(v/1000)+'k':v}},
+      y1:{position:'left',title:{display:true,text:'ROAS ×'},grid:{drawOnChartArea:false},min:0},
+      x:{grid:{display:false}}
+    }}
+});
+
+new Chart(document.getElementById('catChart'),{
+  type:'doughnut',
+  data:{labels:["المبيعات", "الرسائل", "التفاعل", "لايكات الصفحة", "إنستجرام", "أخرى"],
+    datasets:[{data:[91167, 224578, 162669, 19376, 21219, 7792],
+      backgroundColor:[green,gold,red,blue,purple,gray],borderColor:'#fff',borderWidth:3}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'56%',
+    plugins:{legend:{position:'bottom',labels:{usePointStyle:true,boxWidth:9,padding:12,font:{weight:'700',size:11}}},
+      title:{display:true,text:'توزيع الإنفاق حسب نوع الحملة',font:{size:14,weight:'800'},color:ink}}}
+});
+</script>
+
+</body>
+</html>
