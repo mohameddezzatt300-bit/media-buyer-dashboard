@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>BrightVision — Leads CRM</title>
+<style>
+:root{--purple:#4B2E83;--purple2:#6B5DBA;--gold:#F5B301;--indigo:#1E1840;--bg:#F4F2FA;--ok:#1e9e5a;--warn:#e07b00;--bad:#c0392b}
+*{box-sizing:border-box;font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+body{margin:0;background:var(--bg);color:#222}
+header{background:linear-gradient(135deg,var(--indigo),var(--purple));color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:18px;margin:0;flex:1}header h1 span{color:var(--gold)}
+.agent{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;padding:6px 10px;font-size:13px;width:150px}
+.agent::placeholder{color:#ddd}
+button.refresh{background:var(--gold);border:0;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer;color:var(--indigo)}
+.cards{display:flex;gap:10px;padding:14px 20px;flex-wrap:wrap}
+.card{background:#fff;border-radius:12px;padding:10px 16px;min-width:100px;box-shadow:0 1px 4px rgba(30,24,64,.1);cursor:pointer;border:2px solid transparent;text-align:center}
+.card.active{border-color:var(--purple2)}
+.card b{display:block;font-size:22px;color:var(--purple)}
+.card small{color:#666}
+.controls{display:flex;gap:10px;padding:0 20px 10px;flex-wrap:wrap}
+.controls input{flex:1;min-width:200px;padding:9px 12px;border:1px solid #ccc;border-radius:8px;font-size:14px}
+.wrap{overflow-x:auto;padding:0 20px 30px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(30,24,64,.1);min-width:900px}
+th{background:var(--purple);color:var(--gold);padding:9px 8px;font-size:13px;white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid #eee;font-size:13px;vertical-align:middle}
+tr:hover td{background:#faf8ff}
+td select{padding:5px;border-radius:6px;border:1px solid #ccc;font-size:12px}
+td input.fb{width:100%;min-width:160px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:12px}
+a.wa{background:#25D366;color:#fff;border-radius:6px;padding:3px 8px;text-decoration:none;font-size:12px;margin-inline-start:4px}
+a.tel{color:var(--purple);text-decoration:none;font-weight:600;direction:ltr;display:inline-block}
+.badge{border-radius:20px;padding:2px 10px;font-size:11px;color:#fff;display:inline-block}
+.saving{color:var(--warn);font-size:11px}.saved{color:var(--ok);font-size:11px}.err{color:var(--bad);font-size:11px}
+.muted{color:#888;font-size:11px}
+.notice{margin:20px;padding:16px;background:#fff3e0;border:1px solid #e07b00;border-radius:10px;color:#7a4500;display:none}
+@media(max-width:600px){header h1{font-size:15px}.card{min-width:80px;padding:8px 10px}.card b{font-size:18px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Bright<span>Vision</span> — ليدز CRM</h1>
+  <input class="agent" id="agent" placeholder="اسمك (مندوب السيلز)">
+  <button class="refresh" onclick="load()">تحديث ⟳</button>
+</header>
+<div class="notice" id="notice"></div>
+<div class="cards" id="cards"></div>
+<div class="controls">
+  <input id="q" placeholder="🔍 دور بالاسم أو الموبايل أو الإيميل..." oninput="render()">
+</div>
+<div class="wrap"><table id="tbl">
+  <thead><tr><th>التاريخ</th><th>الاسم</th><th>الموبايل</th><th>التخصص</th><th>الحملة / الأدسِت</th><th>الحالة</th><th>الفيدباك</th><th>المندوب</th><th></th></tr></thead>
+  <tbody id="rows"></tbody>
+</table></div>
+<script>
+var API='https://script.google.com/macros/s/AKfycbwAqWuvxjeC1vVj7TGUeVO9B5Emd9-f_a4pUwFE8fiCSYVqLSURF33w1w5QQX3ipTkCJw/exec';
+var STATUSES=['جديد','لم يرد','تم التواصل','مهتم','حجز / تقديم','غير مهتم','رقم خطأ'];
+var COLORS={'جديد':'#6B5DBA','لم يرد':'#e07b00','تم التواصل':'#2980b9','مهتم':'#1e9e5a','حجز / تقديم':'#F5B301','غير مهتم':'#7f8c8d','رقم خطأ':'#c0392b'};
+var LEADS=[],FILTER='';
+document.getElementById('agent').value=localStorage.agent||'';
+document.getElementById('agent').onchange=function(){localStorage.agent=this.value};
+
+async function load(){
+  var tb=document.getElementById('rows');
+  tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:30px">⏳ بتحمّل...</td></tr>';
+  try{
+    var r=await fetch(API+'?api=leads');
+    var d=await r.json();
+    LEADS=(d.leads||[]).sort(function(a,b){return (b.date||'').localeCompare(a.date||'')});
+    document.getElementById('notice').style.display='none';
+    render();cards();
+  }catch(e){
+    tb.innerHTML='';
+    var n=document.getElementById('notice');
+    n.style.display='block';
+    n.innerHTML='⚠️ مش قادر أوصل للداتا. لو دي أول مرة، اتأكد إن آخر نسخة من كود الـ Apps Script متنشرة (Deploy → New version). التفاصيل: '+e;
+  }
+}
+function cards(){
+  var counts={'الكل':LEADS.length};
+  STATUSES.forEach(function(s){counts[s]=LEADS.filter(function(l){return l.status===s}).length});
+  var el=document.getElementById('cards');el.innerHTML='';
+  Object.keys(counts).forEach(function(k){
+    var c=document.createElement('div');
+    c.className='card'+((FILTER===k||(k==='الكل'&&!FILTER))?' active':'');
+    c.innerHTML='<b>'+counts[k]+'</b><small>'+k+'</small>';
+    c.onclick=function(){FILTER=(k==='الكل')?'':k;render();cards();};
+    el.appendChild(c);
+  });
+}
+function render(){
+  var q=document.getElementById('q').value.trim().toLowerCase();
+  var rows=LEADS.filter(function(l){
+    if(FILTER&&l.status!==FILTER)return false;
+    if(!q)return true;
+    return (l.name+' '+l.phone+' '+l.email).toLowerCase().indexOf(q)>-1;
+  });
+  var tb=document.getElementById('rows');tb.innerHTML='';
+  rows.forEach(function(l){
+    var tr=document.createElement('tr');
+    var opts=STATUSES.map(function(s){return '<option'+(s===l.status?' selected':'')+'>'+s+'</option>'}).join('');
+    var ph=(l.phone||'').replace(/[^0-9+]/g,'');
+    var wa=ph?'<a class="wa" target="_blank" href="https://wa.me/'+ph.replace('+','')+'">واتس</a>':'';
+    tr.innerHTML=
+      '<td class="muted">'+(l.date||'')+'</td>'+
+      '<td><b>'+(l.name||'—')+'</b><br><span class="muted">'+(l.email||'')+'</span></td>'+
+      '<td><a class="tel" href="tel:'+ph+'">'+(l.phone||'—')+'</a>'+wa+'</td>'+
+      '<td>'+(l.major||'—')+'</td>'+
+      '<td class="muted">'+(l.campaign||'')+'<br>'+(l.adset||'')+'</td>'+
+      '<td><span class="badge" style="background:'+(COLORS[l.status]||'#999')+'">'+(l.status||'جديد')+'</span><br><select>'+opts+'</select></td>'+
+      '<td><input class="fb" value="'+(l.feedback||'').replace(/"/g,'&quot;')+'" placeholder="اكتب الفيدباك..."></td>'+
+      '<td class="muted">'+(l.agent||'')+'<br>'+(l.updated||'')+'</td>'+
+      '<td><span class="st"></span></td>';
+    var sel=tr.querySelector('select'),fb=tr.querySelector('input.fb'),st=tr.querySelector('.st');
+    async function save(){
+      var agent=document.getElementById('agent').value||'';
+      st.className='st saving';st.textContent='...';
+      try{
+        // body كـ نص عادي عشان نتفادى الـ CORS preflight مع Apps Script
+        var r=await fetch(API,{method:'POST',
+          body:JSON.stringify({action:'update',id:l.id,status:sel.value,feedback:fb.value,agent:agent})});
+        var res=await r.json();
+        if(!res.ok)throw (res.error||'فشل الحفظ');
+        st.className='st saved';st.textContent='✓';
+        l.status=sel.value;l.feedback=fb.value;l.agent=agent;cards();
+        var b=tr.querySelector('.badge');b.textContent=sel.value;b.style.background=COLORS[sel.value]||'#999';
+      }catch(e){
+        st.className='st err';st.textContent='✗ معتمش';
+      }
+    }
+    sel.onchange=save;fb.onchange=save;
+    tb.appendChild(tr);
+  });
+  if(!rows.length)tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:30px;color:#888">مفيش ليدز مطابقة</td></tr>';
+}
+load();
+</script>
+</body>
+</html>
